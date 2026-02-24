@@ -1,0 +1,29 @@
+.toast-notification {
+  padding: 14px 24px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  backdrop-filter: blur(6px);
+}
+
+.toast-notification p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.toast-notification-success {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #d1fae5;
+}
+
+.toast-notification-error {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #f87171;
+  color: #fecaca;
+}
+
+.toast-notification-info {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: #22d3ee;
+  color: #cffafe;
+}
