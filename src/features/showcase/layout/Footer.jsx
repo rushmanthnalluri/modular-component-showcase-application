@@ -4,29 +4,29 @@ const footerLinks = [
   {
     title: "Explore",
     links: [
-      { name: "All Components", href: "/#components" },
-      { name: "Buttons", href: "/#categories" },
-      { name: "Cards", href: "/#categories" },
-      { name: "Forms", href: "/#categories" },
-      { name: "Navigation", href: "/#categories" },
+      { name: "All Components", to: "/#components" },
+      { name: "Buttons", to: "/#categories" },
+      { name: "Cards", to: "/#categories" },
+      { name: "Forms", to: "/#categories" },
+      { name: "Navigation", to: "/#categories" },
     ],
   },
   {
     title: "Project",
     links: [
-      { name: "Home", href: "/" },
-      { name: "Components", href: "/#components" },
-      { name: "Code Previews", href: "/#components" },
-      { name: "Get in Touch", href: "/contact" },
+      { name: "Home", to: "/" },
+      { name: "Components", to: "/#components" },
+      { name: "Code Previews", to: "/#components" },
+      { name: "Get in Touch", to: "/contact" },
     ],
   },
   {
     title: "Support",
     links: [
-      { name: "Contact Team", href: "/contact" },
-      { name: "Privacy", href: "/" },
-      { name: "Terms", href: "/" },
-      { name: "Help", href: "/" },
+      { name: "Contact Team", to: "/contact" },
+      { name: "Privacy", to: "/" },
+      { name: "Terms", to: "/" },
+      { name: "Help", to: "/" },
     ],
   },
 ];
@@ -67,12 +67,12 @@ const Footer = () => {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.to}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
