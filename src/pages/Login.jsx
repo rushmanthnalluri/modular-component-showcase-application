@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Layout } from "@/features/showcase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
@@ -10,6 +7,7 @@ import lockIcon from "@/assets/showcase/lock.png";
 import eyeIcon from "@/assets/showcase/eye.png";
 import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
+import "./Auth.css";
 
 const initialFormData = {
   email: "",
@@ -99,111 +97,65 @@ const Login = () => {
           Credentials are ready for authentication.
         </span>
       ),
+      duration: 4000,
     });
   };
 
   return (
-    <Layout>
-      <section className="py-16 md:py-24">
-        <div className="container max-w-md">
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-muted/30 p-2">
-              <img
-                src={userIcon}
-                alt="User"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <h1 className="display-font text-3xl font-bold text-foreground mb-2">
-              Login
-            </h1>
-            <p className="text-muted-foreground mb-8">
-              Sign in to continue to the application.
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Email
-                </label>
-                <div className="relative">
-                  <img
-                    src={mailIcon}
-                    alt=""
-                    aria-hidden
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                  />
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="you@example.com"
-                    aria-invalid={fieldErrors.email}
-                    className={`pl-10 ${
-                      fieldErrors.email
-                        ? "border-red-500 focus-visible:ring-red-500"
-                        : ""
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Password
-                </label>
-                <div className="relative">
-                  <img
-                    src={lockIcon}
-                    alt=""
-                    aria-hidden
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                  />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter password"
-                    aria-invalid={fieldErrors.password}
-                    className={`pl-10 pr-10 ${
-                      fieldErrors.password
-                        ? "border-red-500 focus-visible:ring-red-500"
-                        : ""
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    <img
-                      src={eyeIcon}
-                      alt=""
-                      aria-hidden
-                      className={`h-4 w-4 ${showPassword ? "opacity-100" : "opacity-60"}`}
-                    />
-                  </button>
-                </div>
-              </div>
-
-              <Button type="submit" variant="hero" className="w-full">
-                Login
-              </Button>
-            </form>
-
-            <p className="mt-6 text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link to="/register" className="text-primary font-semibold">
-                Register
-              </Link>
-            </p>
-          </div>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-avatar">
+          <img src={userIcon} alt="User avatar" />
         </div>
-      </section>
-    </Layout>
+        <h2>Sign in with email</h2>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="input-group">
+            <img className="left-icon" src={mailIcon} alt="" aria-hidden />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              className={fieldErrors.email ? "error" : ""}
+            />
+          </div>
+
+          <div className="input-group">
+            <img className="left-icon" src={lockIcon} alt="" aria-hidden />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              className={fieldErrors.password ? "error" : ""}
+            />
+            <button
+              type="button"
+              className="icon-toggle"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
+            </button>
+          </div>
+
+          <div className="forgot-password">
+            Forgot <span>Password</span>?
+          </div>
+
+          <button type="submit" className="auth-submit">
+            Get Started
+          </button>
+        </form>
+
+        <p className="auth-switch">
+          Don&apos;t have an account? <Link to="/register">Sign up</Link>
+        </p>
+      </div>
+    </div>
   );
 };
 
