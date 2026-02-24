@@ -4,31 +4,20 @@ import {
   CodeBlock,
   Layout,
   previewComponents,
-  useComponent,
-} from "@/features/showcase";
+} from "@/showcase";
+import { components } from "@/showcase/components.data";
 import "./ComponentDetails.css";
 
 const ComponentDetail = () => {
   const { id } = useParams();
-  const [isDarkPreview, setIsDarkPreview] = useState(false);
   const [activeTab, setActiveTab] = useState("jsx");
-  const { data: component, isLoading, error } = useComponent(id);
+  const item = components.find((component) => component.id === id || component.preview === id);
 
-  const PreviewComponent = component?.preview
-    ? previewComponents[component.preview]
+  const PreviewComponent = item?.preview
+    ? previewComponents[item.preview]
     : null;
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="layout-container details-state">
-          <div className="loader" />
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error || !component) {
+  if (!item) {
     return (
       <Layout>
         <div className="layout-container details-state">
@@ -50,27 +39,17 @@ const ComponentDetail = () => {
         </Link>
 
         <div className="details-head">
-          <h1>{component.name}</h1>
-          <span className="component-tag">{component.category}</span>
+          <h1>{item.name}</h1>
+          <span className="component-tag">{item.category}</span>
         </div>
-        <p className="details-desc">{component.description}</p>
+        <p className="details-desc">{item.description}</p>
 
         <div className="details-grid">
           <div className="preview-box">
             <div className="preview-head">
               <span>Live Preview</span>
-              <button
-                type="button"
-                onClick={() => setIsDarkPreview((prev) => !prev)}
-              >
-                {isDarkPreview ? "Light" : "Dark"}
-              </button>
             </div>
-            <div
-              className={
-                isDarkPreview ? "preview-body dark-preview" : "preview-body"
-              }
-            >
+            <div className="preview-body">
               {PreviewComponent ? (
                 <PreviewComponent />
               ) : (
@@ -88,7 +67,7 @@ const ComponentDetail = () => {
               >
                 JSX
               </button>
-              {component.code.css ? (
+              {item.code.css ? (
                 <button
                   type="button"
                   className={activeTab === "css" ? "tab-btn active" : "tab-btn"}
@@ -100,9 +79,9 @@ const ComponentDetail = () => {
             </div>
 
             {activeTab === "jsx" ? (
-              <CodeBlock code={component.code.jsx} language="jsx" />
+              <CodeBlock code={item.code.jsx} language="jsx" />
             ) : (
-              <CodeBlock code={component.code.css || ""} language="css" />
+              <CodeBlock code={item.code.css || ""} language="css" />
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
-import { categories } from "@/features/showcase/data/components";
-import "./CategoryFilter.css";
+import { categories } from "@/showcase/components.data";
+import "./ShowcaseComponents.css";
 
 const CategoryFilter = ({ activeCategory, onCategoryChange }) => {
   return (

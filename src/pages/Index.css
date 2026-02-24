@@ -51,7 +51,8 @@
 
 .component-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fill, 270px);
+  justify-content: flex-start;
   gap: 14px;
 }
 
@@ -90,5 +91,9 @@
   .hero-content h1 span:first-child,
   .hero-content h1 span:last-child {
     font-size: 33px;
+  }
+
+  .component-grid {
+    grid-template-columns: 1fr;
   }
 }
