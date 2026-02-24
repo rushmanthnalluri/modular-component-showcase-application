@@ -5,24 +5,65 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+const initialFormData = {
+  fullName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
+
+const initialFieldErrors = {
+  fullName: false,
+  email: false,
+  password: false,
+  confirmPassword: false,
+};
+
 const Register = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [fieldErrors, setFieldErrors] = useState(initialFieldErrors);
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[name]) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [name]: value.trim() === "",
+      };
+    });
+
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordMismatch(false);
+    }
+  };
+
+  const validateRequiredFields = () => {
+    const nextErrors = Object.entries(formData).reduce((acc, [field, value]) => {
+      acc[field] = value.trim() === "";
+      return acc;
+    }, {});
+
+    setFieldErrors(nextErrors);
+    return Object.values(nextErrors).every((hasError) => !hasError);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    if (!validateRequiredFields()) {
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
+      setPasswordMismatch(true);
       toast({
         title: "Password mismatch",
         description: "Password and confirm password should be the same.",
@@ -31,8 +72,8 @@ const Register = () => {
     }
 
     toast({
-      title: "Registration submitted",
-      description: "Your details were captured successfully.",
+      title: "Validation successful",
+      description: "Registration data is ready for processing.",
     });
   };
 
@@ -48,7 +89,7 @@ const Register = () => {
               Create a new account to access the application.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Full Name
@@ -59,8 +100,18 @@ const Register = () => {
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="Enter full name"
-                  required
+                  aria-invalid={fieldErrors.fullName}
+                  className={
+                    fieldErrors.fullName
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.fullName ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Full name is required.
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -73,8 +124,18 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  required
+                  aria-invalid={fieldErrors.email}
+                  className={
+                    fieldErrors.email
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.email ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Email is required.
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -87,8 +148,18 @@ const Register = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Create password"
-                  required
+                  aria-invalid={fieldErrors.password}
+                  className={
+                    fieldErrors.password
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.password ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Password is required.
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -101,8 +172,23 @@ const Register = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm password"
-                  required
+                  aria-invalid={fieldErrors.confirmPassword || passwordMismatch}
+                  className={
+                    fieldErrors.confirmPassword || passwordMismatch
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.confirmPassword ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Confirm password is required.
+                  </p>
+                ) : null}
+                {passwordMismatch ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Password and confirm password should be the same.
+                  </p>
+                ) : null}
               </div>
 
               <Button type="submit" variant="hero" className="w-full">
