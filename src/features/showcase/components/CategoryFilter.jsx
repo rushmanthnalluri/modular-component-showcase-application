@@ -1,27 +1,27 @@
-import { motion } from "framer-motion";
 import { categories } from "@/features/showcase/data/components";
+import "./CategoryFilter.css";
+
 const CategoryFilter = ({ activeCategory, onCategoryChange }) => {
-  return <motion.div
-    initial={{ opacity: 0, y: -10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay: 0.1 }}
-    className="flex flex-wrap gap-2"
-  >
+  return (
+    <div className="category-filter">
       {categories.map((category) => {
-    const Icon = category.icon;
-    return <button
-      key={category.id}
-      onClick={() => onCategoryChange(category.id)}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2
-              ${activeCategory === category.id ? "bg-accent text-accent-foreground shadow-[0_10px_24px_hsl(var(--accent)/0.24)]" : "bg-card text-muted-foreground hover:bg-bg-hover hover:text-foreground border border-border shadow-sm"}`}
-    >
-            <Icon className="w-4 h-4" />
+        const Icon = category.icon;
+        const isActive = activeCategory === category.id;
+
+        return (
+          <button
+            type="button"
+            key={category.id}
+            onClick={() => onCategoryChange(category.id)}
+            className={isActive ? "filter-btn active" : "filter-btn"}
+          >
+            <Icon />
             <span>{category.name}</span>
-          </button>;
-  })}
-    </motion.div>;
+          </button>
+        );
+      })}
+    </div>
+  );
 };
-var stdin_default = CategoryFilter;
-export {
-  stdin_default as default
-};
+
+export default CategoryFilter;

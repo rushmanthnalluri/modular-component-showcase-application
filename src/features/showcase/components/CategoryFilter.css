@@ -1,0 +1,34 @@
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-btn {
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.filter-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.filter-btn.active {
+  border-color: #f97316;
+  background: #f97316;
+  color: #ffffff;
+}
