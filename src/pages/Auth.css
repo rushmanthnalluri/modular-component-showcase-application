@@ -7,6 +7,12 @@
   padding: 24px;
 }
 
+.auth-page.with-navbar {
+  min-height: calc(100vh - 80px);
+  padding-top: 104px;
+  padding-bottom: 24px;
+}
+
 .auth-card {
   width: 100%;
   max-width: 420px;
@@ -135,6 +141,11 @@
 @media (max-width: 560px) {
   .auth-page {
     padding: 14px;
+  }
+
+  .auth-page.with-navbar {
+    padding-top: 94px;
+    padding-bottom: 14px;
   }
 
   .auth-card {

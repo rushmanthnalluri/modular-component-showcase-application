@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/features/showcase/layout/Header";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -102,60 +103,63 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-avatar">
-          <img src={userIcon} alt="User avatar" />
-        </div>
-        <h2>Sign in with email</h2>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="input-group">
-            <img className="left-icon" src={mailIcon} alt="" aria-hidden />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className={fieldErrors.email ? "error" : ""}
-            />
+    <>
+      <Header />
+      <div className="auth-page with-navbar">
+        <div className="auth-card">
+          <div className="auth-avatar">
+            <img src={userIcon} alt="User avatar" />
           </div>
+          <h2>Sign in with email</h2>
 
-          <div className="input-group">
-            <img className="left-icon" src={lockIcon} alt="" aria-hidden />
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className={fieldErrors.password ? "error" : ""}
-            />
-            <button
-              type="button"
-              className="icon-toggle"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="input-group">
+              <img className="left-icon" src={mailIcon} alt="" aria-hidden />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                className={fieldErrors.email ? "error" : ""}
+              />
+            </div>
+
+            <div className="input-group">
+              <img className="left-icon" src={lockIcon} alt="" aria-hidden />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                className={fieldErrors.password ? "error" : ""}
+              />
+              <button
+                type="button"
+                className="icon-toggle"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
+              </button>
+            </div>
+
+            <div className="forgot-password">
+              Forgot <span>Password</span>?
+            </div>
+
+            <button type="submit" className="auth-submit">
+              Get Started
             </button>
-          </div>
+          </form>
 
-          <div className="forgot-password">
-            Forgot <span>Password</span>?
-          </div>
-
-          <button type="submit" className="auth-submit">
-            Get Started
-          </button>
-        </form>
-
-        <p className="auth-switch">
-          Don&apos;t have an account? <Link to="/register">Sign up</Link>
-        </p>
+          <p className="auth-switch">
+            Don&apos;t have an account? <Link to="/register">Sign up</Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
