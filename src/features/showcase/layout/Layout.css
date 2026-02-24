@@ -1,0 +1,19 @@
+.layout-page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f3f6fb, #ffffff);
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-main {
+  flex: 1;
+  padding-top: 80px;
+}
+
+.layout-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
