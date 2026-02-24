@@ -4,17 +4,24 @@ import {
   ComponentCard,
   Layout,
   SearchBar,
-  useFilteredComponents,
-} from "@/features/showcase";
+} from "@/showcase";
+import { components } from "@/showcase/components.data";
 import "./Index.css";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const { data: filteredComponents = [], isLoading } = useFilteredComponents(
-    activeCategory,
-    searchQuery,
-  );
+  const searchText = searchQuery.trim().toLowerCase();
+  const filteredComponents = components.filter((item) => {
+    const matchesCategory = activeCategory === "all" || item.category === activeCategory;
+    const matchesSearch =
+      searchText === "" ||
+      item.name.toLowerCase().includes(searchText) ||
+      item.description.toLowerCase().includes(searchText) ||
+      item.tags.some((tag) => tag.toLowerCase().includes(searchText));
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <Layout>
@@ -44,11 +51,7 @@ const Index = () => {
               />
             </div>
 
-            {isLoading ? (
-              <div className="loader-wrap">
-                <div className="loader" />
-              </div>
-            ) : filteredComponents.length > 0 ? (
+            {filteredComponents.length > 0 ? (
               <div className="component-grid">
                 {filteredComponents.map((component) => (
                   <ComponentCard
@@ -56,7 +59,6 @@ const Index = () => {
                     id={component.id}
                     name={component.name}
                     description={component.description}
-                    category={component.category}
                     thumbnail={component.thumbnail}
                   />
                 ))}

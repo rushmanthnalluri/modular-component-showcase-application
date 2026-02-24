@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Layout } from "@/features/showcase";
+import { Layout } from "@/showcase";
 import "./NotFound.css";
 
 const NotFound = () => {

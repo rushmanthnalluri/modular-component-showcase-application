@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import Header from "@/features/showcase/layout/Header";
+import { useToast } from "@/use-toast";
+import Header from "@/showcase/Header";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -10,59 +10,37 @@ import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
-const initialFormData = {
-  email: "",
-  password: "",
-};
-
-const initialFieldErrors = {
-  email: false,
-  password: false,
-};
-
-const fieldLabels = {
-  email: "Email",
-  password: "Password",
-};
-
 const Login = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState(initialFormData);
-  const [fieldErrors, setFieldErrors] = useState(initialFieldErrors);
+  const [data, setData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    setData((prev) => ({ ...prev, [name]: value }));
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setFieldErrors((prev) => {
-      if (!prev[name]) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [name]: value.trim() === "",
-      };
-    });
+    if (value.trim() !== "") {
+      setErrors((prev) => ({ ...prev, [name]: false }));
+    }
   };
 
-  const validateRequiredFields = () => {
-    const nextErrors = Object.entries(formData).reduce((acc, [field, value]) => {
-      acc[field] = value.trim() === "";
-      return acc;
-    }, {});
-
-    setFieldErrors(nextErrors);
-
-    const missingFields = Object.entries(nextErrors)
-      .filter(([, hasError]) => hasError)
-      .map(([field]) => fieldLabels[field]);
-
-    return {
-      isValid: missingFields.length === 0,
-      missingFields,
+  const validateForm = () => {
+    const nextErrors = {
+      email: data.email.trim() === "",
+      password: data.password.trim() === "",
     };
+    setErrors(nextErrors);
+
+    const missingFields = [];
+    if (nextErrors.email) {
+      missingFields.push("Email");
+    }
+    if (nextErrors.password) {
+      missingFields.push("Password");
+    }
+
+    return missingFields;
   };
 
   const showMissingFieldToasts = (missingFields) => {
@@ -83,19 +61,18 @@ const Login = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const { isValid, missingFields } = validateRequiredFields();
-
-    if (!isValid) {
+    const missingFields = validateForm();
+    if (missingFields.length > 0) {
       showMissingFieldToasts(missingFields);
       return;
     }
 
     toast({
-      title: "Validation successful",
+      title: "Demo login successful",
       description: (
         <span className="inline-flex items-center gap-2">
           <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
-          Credentials are ready for authentication.
+          Frontend demo only. Authentication service is not connected.
         </span>
       ),
       duration: 4000,
@@ -118,10 +95,10 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
-                value={formData.email}
+                value={data.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                className={fieldErrors.email ? "error" : ""}
+                className={errors.email ? "error" : ""}
               />
             </div>
 
@@ -130,10 +107,10 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                value={formData.password}
+                value={data.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
-                className={fieldErrors.password ? "error" : ""}
+                className={errors.password ? "error" : ""}
               />
               <button
                 type="button"
@@ -146,7 +123,9 @@ const Login = () => {
             </div>
 
             <div className="forgot-password">
-              Forgot <span>Password</span>?
+              <button type="button" className="forgot-password-link">
+                Forgot Password?
+              </button>
             </div>
 
             <button type="submit" className="auth-submit">

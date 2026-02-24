@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
-import "./ComponentCard.css";
+import "./ShowcaseComponents.css";
 
 const ComponentCard = ({
   id,
   name,
   description,
-  category,
   thumbnail,
 }) => {
   return (
@@ -19,10 +18,7 @@ const ComponentCard = ({
       </div>
 
       <div className="component-card-body">
-        <div className="component-card-head">
-          <h3>{name}</h3>
-          <span className="component-tag">{category}</span>
-        </div>
+        <h3>{name}</h3>
         <p>{description}</p>
         <Link to={`/component/${id}`} className="component-link">
           View Component
