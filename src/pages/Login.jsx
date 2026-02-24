@@ -67,7 +67,12 @@ const Login = () => {
   };
 
   const showMissingFieldToasts = (missingFields) => {
-    missingFields.slice(0, 2).forEach((fieldName) => {
+    const prioritizedFields = [
+      ...missingFields.filter((fieldName) => fieldName === "Password"),
+      ...missingFields.filter((fieldName) => fieldName !== "Password"),
+    ];
+
+    prioritizedFields.slice(0, 2).forEach((fieldName) => {
       toast({
         title: `${fieldName} is required`,
         description: (
