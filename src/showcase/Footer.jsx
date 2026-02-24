@@ -51,7 +51,6 @@ const Footer = () => {
               <p>Team: Modular Component Showcase</p>
               <p>Email: rushmanth21@gmail.com</p>
               <p>Phone: 9912387093</p>
-              <p>LinkedIn: rushmanthnalluri</p>
             </div>
           </div>
 

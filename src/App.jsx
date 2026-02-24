@@ -1,24 +1,17 @@
-import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import ComponentDetail from "./pages/ComponentDetails";
+import Contact from "./pages/Contact";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import NotFound from "./pages/NotFound";
 
-const Index = lazy(() => import("./pages/Index"));
-const ComponentDetail = lazy(() => import("./pages/ComponentDetails"));
-const Contact = lazy(() => import("./pages/Contact"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const App = () => (
-  <>
-    <Toaster />
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Suspense
-        fallback={
-          <div className="app-loading">
-            Loading...
-          </div>
-        }
-      >
+const App = () => {
+  return (
+    <>
+      <Toaster />
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/component/:id" element={<ComponentDetail />} />
@@ -27,9 +20,9 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
-    </BrowserRouter>
-  </>
-);
-var stdin_default = App;
-export { stdin_default as default };
+      </BrowserRouter>
+    </>
+  );
+};
+
+export default App;

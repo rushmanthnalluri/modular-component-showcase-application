@@ -102,15 +102,6 @@
   font-weight: 600;
 }
 
-.preview-head button {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  font-size: 12px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-
 .preview-body {
   min-height: 320px;
   background: #ffffff;
@@ -118,10 +109,6 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-}
-
-.preview-body.dark-preview {
-  background: #0f172a;
 }
 
 .preview-body p {

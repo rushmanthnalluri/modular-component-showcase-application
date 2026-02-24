@@ -104,13 +104,23 @@
   width: 100%;
   text-align: right;
   margin: 2px 0 16px;
-  font-size: 13px;
-  color: #475569;
 }
 
-.forgot-password span,
-.auth-switch a {
+.forgot-password-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: bold;
   cursor: pointer;
+}
+
+.forgot-password-link:hover {
+  color: #1f2937;
+}
+
+.auth-switch a {
   font-weight: bold;
   color: #0f172a;
   text-decoration: none;
