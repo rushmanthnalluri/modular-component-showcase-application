@@ -1,6 +1,7 @@
 import * as React from "react";
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1e6;
+const TOAST_LIMIT = 2;
+const DEFAULT_TOAST_DURATION = 4000;
+const TOAST_REMOVE_DELAY = 300;
 let count = 0;
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER;
@@ -76,6 +77,9 @@ function dispatch(action) {
 }
 function toast({ ...props }) {
   const id = genId();
+  const duration = props.duration ?? DEFAULT_TOAST_DURATION;
+  const createdAt = Date.now();
+  const showTimer = props.showTimer ?? true;
   const update = (props2) => dispatch({
     type: "UPDATE_TOAST",
     toast: { ...props2, id }
@@ -85,6 +89,9 @@ function toast({ ...props }) {
     type: "ADD_TOAST",
     toast: {
       ...props,
+      duration,
+      createdAt,
+      showTimer,
       id,
       open: true,
       onOpenChange: (open) => {
