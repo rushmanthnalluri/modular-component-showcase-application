@@ -1,3 +1,9 @@
+.index-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
 .index-hero {
   padding: 60px 0 30px;
 }
@@ -35,6 +41,7 @@
 }
 
 .index-components {
+  flex: 1;
   padding: 12px 0 40px;
 }
 
