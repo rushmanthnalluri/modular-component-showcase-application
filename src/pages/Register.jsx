@@ -223,7 +223,7 @@ const Register = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="+1 555 000 0000"
+                    placeholder="+91 98765 43210"
                     aria-invalid={fieldErrors.phone}
                     className={`pl-10 ${
                       fieldErrors.phone
@@ -286,31 +286,18 @@ const Register = () => {
                     className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
                   />
                   <Input
-                    type={showPasswords ? "text" : "password"}
+                    type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm password"
                     aria-invalid={fieldErrors.confirmPassword || passwordMismatch}
-                    className={`pl-10 pr-10 ${
+                    className={`pl-10 ${
                       fieldErrors.confirmPassword || passwordMismatch
                         ? "border-red-500 focus-visible:ring-red-500"
                         : ""
                     }`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswords((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    aria-label={showPasswords ? "Hide passwords" : "Show passwords"}
-                  >
-                    <img
-                      src={eyeIcon}
-                      alt=""
-                      aria-hidden
-                      className={`h-4 w-4 ${showPasswords ? "opacity-100" : "opacity-60"}`}
-                    />
-                  </button>
                 </div>
               </div>
 
