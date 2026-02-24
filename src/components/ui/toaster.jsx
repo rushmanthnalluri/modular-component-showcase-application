@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Toast,
@@ -9,24 +9,32 @@ import {
   ToastViewport,
 } from "@/components/ui/toast";
 
-function ToastTimer({ createdAt, duration, open }) {
+function ToastTimer({ createdAt, duration, open, onExpire }) {
   const [remainingMs, setRemainingMs] = useState(duration);
+  const hasExpiredRef = useRef(false);
 
   useEffect(() => {
     if (!open) {
       return;
     }
+    hasExpiredRef.current = false;
 
     const updateRemaining = () => {
       const elapsed = Date.now() - createdAt;
-      setRemainingMs(Math.max(0, duration - elapsed));
+      const nextRemaining = Math.max(0, duration - elapsed);
+      setRemainingMs(nextRemaining);
+
+      if (nextRemaining === 0 && !hasExpiredRef.current) {
+        hasExpiredRef.current = true;
+        onExpire();
+      }
     };
 
     updateRemaining();
 
     const intervalId = setInterval(updateRemaining, 100);
     return () => clearInterval(intervalId);
-  }, [createdAt, duration, open]);
+  }, [createdAt, duration, onExpire, open]);
 
   const progress = duration > 0 ? (remainingMs / duration) * 100 : 0;
 
@@ -43,7 +51,7 @@ function ToastTimer({ createdAt, duration, open }) {
 }
 
 function Toaster() {
-  const { toasts } = useToast();
+  const { toasts, dismiss } = useToast();
 
   return (
     <ToastProvider>
@@ -67,6 +75,7 @@ function Toaster() {
                   createdAt={createdAt}
                   duration={duration}
                   open={Boolean(props.open)}
+                  onExpire={() => dismiss(id)}
                 />
               ) : null}
             </div>
