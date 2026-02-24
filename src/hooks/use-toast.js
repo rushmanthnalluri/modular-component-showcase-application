@@ -1,5 +1,5 @@
 import * as React from "react";
-const TOAST_LIMIT = 2;
+const TOAST_LIMIT = 10;
 const DEFAULT_TOAST_DURATION = 4000;
 const TOAST_REMOVE_DELAY = 300;
 let count = 0;
