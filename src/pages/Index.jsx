@@ -18,55 +18,57 @@ const Index = () => {
 
   return (
     <Layout>
-      <section className="index-hero">
-        <div className="layout-container">
-          <div className="hero-content">
-            <h1>
-              <span>Modular Component</span>
-              <span>Showcase Application</span>
-            </h1>
-            <p>
-              Explore reusable components and prop-driven interactions in a
-              clean single-page React application.
-            </p>
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <div className="index-page">
+        <section className="index-hero">
+          <div className="layout-container">
+            <div className="hero-content">
+              <h1>
+                <span>Modular Component</span>
+                <span>Showcase Application</span>
+              </h1>
+              <p>
+                Explore reusable components and prop-driven interactions in a
+                clean single-page React application.
+              </p>
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="components" className="index-components">
-        <div className="layout-container">
-          <div id="categories" className="category-block">
-            <CategoryFilter
-              activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
-            />
+        <section id="components" className="index-components">
+          <div className="layout-container">
+            <div id="categories" className="category-block">
+              <CategoryFilter
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+              />
+            </div>
+
+            {isLoading ? (
+              <div className="loader-wrap">
+                <div className="loader" />
+              </div>
+            ) : filteredComponents.length > 0 ? (
+              <div className="component-grid">
+                {filteredComponents.map((component) => (
+                  <ComponentCard
+                    key={component.id}
+                    id={component.id}
+                    name={component.name}
+                    description={component.description}
+                    category={component.category}
+                    thumbnail={component.thumbnail}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                No components found. Try adjusting search or category.
+              </div>
+            )}
           </div>
-
-          {isLoading ? (
-            <div className="loader-wrap">
-              <div className="loader" />
-            </div>
-          ) : filteredComponents.length > 0 ? (
-            <div className="component-grid">
-              {filteredComponents.map((component) => (
-                <ComponentCard
-                  key={component.id}
-                  id={component.id}
-                  name={component.name}
-                  description={component.description}
-                  category={component.category}
-                  thumbnail={component.thumbnail}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              No components found. Try adjusting search or category.
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      </div>
     </Layout>
   );
 };
