@@ -4,10 +4,20 @@ import { Layout } from "@/features/showcase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import userIcon from "@/assets/showcase/user.png";
+import alternateUserIcon from "@/assets/showcase/user (2).png";
+import mailIcon from "@/assets/showcase/mail.png";
+import lockIcon from "@/assets/showcase/lock.png";
+import eyeIcon from "@/assets/showcase/eye.png";
+import phoneIcon from "@/assets/showcase/phone.png";
+import warningIcon from "@/assets/showcase/warning.png";
+import errorIcon from "@/assets/showcase/error.png";
+import successIcon from "@/assets/showcase/success.png";
 
 const initialFormData = {
   fullName: "",
   email: "",
+  phone: "",
   password: "",
   confirmPassword: "",
 };
@@ -15,6 +25,7 @@ const initialFormData = {
 const initialFieldErrors = {
   fullName: false,
   email: false,
+  phone: false,
   password: false,
   confirmPassword: false,
 };
@@ -24,6 +35,7 @@ const Register = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [fieldErrors, setFieldErrors] = useState(initialFieldErrors);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -66,14 +78,24 @@ const Register = () => {
       setPasswordMismatch(true);
       toast({
         title: "Password mismatch",
-        description: "Password and confirm password should be the same.",
+        description: (
+          <span className="inline-flex items-center gap-2">
+            <img src={errorIcon} alt="" aria-hidden className="h-4 w-4" />
+            Password and confirm password should be the same.
+          </span>
+        ),
       });
       return;
     }
 
     toast({
       title: "Validation successful",
-      description: "Registration data is ready for processing.",
+      description: (
+        <span className="inline-flex items-center gap-2">
+          <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
+          Registration data is ready for processing.
+        </span>
+      ),
     });
   };
 
@@ -82,6 +104,13 @@ const Register = () => {
       <section className="py-16 md:py-24">
         <div className="container max-w-md">
           <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-muted/30 p-2">
+              <img
+                src={alternateUserIcon}
+                alt="Registration user"
+                className="h-full w-full object-contain"
+              />
+            </div>
             <h1 className="display-font text-3xl font-bold text-foreground mb-2">
               Register
             </h1>
@@ -94,21 +123,35 @@ const Register = () => {
                 <label className="text-sm font-medium text-foreground">
                   Full Name
                 </label>
-                <Input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                  aria-invalid={fieldErrors.fullName}
-                  className={
-                    fieldErrors.fullName
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
-                  }
-                />
+                <div className="relative">
+                  <img
+                    src={userIcon}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  />
+                  <Input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter full name"
+                    aria-invalid={fieldErrors.fullName}
+                    className={`pl-10 ${
+                      fieldErrors.fullName
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
+                  />
+                </div>
                 {fieldErrors.fullName ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={warningIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
                     Full name is required.
                   </p>
                 ) : null}
@@ -118,22 +161,74 @@ const Register = () => {
                 <label className="text-sm font-medium text-foreground">
                   Email
                 </label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  aria-invalid={fieldErrors.email}
-                  className={
-                    fieldErrors.email
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
-                  }
-                />
+                <div className="relative">
+                  <img
+                    src={mailIcon}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  />
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="you@example.com"
+                    aria-invalid={fieldErrors.email}
+                    className={`pl-10 ${
+                      fieldErrors.email
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
+                  />
+                </div>
                 {fieldErrors.email ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={warningIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
                     Email is required.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Phone
+                </label>
+                <div className="relative">
+                  <img
+                    src={phoneIcon}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  />
+                  <Input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+1 555 000 0000"
+                    aria-invalid={fieldErrors.phone}
+                    className={`pl-10 ${
+                      fieldErrors.phone
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
+                  />
+                </div>
+                {fieldErrors.phone ? (
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={warningIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
+                    Phone is required.
                   </p>
                 ) : null}
               </div>
@@ -142,21 +237,48 @@ const Register = () => {
                 <label className="text-sm font-medium text-foreground">
                   Password
                 </label>
-                <Input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Create password"
-                  aria-invalid={fieldErrors.password}
-                  className={
-                    fieldErrors.password
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
-                  }
-                />
+                <div className="relative">
+                  <img
+                    src={lockIcon}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  />
+                  <Input
+                    type={showPasswords ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Create password"
+                    aria-invalid={fieldErrors.password}
+                    className={`pl-10 pr-10 ${
+                      fieldErrors.password
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    aria-label={showPasswords ? "Hide passwords" : "Show passwords"}
+                  >
+                    <img
+                      src={eyeIcon}
+                      alt=""
+                      aria-hidden
+                      className={`h-4 w-4 ${showPasswords ? "opacity-100" : "opacity-60"}`}
+                    />
+                  </button>
+                </div>
                 {fieldErrors.password ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={warningIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
                     Password is required.
                   </p>
                 ) : null}
@@ -166,26 +288,59 @@ const Register = () => {
                 <label className="text-sm font-medium text-foreground">
                   Confirm Password
                 </label>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm password"
-                  aria-invalid={fieldErrors.confirmPassword || passwordMismatch}
-                  className={
-                    fieldErrors.confirmPassword || passwordMismatch
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
-                  }
-                />
+                <div className="relative">
+                  <img
+                    src={lockIcon}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  />
+                  <Input
+                    type={showPasswords ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirm password"
+                    aria-invalid={fieldErrors.confirmPassword || passwordMismatch}
+                    className={`pl-10 pr-10 ${
+                      fieldErrors.confirmPassword || passwordMismatch
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    aria-label={showPasswords ? "Hide passwords" : "Show passwords"}
+                  >
+                    <img
+                      src={eyeIcon}
+                      alt=""
+                      aria-hidden
+                      className={`h-4 w-4 ${showPasswords ? "opacity-100" : "opacity-60"}`}
+                    />
+                  </button>
+                </div>
                 {fieldErrors.confirmPassword ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={warningIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
                     Confirm password is required.
                   </p>
                 ) : null}
                 {passwordMismatch ? (
-                  <p className="text-xs font-medium text-red-600">
+                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                    <img
+                      src={errorIcon}
+                      alt=""
+                      aria-hidden
+                      className="h-3.5 w-3.5"
+                    />
                     Password and confirm password should be the same.
                   </p>
                 ) : null}
