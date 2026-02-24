@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
-import { motion } from "framer-motion";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { themeColors } from "@/lib/theme";
+import "./CodeBlock.css";
+
 const customStyle = {
   'code[class*="language-"]': {
     color: themeColors.default,
@@ -12,7 +11,7 @@ const customStyle = {
     textShadow: "none",
     fontFamily: "JetBrains Mono, monospace",
     fontSize: "0.875rem",
-    lineHeight: "1.5"
+    lineHeight: "1.5",
   },
   'pre[class*="language-"]': {
     color: themeColors.default,
@@ -22,132 +21,51 @@ const customStyle = {
     fontSize: "0.875rem",
     lineHeight: "1.5",
     margin: 0,
-    padding: 0
+    padding: 0,
   },
   comment: {
     color: themeColors.comment,
-    fontStyle: "italic"
-  },
-  prolog: {
-    color: themeColors.comment,
-    fontStyle: "italic"
-  },
-  doctype: {
-    color: themeColors.comment,
-    fontStyle: "italic"
-  },
-  cdata: {
-    color: themeColors.comment,
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   punctuation: {
-    color: themeColors.punctuation
-  },
-  property: {
-    color: themeColors.function
-  },
-  tag: {
-    color: themeColors.tag
-  },
-  boolean: {
-    color: themeColors.number
-  },
-  number: {
-    color: themeColors.number
-  },
-  constant: {
-    color: themeColors.number
-  },
-  symbol: {
-    color: themeColors.number
-  },
-  deleted: {
-    color: "#FF5370"
-  },
-  selector: {
-    color: themeColors.tag
-  },
-  "attr-name": {
-    color: themeColors.attrName
+    color: themeColors.punctuation,
   },
   string: {
     color: themeColors.string,
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
-  char: {
-    color: themeColors.string,
-    fontStyle: "italic"
-  },
-  builtin: {
-    color: themeColors.function
-  },
-  inserted: {
-    color: "#C3E88D"
-  },
-  operator: {
-    color: themeColors.operator
-  },
-  entity: {
-    color: themeColors.variable,
-    cursor: "help"
-  },
-  url: {
-    color: themeColors.string,
-    fontStyle: "italic"
-  },
-  ".language-css .token.string": {
-    color: themeColors.string,
-    fontStyle: "italic"
-  },
-  ".style .token.string": {
-    color: themeColors.string,
-    fontStyle: "italic"
-  },
-  variable: {
-    color: themeColors.variable
-  },
-  atrule: {
-    color: themeColors.keyword
-  },
-  "attr-value": {
-    color: themeColors.string,
-    fontStyle: "italic"
+  number: {
+    color: themeColors.number,
   },
   function: {
-    color: themeColors.function
-  },
-  "class-name": {
-    color: themeColors.className
+    color: themeColors.function,
   },
   keyword: {
-    color: themeColors.keyword
-  },
-  regex: {
-    color: "#89DDFF"
-  },
-  important: {
     color: themeColors.keyword,
-    fontWeight: "bold"
   },
-  bold: {
-    fontWeight: "bold"
+  operator: {
+    color: themeColors.operator,
   },
-  italic: {
-    fontStyle: "italic"
-  }
+  "class-name": {
+    color: themeColors.className,
+  },
 };
+
 const CodeBlock = ({ code, language = "jsx" }) => {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
     toast({
       title: "Copied!",
-      description: "Code copied to clipboard"
+      description: "Code copied to clipboard",
+      duration: 2500,
     });
-    setTimeout(() => setCopied(false), 2e3);
+    setTimeout(() => setCopied(false), 2000);
   };
+
   const mapLanguage = (lang) => {
     const langMap = {
       tsx: "tsx",
@@ -156,65 +74,31 @@ const CodeBlock = ({ code, language = "jsx" }) => {
       js: "javascript",
       css: "css",
       html: "html",
-      json: "json"
+      json: "json",
     };
     return langMap[lang.toLowerCase()] || lang.toLowerCase();
   };
-  return <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="relative rounded-xl bg-bg-main border border-border overflow-hidden"
-  >
-      {
-    /* Header */
-  }
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-bg-secondary">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-destructive/60" />
-            <span className="w-3 h-3 rounded-full bg-warning/60" />
-            <span className="w-3 h-3 rounded-full bg-success/60" />
-          </div>
-          <span className="text-xs text-muted-foreground ml-2 font-mono uppercase">
-            {language}
-          </span>
-        </div>
-        <Button
-    variant="ghost"
-    size="sm"
-    onClick={handleCopy}
-    className="gap-2 text-muted-foreground hover:text-foreground"
-  >
-          {copied ? <>
-              <Check className="w-4 h-4 text-success" />
-              Copied
-            </> : <>
-              <Copy className="w-4 h-4" />
-              Copy
-            </>}
-        </Button>
-      </div>
 
-      {
-    /* Code */
-  }
-      <div className="overflow-x-auto scrollbar-thin">
+  return (
+    <div className="code-block-wrap">
+      <div className="code-block-head">
+        <span className="code-language">{language.toUpperCase()}</span>
+        <button type="button" onClick={handleCopy}>
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div className="code-block-body">
         <SyntaxHighlighter
-    language={mapLanguage(language)}
-    style={customStyle}
-    customStyle={{
-      margin: 0,
-      padding: "1rem",
-      background: "transparent"
-    }}
-    PreTag="div"
-  >
+          language={mapLanguage(language)}
+          style={customStyle}
+          customStyle={{ margin: 0, padding: "1rem", background: "transparent" }}
+          PreTag="div"
+        >
           {code}
         </SyntaxHighlighter>
       </div>
-    </motion.div>;
+    </div>
+  );
 };
-var stdin_default = CodeBlock;
-export {
-  stdin_default as default
-};
+
+export default CodeBlock;
