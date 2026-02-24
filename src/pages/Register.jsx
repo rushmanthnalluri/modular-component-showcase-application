@@ -84,16 +84,7 @@ const Register = () => {
   };
 
   const showMissingFieldToasts = (missingFields) => {
-    const prioritizedFields = [
-      ...missingFields.filter((fieldName) => fieldName === "Password"),
-      ...missingFields.filter((fieldName) => fieldName === "Confirm password"),
-      ...missingFields.filter(
-        (fieldName) =>
-          fieldName !== "Password" && fieldName !== "Confirm password",
-      ),
-    ];
-
-    prioritizedFields.slice(0, 2).forEach((fieldName) => {
+    missingFields.forEach((fieldName) => {
       toast({
         title: `${fieldName} is required`,
         description: (
