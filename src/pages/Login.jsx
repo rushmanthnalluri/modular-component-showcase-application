@@ -5,23 +5,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+const initialFormData = {
+  email: "",
+  password: "",
+};
+
+const initialFieldErrors = {
+  email: false,
+  password: false,
+};
+
 const Login = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [fieldErrors, setFieldErrors] = useState(initialFieldErrors);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[name]) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [name]: value.trim() === "",
+      };
+    });
+  };
+
+  const validateRequiredFields = () => {
+    const nextErrors = Object.entries(formData).reduce((acc, [field, value]) => {
+      acc[field] = value.trim() === "";
+      return acc;
+    }, {});
+
+    setFieldErrors(nextErrors);
+    return Object.values(nextErrors).every((hasError) => !hasError);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    if (!validateRequiredFields()) {
+      return;
+    }
+
     toast({
-      title: "Login submitted",
-      description: "Credentials captured successfully.",
+      title: "Validation successful",
+      description: "Credentials are ready for authentication.",
     });
   };
 
@@ -37,7 +71,7 @@ const Login = () => {
               Sign in to continue to the application.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Email
@@ -48,8 +82,18 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  required
+                  aria-invalid={fieldErrors.email}
+                  className={
+                    fieldErrors.email
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.email ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Email is required.
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -62,8 +106,18 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter password"
-                  required
+                  aria-invalid={fieldErrors.password}
+                  className={
+                    fieldErrors.password
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {fieldErrors.password ? (
+                  <p className="text-xs font-medium text-red-600">
+                    Password is required.
+                  </p>
+                ) : null}
               </div>
 
               <Button type="submit" variant="hero" className="w-full">
