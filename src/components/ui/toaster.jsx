@@ -9,8 +9,6 @@ import {
   ToastViewport,
 } from "@/components/ui/toast";
 
-const formatSeconds = (milliseconds) => (Math.max(0, milliseconds) / 1000).toFixed(1);
-
 function ToastTimer({ createdAt, duration, open }) {
   const [remainingMs, setRemainingMs] = useState(duration);
 
@@ -40,9 +38,6 @@ function ToastTimer({ createdAt, duration, open }) {
           style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
         />
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        Closes in {formatSeconds(remainingMs)}s
-      </p>
     </div>
   );
 }
