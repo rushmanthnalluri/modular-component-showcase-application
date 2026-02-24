@@ -66,21 +66,28 @@ const Login = () => {
     };
   };
 
+  const showMissingFieldToasts = (missingFields) => {
+    missingFields.slice(0, 2).forEach((fieldName) => {
+      toast({
+        title: `${fieldName} is required`,
+        description: (
+          <span className="inline-flex items-center gap-2">
+            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+            Please enter your {fieldName.toLowerCase()}.
+          </span>
+        ),
+        duration: 4000,
+      });
+    });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
     const { isValid, missingFields } = validateRequiredFields();
 
     if (!isValid) {
-      toast({
-        title: "Missing required fields",
-        description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
-            Please fill: {missingFields.join(", ")}.
-          </span>
-        ),
-      });
+      showMissingFieldToasts(missingFields);
       return;
     }
 
