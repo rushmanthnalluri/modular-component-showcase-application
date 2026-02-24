@@ -21,6 +21,11 @@ const initialFieldErrors = {
   password: false,
 };
 
+const fieldLabels = {
+  email: "Email",
+  password: "Password",
+};
+
 const Login = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState(initialFormData);
@@ -50,13 +55,32 @@ const Login = () => {
     }, {});
 
     setFieldErrors(nextErrors);
-    return Object.values(nextErrors).every((hasError) => !hasError);
+
+    const missingFields = Object.entries(nextErrors)
+      .filter(([, hasError]) => hasError)
+      .map(([field]) => fieldLabels[field]);
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!validateRequiredFields()) {
+    const { isValid, missingFields } = validateRequiredFields();
+
+    if (!isValid) {
+      toast({
+        title: "Missing required fields",
+        description: (
+          <span className="inline-flex items-center gap-2">
+            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+            Please fill: {missingFields.join(", ")}.
+          </span>
+        ),
+      });
       return;
     }
 
@@ -116,17 +140,6 @@ const Login = () => {
                     }`}
                   />
                 </div>
-                {fieldErrors.email ? (
-                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
-                    <img
-                      src={warningIcon}
-                      alt=""
-                      aria-hidden
-                      className="h-3.5 w-3.5"
-                    />
-                    Email is required.
-                  </p>
-                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -167,17 +180,6 @@ const Login = () => {
                     />
                   </button>
                 </div>
-                {fieldErrors.password ? (
-                  <p className="flex items-center gap-1 text-xs font-medium text-red-600">
-                    <img
-                      src={warningIcon}
-                      alt=""
-                      aria-hidden
-                      className="h-3.5 w-3.5"
-                    />
-                    Password is required.
-                  </p>
-                ) : null}
               </div>
 
               <Button type="submit" variant="hero" className="w-full">
