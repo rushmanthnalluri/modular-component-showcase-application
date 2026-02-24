@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core palette */
+    --primary: 186 46% 32%;
+    --primary-dark: 186 47% 24%;
+    --primary-light: 187 40% 85%;
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 20 88% 57%;
+    --accent-foreground: 0 0% 100%;
+    --secondary: 43 92% 55%;
+    --secondary-foreground: 202 32% 18%;
+
+    /* Surfaces (light-first theme) */
+    --background: 39 44% 96%;
+    --bg-main: 38 41% 94%;
+    --bg-secondary: 38 35% 90%;
+    --bg-card: 0 0% 100%;
+    --bg-hover: 38 30% 86%;
+    --bg-active: 38 28% 82%;
+    --foreground: 202 32% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 202 32% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 202 32% 18%;
+
+    /* Text hierarchy */
+    --text-primary: 202 32% 18%;
+    --text-secondary: 199 20% 31%;
+    --text-muted: 199 13% 45%;
+    --muted: 38 24% 90%;
+    --muted-foreground: 199 13% 45%;
+
+    /* States */
+    --destructive: 0 71% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 153 51% 39%;
+    --warning: 37 96% 52%;
+    --info: 199 73% 45%;
+
+    /* Borders and focus */
+    --border: 34 25% 79%;
+    --border-light: 34 24% 86%;
+    --input: 34 24% 82%;
+    --ring: 20 88% 57%;
+
+    /* Layout */
+    --radius: 0.9rem;
+    --header-height: 80px;
+
+    /* Shadows */
+    --shadow-glow: 0 14px 35px hsl(var(--accent) / 0.24);
+
+    /* Sidebar (keeping for shadcn) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 202 32% 18%;
+    --sidebar-primary: 186 46% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 35% 90%;
+    --sidebar-accent-foreground: 202 32% 18%;
+    --sidebar-border: 34 25% 79%;
+    --sidebar-ring: 20 88% 57%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply text-foreground antialiased;
+    font-family: "Manrope", system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 15% -10%, hsl(var(--primary-light) / 0.55) 0%, transparent 42%),
+      radial-gradient(circle at 88% 2%, hsl(var(--accent) / 0.14) 0%, transparent 36%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--bg-main)) 100%);
+  }
+
+  h1,
+  h2,
+  h3,
+  .display-font {
+    font-family: "Fraunces", ui-serif, serif;
+    letter-spacing: -0.02em;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@layer components {
+  .glow-green {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent;
+  }
+
+  .glass-card {
+    @apply bg-card/90 backdrop-blur-xl border border-border shadow-lg;
+  }
+
+  .code-block {
+    @apply bg-bg-main rounded-lg p-4 font-mono text-sm overflow-x-auto border border-border shadow-sm;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+}

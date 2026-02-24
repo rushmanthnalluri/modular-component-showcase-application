@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="40" y1="40" x2="600" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="1" stop-color="#1F2937"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#bg)"/>
+  <circle cx="510" cy="84" r="84" fill="#0EA5E9" fill-opacity=".16"/>
+  <circle cx="130" cy="286" r="98" fill="#FB923C" fill-opacity=".13"/>
+  <rect x="112" y="144" width="416" height="72" rx="18" fill="#0B1220" stroke="#334155"/>
+  <rect x="122" y="154" width="396" height="52" rx="14" fill="#0F172A"/>
+  <rect x="136" y="175" width="188" height="14" rx="7" fill="#64748B"/>
+  <rect x="112" y="216" width="416" height="4" rx="2" fill="#FB923C"/>
+  <rect x="112" y="216" width="416" height="4" rx="2" fill="#FB923C" fill-opacity=".45" filter="url(#blur)"/>
+  <defs>
+    <filter id="blur" x="84" y="188" width="472" height="60" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+</svg>

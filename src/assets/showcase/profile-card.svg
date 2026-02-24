@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="640" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF4F5"/>
+      <stop offset="1" stop-color="#FFEBDD"/>
+    </linearGradient>
+    <linearGradient id="card" x1="210" y1="44" x2="430" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121B2D"/>
+      <stop offset="1" stop-color="#0A1220"/>
+    </linearGradient>
+    <linearGradient id="avatarRing" x1="258" y1="84" x2="382" y2="172" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#FB923C"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="360" rx="28" fill="url(#bg)"/>
+  <circle cx="110" cy="74" r="78" fill="#0EA5E9" fill-opacity=".12"/>
+  <circle cx="548" cy="298" r="112" fill="#F97316" fill-opacity=".11"/>
+
+  <rect x="206" y="40" width="228" height="280" rx="28" fill="url(#card)"/>
+  <rect x="206.5" y="40.5" width="227" height="279" rx="27.5" stroke="#334155" stroke-opacity=".85"/>
+
+  <circle cx="320" cy="126" r="56" fill="url(#avatarRing)"/>
+  <circle cx="320" cy="126" r="48" fill="#1E293B"/>
+  <circle cx="320" cy="114" r="15" fill="#E2E8F0"/>
+  <path d="M287 149C292 133 305 124 320 124C335 124 348 133 353 149V158H287V149Z" fill="#CBD5E1"/>
+
+  <rect x="252" y="188" width="136" height="16" rx="8" fill="#F8FAFC"/>
+  <rect x="272" y="214" width="96" height="12" rx="6" fill="#94A3B8"/>
+
+  <rect x="235" y="246" width="52" height="28" rx="14" fill="#132033" stroke="#3A4B62"/>
+  <rect x="294" y="246" width="52" height="28" rx="14" fill="#132033" stroke="#3A4B62"/>
+  <rect x="353" y="246" width="52" height="28" rx="14" fill="#132033" stroke="#3A4B62"/>
+  <text x="261" y="264" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">React</text>
+  <text x="320" y="264" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Vite</text>
+  <text x="379" y="264" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">UI</text>
+</svg>
