@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import Header from "@/features/showcase/layout/Header";
+import { useToast } from "@/use-toast";
+import Header from "@/showcase/Header";
 import userIcon from "@/assets/showcase/user.png";
+import userdarkIcon from "@/assets/showcase/user dark.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
 import eyeIcon from "@/assets/showcase/eye.png";
@@ -12,73 +13,66 @@ import errorIcon from "@/assets/showcase/error.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
-const initialFormData = {
-  fullName: "",
-  email: "",
-  phone: "",
-  password: "",
-  confirmPassword: "",
-};
-
-const initialFieldErrors = {
-  fullName: false,
-  email: false,
-  phone: false,
-  password: false,
-  confirmPassword: false,
-};
-
-const fieldLabels = {
-  fullName: "Full name",
-  email: "Email",
-  phone: "Phone",
-  password: "Password",
-  confirmPassword: "Confirm password",
-};
-
 const Register = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState(initialFormData);
-  const [fieldErrors, setFieldErrors] = useState(initialFieldErrors);
+  const [data, setData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({
+    fullName: false,
+    email: false,
+    phone: false,
+    password: false,
+    confirmPassword: false,
+  });
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setFieldErrors((prev) => {
-      if (!prev[name]) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [name]: value.trim() === "",
-      };
-    });
+    setData((prev) => ({ ...prev, [name]: value }));
+    if (value.trim() !== "") {
+      setErrors((prev) => ({ ...prev, [name]: false }));
+    }
 
     if (name === "password" || name === "confirmPassword") {
       setPasswordMismatch(false);
     }
   };
 
-  const validateRequiredFields = () => {
-    const nextErrors = Object.entries(formData).reduce((acc, [field, value]) => {
-      acc[field] = value.trim() === "";
-      return acc;
-    }, {});
-
-    setFieldErrors(nextErrors);
-
-    const missingFields = Object.entries(nextErrors)
-      .filter(([, hasError]) => hasError)
-      .map(([field]) => fieldLabels[field]);
-
-    return {
-      isValid: missingFields.length === 0,
-      missingFields,
+  const validateForm = () => {
+    const nextErrors = {
+      fullName: data.fullName.trim() === "",
+      email: data.email.trim() === "",
+      phone: data.phone.trim() === "",
+      password: data.password.trim() === "",
+      confirmPassword: data.confirmPassword.trim() === "",
     };
+    setErrors(nextErrors);
+
+    const missingFields = [];
+    if (nextErrors.fullName) {
+      missingFields.push("Full name");
+    }
+    if (nextErrors.email) {
+      missingFields.push("Email");
+    }
+    if (nextErrors.phone) {
+      missingFields.push("Phone");
+    }
+    if (nextErrors.password) {
+      missingFields.push("Password");
+    }
+    if (nextErrors.confirmPassword) {
+      missingFields.push("Confirm password");
+    }
+
+    return missingFields;
   };
 
   const showMissingFieldToasts = (missingFields) => {
@@ -99,14 +93,13 @@ const Register = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const { isValid, missingFields } = validateRequiredFields();
-
-    if (!isValid) {
+    const missingFields = validateForm();
+    if (missingFields.length > 0) {
       showMissingFieldToasts(missingFields);
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (data.password !== data.confirmPassword) {
       setPasswordMismatch(true);
       toast({
         title: "Password mismatch",
@@ -122,11 +115,11 @@ const Register = () => {
     }
 
     toast({
-      title: "Validation successful",
+      title: "Demo registration successful",
       description: (
         <span className="inline-flex items-center gap-2">
           <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
-          Registration data is ready for processing.
+          Frontend demo only. Authentication service is not connected.
         </span>
       ),
       duration: 4000,
@@ -147,17 +140,17 @@ const Register = () => {
             <div className="input-group">
               <img
                 className="left-icon"
-                src={userIcon}
+                src={userdarkIcon}
                 alt=""
                 aria-hidden
               />
               <input
                 type="text"
                 name="fullName"
-                value={formData.fullName}
+                value={data.fullName}
                 onChange={handleChange}
                 placeholder="Full Name"
-                className={fieldErrors.fullName ? "error" : ""}
+                className={errors.fullName ? "error" : ""}
               />
             </div>
 
@@ -166,10 +159,10 @@ const Register = () => {
               <input
                 type="email"
                 name="email"
-                value={formData.email}
+                value={data.email}
                 onChange={handleChange}
                 placeholder="Email"
-                className={fieldErrors.email ? "error" : ""}
+                className={errors.email ? "error" : ""}
               />
             </div>
 
@@ -178,10 +171,10 @@ const Register = () => {
               <input
                 type="tel"
                 name="phone"
-                value={formData.phone}
+                value={data.phone}
                 onChange={handleChange}
                 placeholder="+91 98765 43210"
-                className={fieldErrors.phone ? "error" : ""}
+                className={errors.phone ? "error" : ""}
               />
             </div>
 
@@ -190,10 +183,10 @@ const Register = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                value={formData.password}
+                value={data.password}
                 onChange={handleChange}
                 placeholder="Password"
-                className={fieldErrors.password ? "error" : ""}
+                className={errors.password ? "error" : ""}
               />
               <button
                 type="button"
@@ -210,11 +203,11 @@ const Register = () => {
               <input
                 type="password"
                 name="confirmPassword"
-                value={formData.confirmPassword}
+                value={data.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm Password"
                 className={
-                  fieldErrors.confirmPassword || passwordMismatch ? "error" : ""
+                  errors.confirmPassword || passwordMismatch ? "error" : ""
                 }
               />
             </div>

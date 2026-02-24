@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Search } from "lucide-react";
-import "./SearchBar.css";
+import "./ShowcaseComponents.css";
 
 class SearchBar extends Component {
   constructor(props) {

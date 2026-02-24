@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/use-toast";
 import { themeColors } from "@/lib/theme";
-import "./CodeBlock.css";
+import "./ShowcaseComponents.css";
 
 const customStyle = {
   'code[class*="language-"]': {

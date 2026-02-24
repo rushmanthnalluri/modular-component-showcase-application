@@ -1,4 +1,5 @@
-import { Layout } from "@/features/showcase";
+import { Layout } from "@/showcase";
+import { Linkedin, Mail, Phone } from "lucide-react";
 import "./Contact.css";
 
 const Contact = () => {
@@ -15,31 +16,33 @@ const Contact = () => {
 
             <div className="contact-items">
               <div className="contact-item">
-                <span>Email</span>
+                <span className="contact-label">
+                  <Mail size={16} />
+                  <span>Email</span>
+                </span>
                 <span>rushmanth21@gmail.com</span>
               </div>
               <div className="contact-item">
-                <span>Phone</span>
+                <span className="contact-label">
+                  <Phone size={16} />
+                  <span>Phone</span>
+                </span>
                 <span>9912387093</span>
               </div>
               <div className="contact-item">
-                <span>LinkedIn</span>
-                <span>rushmanthnalluri</span>
+                <span className="contact-label">
+                  <Linkedin size={16} />
+                  <span>LinkedIn</span>
+                </span>
+                <a
+                  href="https://www.linkedin.com/in/rushmanthnalluri/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-link"
+                >
+                  rushmanthnalluri
+                </a>
               </div>
-            </div>
-
-            <div className="contact-actions">
-              <a
-                href="https://www.linkedin.com/in/rushmanthnalluri/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-dark"
-              >
-                Open LinkedIn Profile
-              </a>
-              <a href="mailto:rushmanth21@gmail.com" className="btn-outline">
-                Send Email
-              </a>
             </div>
           </div>
         </div>
