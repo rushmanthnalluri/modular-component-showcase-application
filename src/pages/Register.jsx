@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/features/showcase/layout/Header";
 import userIcon from "@/assets/showcase/user.png";
-import alternateUserIcon from "@/assets/showcase/user (2).png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
 import eyeIcon from "@/assets/showcase/eye.png";
@@ -134,94 +134,102 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-avatar">
-          <img src={alternateUserIcon} alt="Registration avatar" />
-        </div>
-        <h2>Create Account</h2>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="input-group">
-            <img className="left-icon" src={userIcon} alt="" aria-hidden />
-            <input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Full Name"
-              className={fieldErrors.fullName ? "error" : ""}
-            />
+    <>
+      <Header />
+      <div className="auth-page with-navbar">
+        <div className="auth-card">
+          <div className="auth-avatar">
+            <img src={userIcon} alt="Registration avatar" />
           </div>
+          <h2>Create Account</h2>
 
-          <div className="input-group">
-            <img className="left-icon" src={mailIcon} alt="" aria-hidden />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              className={fieldErrors.email ? "error" : ""}
-            />
-          </div>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="input-group">
+              <img
+                className="left-icon"
+                src={userIcon}
+                alt=""
+                aria-hidden
+              />
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="Full Name"
+                className={fieldErrors.fullName ? "error" : ""}
+              />
+            </div>
 
-          <div className="input-group">
-            <img className="left-icon" src={phoneIcon} alt="" aria-hidden />
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+91 98765 43210"
-              className={fieldErrors.phone ? "error" : ""}
-            />
-          </div>
+            <div className="input-group">
+              <img className="left-icon" src={mailIcon} alt="" aria-hidden />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className={fieldErrors.email ? "error" : ""}
+              />
+            </div>
 
-          <div className="input-group">
-            <img className="left-icon" src={lockIcon} alt="" aria-hidden />
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              className={fieldErrors.password ? "error" : ""}
-            />
-            <button
-              type="button"
-              className="icon-toggle"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
+            <div className="input-group">
+              <img className="left-icon" src={phoneIcon} alt="" aria-hidden />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="+91 98765 43210"
+                className={fieldErrors.phone ? "error" : ""}
+              />
+            </div>
+
+            <div className="input-group">
+              <img className="left-icon" src={lockIcon} alt="" aria-hidden />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className={fieldErrors.password ? "error" : ""}
+              />
+              <button
+                type="button"
+                className="icon-toggle"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
+              </button>
+            </div>
+
+            <div className="input-group">
+              <img className="left-icon" src={lockIcon} alt="" aria-hidden />
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
+                className={
+                  fieldErrors.confirmPassword || passwordMismatch ? "error" : ""
+                }
+              />
+            </div>
+
+            <button type="submit" className="auth-submit">
+              Register
             </button>
-          </div>
+          </form>
 
-          <div className="input-group">
-            <img className="left-icon" src={lockIcon} alt="" aria-hidden />
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm Password"
-              className={
-                fieldErrors.confirmPassword || passwordMismatch ? "error" : ""
-              }
-            />
-          </div>
-
-          <button type="submit" className="auth-submit">
-            Register
-          </button>
-        </form>
-
-        <p className="auth-switch">
-          Already have an account? <Link to="/login">Login Here</Link>
-        </p>
+          <p className="auth-switch">
+            Already have an account? <Link to="/login">Login Here</Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
