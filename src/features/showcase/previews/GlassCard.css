@@ -1,0 +1,27 @@
+.glass-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid #fed7aa;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.glass-card-title {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 16pt;
+}
+
+.glass-card-description {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
