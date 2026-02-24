@@ -78,26 +78,32 @@
   }
 
   body {
-    @apply text-foreground antialiased;
-    font-family: "Manrope", system-ui, sans-serif;
-    background:
-      radial-gradient(circle at 15% -10%, hsl(var(--primary-light) / 0.55) 0%, transparent 42%),
-      radial-gradient(circle at 88% 2%, hsl(var(--accent) / 0.14) 0%, transparent 36%),
-      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--bg-main)) 100%);
+    @apply antialiased;
+    margin: 0;
+    min-height: 100vh;
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-size: 10pt;
+    color: #0f172a;
+    background: #f1f5f9;
   }
 
   h1,
   h2,
   h3,
   .display-font {
-    font-family: "Fraunces", ui-serif, serif;
-    letter-spacing: -0.02em;
+    font-family: inherit;
+    letter-spacing: normal;
   }
 
   code,
   pre,
   .font-mono {
-    font-family: "JetBrains Mono", monospace;
+    font-family: "Courier New", monospace;
   }
 }
 
@@ -142,4 +148,13 @@
     background: hsl(var(--border));
     border-radius: 3px;
   }
+}
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 16px;
 }
