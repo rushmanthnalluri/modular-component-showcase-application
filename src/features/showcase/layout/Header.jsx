@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
-  { name: "Components", href: "/#components" },
-  { name: "Categories", href: "/#categories" },
-  { name: "Contact", href: "/contact" },
+  { name: "Components", to: "/#components" },
+  { name: "Categories", to: "/#categories" },
+  { name: "Contact", to: "/contact" },
 ];
 
 const Header = () => {
@@ -29,13 +29,13 @@ const Header = () => {
 
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
-              href={link.href}
+              to={link.to}
               className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm font-semibold tracking-wide"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -71,14 +71,14 @@ const Header = () => {
         >
           <div className="container py-4 flex flex-col gap-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.href}
+                to={link.to}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
             <Button variant="outline" size="sm" className="w-fit" asChild>
               <Link to="/login" onClick={() => setIsMenuOpen(false)}>
