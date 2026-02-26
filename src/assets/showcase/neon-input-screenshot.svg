@@ -1,0 +1,6 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" fill="#0B1220"/>
+  <rect x="290" y="300" width="620" height="96" rx="12" fill="#0F172A" stroke="#FB923C" stroke-width="2"/>
+  <rect x="284" y="294" width="632" height="108" rx="16" stroke="#F97316" stroke-opacity="0.35"/>
+  <text x="330" y="360" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="32">Enter your email...</text>
+</svg>
