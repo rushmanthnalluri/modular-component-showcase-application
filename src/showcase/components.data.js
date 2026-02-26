@@ -7,11 +7,17 @@ import {
   Palette,
 } from "lucide-react";
 import animatedNavbarThumb from "@/assets/showcase/animated-navbar.svg";
+import animatedNavbarScreenshot from "@/assets/showcase/animated-navbar-screenshot.svg";
 import glassCardThumb from "@/assets/showcase/glass-card.svg";
+import glassCardScreenshot from "@/assets/showcase/glass-card-preview.svg";
 import gradientButtonThumb from "@/assets/showcase/gradient-button.svg";
+import gradientButtonScreenshot from "@/assets/showcase/gradient-button-screenshot.svg";
 import neonInputThumb from "@/assets/showcase/neon-input.svg";
+import neonInputScreenshot from "@/assets/showcase/neon-input-screenshot.svg";
 import profileCardThumb from "@/assets/showcase/profile-card.svg";
+import profileCardScreenshot from "@/assets/showcase/profile-card-screenshot.svg";
 import toastNotificationThumb from "@/assets/showcase/toast-notification.svg";
+import toastNotificationScreenshot from "@/assets/showcase/toast-notification-screenshot.svg";
 
 export const categories = [
   { id: "all", name: "All Components", icon: Palette },
@@ -29,8 +35,8 @@ export const components = [
     description: "Animated gradient call-to-action button with hover scaling.",
     category: "buttons",
     tags: ["button", "gradient", "animated"],
-    preview: "gradient-button",
     thumbnail: gradientButtonThumb,
+    screenshot: gradientButtonScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import "./GradientButton.css";
@@ -70,8 +76,8 @@ export default GradientButton;`,
     description: "Glassmorphism card with blur, border glow, and clean typography.",
     category: "cards",
     tags: ["card", "glassmorphism", "ui"],
-    preview: "glass-card",
     thumbnail: glassCardThumb,
+    screenshot: glassCardScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import "./GlassCard.css";
@@ -125,8 +131,8 @@ export default GlassCard;`,
     description: "Dark input field with neon focus ring and glowing border.",
     category: "forms",
     tags: ["input", "form", "neon"],
-    preview: "neon-input",
     thumbnail: neonInputThumb,
+    screenshot: neonInputScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import "./NeonInput.css";
@@ -170,8 +176,8 @@ export default NeonInput;`,
     description: "Rounded navigation bar with animated underline interactions.",
     category: "navigation",
     tags: ["navbar", "navigation", "animated"],
-    preview: "animated-navbar",
     thumbnail: animatedNavbarThumb,
+    screenshot: animatedNavbarScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import "./AnimatedNavbar.css";
@@ -238,8 +244,8 @@ export default AnimatedNavbar;`,
     description: "Status toast with success, error, and info visual variants.",
     category: "feedback",
     tags: ["toast", "notification", "feedback"],
-    preview: "toast-notification",
     thumbnail: toastNotificationThumb,
+    screenshot: toastNotificationScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import "./ToastNotification.css";
@@ -300,8 +306,8 @@ export default ToastNotification;`,
     description: "Team profile card with gradient avatar and skill chips.",
     category: "cards",
     tags: ["profile", "card", "team"],
-    preview: "profile-card",
     thumbnail: profileCardThumb,
+    screenshot: profileCardScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
 import profileAvatar from "@/assets/showcase/profile-avatar.svg";
