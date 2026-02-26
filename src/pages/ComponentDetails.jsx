@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   CodeBlock,
   Layout,
-  previewComponents,
 } from "@/showcase";
 import { components } from "@/showcase/components.data";
 import "./ComponentDetails.css";
@@ -11,11 +10,20 @@ import "./ComponentDetails.css";
 const ComponentDetail = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("jsx");
-  const item = components.find((component) => component.id === id || component.preview === id);
+  const item = components.find((component) => component.id === id);
+  const [previewSrc, setPreviewSrc] = useState("");
 
-  const PreviewComponent = item?.preview
-    ? previewComponents[item.preview]
-    : null;
+  useEffect(() => {
+    setPreviewSrc(item?.screenshot || item?.thumbnail || "");
+  }, [item]);
+
+  const handlePreviewError = () => {
+    if (item?.thumbnail && previewSrc !== item.thumbnail) {
+      setPreviewSrc(item.thumbnail);
+      return;
+    }
+    setPreviewSrc("");
+  };
 
   if (!item) {
     return (
@@ -50,8 +58,13 @@ const ComponentDetail = () => {
               <span>Live Preview</span>
             </div>
             <div className="preview-body">
-              {PreviewComponent ? (
-                <PreviewComponent />
+              {previewSrc ? (
+                <img
+                  src={previewSrc}
+                  alt={`${item.name} screenshot`}
+                  className="preview-screenshot"
+                  onError={handlePreviewError}
+                />
               ) : (
                 <p>Preview not available for this component.</p>
               )}

@@ -117,6 +117,13 @@
   font-size: 13px;
 }
 
+.preview-screenshot {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+}
+
 .code-tabs {
   display: flex;
   gap: 8px;
