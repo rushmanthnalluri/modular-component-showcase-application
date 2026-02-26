@@ -1,0 +1,13 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="700" fill="#F8FAFC"/>
+  <rect x="180" y="150" width="840" height="400" rx="24" fill="#E2E8F0"/>
+  <rect x="450" y="300" width="300" height="88" rx="14" fill="url(#g)"/>
+  <text x="600" y="355" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">Click Me</text>
+  <defs>
+    <linearGradient id="g" x1="450" y1="300" x2="750" y2="388" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D9488"/>
+      <stop offset="0.5" stop-color="#0891B2"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+</svg>
