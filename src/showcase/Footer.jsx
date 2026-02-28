@@ -6,10 +6,10 @@ const footerLinks = [
     title: "Explore",
     links: [
       { name: "All Components", to: "/#components" },
-      { name: "Buttons", to: "/#categories" },
-      { name: "Cards", to: "/#categories" },
-      { name: "Forms", to: "/#categories" },
-      { name: "Navigation", to: "/#categories" },
+      { name: "Buttons", to: "/?category=buttons#categories" },
+      { name: "Cards", to: "/?category=cards#categories" },
+      { name: "Forms", to: "/?category=forms#categories" },
+      { name: "Navigation", to: "/?category=navigation#categories" },
     ],
   },
   {
@@ -25,9 +25,9 @@ const footerLinks = [
     title: "Support",
     links: [
       { name: "Contact Team", to: "/contact" },
-      { name: "Privacy", to: "/" },
-      { name: "Terms", to: "/" },
-      { name: "Help", to: "/" },
+      { name: "Privacy", to: "/privacy" },
+      { name: "Terms", to: "/terms" },
+      { name: "Help", to: "/contact" },
     ],
   },
 ];
@@ -49,8 +49,13 @@ const Footer = () => {
             </p>
             <div className="footer-contact">
               <p>Team: Modular Component Showcase</p>
-              <p>Email: rushmanth21@gmail.com</p>
-              <p>Phone: 9912387093</p>
+              <p>
+                Email:{" "}
+                <a href="mailto:rushmanth21@gmail.com">rushmanth21@gmail.com</a>
+              </p>
+              <p>
+                Phone: <a href="tel:+919912387093">9912387093</a>
+              </p>
             </div>
           </div>
 
