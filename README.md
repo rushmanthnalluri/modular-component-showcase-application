@@ -20,3 +20,4 @@ A single-page application (SPA) designed to demonstrate reusable UI components, 
 - Conditional rendering for different component states and variants
 - Performance-optimized rendering for multiple interactive demos
 - Accessible demos with focus management and keyboard support
+
