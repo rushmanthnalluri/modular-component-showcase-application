@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/showcase/Header";
@@ -20,14 +20,6 @@ const Login = () => {
   const [errors, setErrors] = useState({ username: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-
-    if (token) {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
