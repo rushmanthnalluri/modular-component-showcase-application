@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/showcase/Header";
 import userIcon from "@/assets/showcase/user.png";
@@ -15,7 +15,6 @@ const DEMO_PASSWORD = "1234";
 
 const Login = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [data, setData] = useState({ username: "", password: "" });
   const [errors, setErrors] = useState({ username: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
@@ -101,7 +100,7 @@ const Login = () => {
         duration: 4000,
       });
 
-      navigate("/", { replace: true });
+      setData({ username: "", password: "" });
     } catch (error) {
       toast({
         title: "Login failed",
