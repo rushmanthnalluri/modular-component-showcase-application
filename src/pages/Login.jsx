@@ -10,7 +10,7 @@ import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
-const DEMO_USERNAME = "Rushmanth";
+const DEMO_USERNAME = "Rushmanth21@gmail.com";
 const DEMO_PASSWORD = "1234";
 
 const Login = () => {
