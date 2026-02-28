@@ -119,7 +119,7 @@ const Register = () => {
       description: (
         <span className="inline-flex items-center gap-2">
           <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
-          Frontend demo only. Authentication service is not connected.
+          Frontend demo only. Use Rushmanth / 1234 to login.
         </span>
       ),
       duration: 4000,
