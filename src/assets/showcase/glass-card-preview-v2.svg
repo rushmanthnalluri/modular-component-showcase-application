@@ -1,0 +1,35 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgNew" x1="0" y1="0" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#1E293B"/>
+    </linearGradient>
+    <radialGradient id="auraCyan" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(260 190) rotate(20) scale(280 190)">
+      <stop stop-color="#22D3EE" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="auraPink" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(950 520) rotate(-18) scale(300 220)">
+      <stop stop-color="#F472B6" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#F472B6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panel" x1="370" y1="150" x2="830" y2="550" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.12"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="700" fill="url(#bgNew)"/>
+  <ellipse cx="260" cy="190" rx="250" ry="170" fill="url(#auraCyan)"/>
+  <ellipse cx="950" cy="520" rx="270" ry="190" fill="url(#auraPink)"/>
+
+  <rect x="370" y="150" width="460" height="400" rx="30" fill="url(#panel)" stroke="#FFFFFF" stroke-opacity="0.5"/>
+  <rect x="410" y="190" width="150" height="11" rx="5.5" fill="#E2E8F0" fill-opacity="0.65"/>
+  <rect x="410" y="212" width="240" height="9" rx="4.5" fill="#CBD5E1" fill-opacity="0.55"/>
+
+  <rect x="420" y="255" width="360" height="245" rx="22" fill="#FFFFFF" fill-opacity="0.86" stroke="#FDE68A"/>
+  <rect x="450" y="300" width="230" height="14" rx="7" fill="#334155"/>
+  <rect x="450" y="326" width="290" height="10" rx="5" fill="#94A3B8"/>
+  <rect x="450" y="344" width="250" height="10" rx="5" fill="#94A3B8"/>
+  <rect x="450" y="378" width="130" height="38" rx="19" fill="#0EA5E9"/>
+  <rect x="594" y="378" width="130" height="38" rx="19" fill="#F59E0B"/>
+</svg>
