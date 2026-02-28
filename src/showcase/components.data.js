@@ -9,7 +9,7 @@ import {
 import animatedNavbarThumb from "@/assets/showcase/animated-navbar.svg";
 import animatedNavbarScreenshot from "@/assets/showcase/animated-navbar-screenshot.svg";
 import glassCardThumb from "@/assets/showcase/glass-card.svg";
-import glassCardScreenshot from "@/assets/showcase/glass-card-preview.svg";
+import glassCardScreenshot from "@/assets/showcase/glass-card-preview-v2.svg";
 import gradientButtonThumb from "@/assets/showcase/gradient-button.svg";
 import gradientButtonScreenshot from "@/assets/showcase/gradient-button-screenshot.svg";
 import neonInputThumb from "@/assets/showcase/neon-input.svg";
