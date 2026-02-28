@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/showcase/Header";
 import userIcon from "@/assets/showcase/user.png";
@@ -10,11 +10,24 @@ import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
+const DEMO_USERNAME = "Rushmanth";
+const DEMO_PASSWORD = "1234";
+
 const Login = () => {
   const { toast } = useToast();
-  const [data, setData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: false, password: false });
+  const navigate = useNavigate();
+  const [data, setData] = useState({ username: "", password: "" });
+  const [errors, setErrors] = useState({ username: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+
+    if (token) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -27,14 +40,14 @@ const Login = () => {
 
   const validateForm = () => {
     const nextErrors = {
-      email: data.email.trim() === "",
+      username: data.username.trim() === "",
       password: data.password.trim() === "",
     };
     setErrors(nextErrors);
 
     const missingFields = [];
-    if (nextErrors.email) {
-      missingFields.push("Email");
+    if (nextErrors.username) {
+      missingFields.push("Username");
     }
     if (nextErrors.password) {
       missingFields.push("Password");
@@ -58,7 +71,7 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const missingFields = validateForm();
@@ -67,16 +80,50 @@ const Login = () => {
       return;
     }
 
-    toast({
-      title: "Demo login successful",
-      description: (
-        <span className="inline-flex items-center gap-2">
-          <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
-          Frontend demo only. Authentication service is not connected.
-        </span>
-      ),
-      duration: 4000,
-    });
+    try {
+      setIsSubmitting(true);
+      const inputUsername = data.username.trim();
+      const inputPassword = data.password;
+
+      if (inputUsername !== DEMO_USERNAME || inputPassword !== DEMO_PASSWORD) {
+        throw new Error("Invalid username or password.");
+      }
+
+      localStorage.setItem("authToken", "demo-auth-token");
+      localStorage.setItem(
+        "authUser",
+        JSON.stringify({
+          fullName: DEMO_USERNAME,
+          username: DEMO_USERNAME,
+        })
+      );
+
+      toast({
+        title: "Login successful",
+        description: (
+          <span className="inline-flex items-center gap-2">
+            <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
+            Welcome back, {DEMO_USERNAME}.
+          </span>
+        ),
+        duration: 4000,
+      });
+
+      navigate("/", { replace: true });
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: (
+          <span className="inline-flex items-center gap-2">
+            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+            {error.message}
+          </span>
+        ),
+        duration: 4000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -93,12 +140,12 @@ const Login = () => {
             <div className="input-group">
               <img className="left-icon" src={mailIcon} alt="" aria-hidden />
               <input
-                type="email"
-                name="email"
-                value={data.email}
+                type="text"
+                name="username"
+                value={data.username}
                 onChange={handleChange}
-                placeholder="Enter your email"
-                className={errors.email ? "error" : ""}
+                placeholder="Enter your username"
+                className={errors.username ? "error" : ""}
               />
             </div>
 
@@ -128,8 +175,8 @@ const Login = () => {
               </button>
             </div>
 
-            <button type="submit" className="auth-submit">
-              Get Started
+            <button type="submit" className="auth-submit" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Get Started"}
             </button>
           </form>
 
