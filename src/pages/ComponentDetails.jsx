@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  CodeBlock,
-  Layout,
-} from "@/showcase";
-import { components } from "@/showcase/components.data";
+import CodeBlock from "@/components/CodeBlock";
+import Layout from "@/components/Layout";
+import { components } from "@/data/components.data";
 import "./ComponentDetails.css";
 
 const ComponentDetail = () => {
@@ -51,6 +49,11 @@ const ComponentDetail = () => {
           <span className="component-tag">{item.category}</span>
         </div>
         <p className="details-desc">{item.description}</p>
+        <p className="details-desc">
+          <Link to={`/component/${item.id}/code`} className="back-btn">
+            Open Dedicated Code Route
+          </Link>
+        </p>
 
         <div className="details-grid">
           <div className="preview-box">
@@ -77,6 +80,7 @@ const ComponentDetail = () => {
                 type="button"
                 className={activeTab === "jsx" ? "tab-btn active" : "tab-btn"}
                 onClick={() => setActiveTab("jsx")}
+                aria-label="Show JSX code tab"
               >
                 JSX
               </button>
@@ -85,6 +89,7 @@ const ComponentDetail = () => {
                   type="button"
                   className={activeTab === "css" ? "tab-btn active" : "tab-btn"}
                   onClick={() => setActiveTab("css")}
+                  aria-label="Show CSS code tab"
                 >
                   CSS
                 </button>
@@ -92,7 +97,10 @@ const ComponentDetail = () => {
             </div>
 
             {activeTab === "jsx" ? (
-              <CodeBlock code={item.code.jsx} language="jsx" />
+              <>
+                {/* Declarative tab rendering: active state decides which code block is shown. */}
+                <CodeBlock code={item.code.jsx} language="jsx" />
+              </>
             ) : (
               <CodeBlock code={item.code.css || ""} language="css" />
             )}
