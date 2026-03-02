@@ -1,4 +1,4 @@
-import { Layout } from "@/showcase";
+import Layout from "@/components/Layout";
 import { Linkedin, Mail, Phone } from "lucide-react";
 import "./Contact.css";
 

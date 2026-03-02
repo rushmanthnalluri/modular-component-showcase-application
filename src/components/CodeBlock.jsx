@@ -1,8 +1,22 @@
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useToast } from "@/use-toast";
-import { themeColors } from "@/lib/theme";
 import "./ShowcaseComponents.css";
+
+const themeColors = {
+  comment: "#7a8698",
+  keyword: "#b64d27",
+  string: "#0d7a72",
+  function: "#1b5e8f",
+  variable: "#2f4858",
+  number: "#8a4b14",
+  className: "#0f6e84",
+  tag: "#b23a48",
+  attrName: "#9a6112",
+  punctuation: "#506070",
+  operator: "#44546a",
+  default: "#23323d",
+};
 
 const customStyle = {
   'code[class*="language-"]': {
@@ -83,7 +97,7 @@ const CodeBlock = ({ code, language = "jsx" }) => {
     <div className="code-block-wrap">
       <div className="code-block-head">
         <span className="code-language">{language.toUpperCase()}</span>
-        <button type="button" onClick={handleCopy}>
+        <button type="button" onClick={handleCopy} aria-label="Copy code to clipboard">
           {copied ? "Copied" : "Copy"}
         </button>
       </div>

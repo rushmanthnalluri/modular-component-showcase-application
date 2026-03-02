@@ -7,7 +7,7 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast";
+} from "@/components/Toast";
 
 function ToastTimer({ createdAt, duration, open, onExpire }) {
   const [remainingMs, setRemainingMs] = useState(duration);
@@ -39,10 +39,10 @@ function ToastTimer({ createdAt, duration, open, onExpire }) {
   const progress = duration > 0 ? (remainingMs / duration) * 100 : 0;
 
   return (
-    <div className="mt-2">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+    <div className="toast-timer">
+      <div className="toast-timer-track">
         <div
-          className="h-full rounded-full bg-foreground/60 transition-[width] duration-100"
+          className="toast-timer-fill"
           style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
         />
       </div>
@@ -67,7 +67,7 @@ function Toaster() {
       }) {
         return (
           <Toast key={id} duration={duration} {...props}>
-            <div className="grid gap-1">
+            <div className="toast-content">
               {title ? <ToastTitle>{title}</ToastTitle> : null}
               {description ? <ToastDescription>{description}</ToastDescription> : null}
               {showTimer ? (

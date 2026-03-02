@@ -1,18 +1,8 @@
-import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Layout } from "@/showcase";
+import { Link } from "react-router-dom";
+import Layout from "@/components/Layout";
 import "./NotFound.css";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname,
-    );
-  }, [location.pathname]);
-
   return (
     <Layout>
       <div className="notfound-page">

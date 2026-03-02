@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/use-toast";
-import Header from "@/showcase/Header";
+import Header from "@/components/Header";
 import userIcon from "@/assets/showcase/user.png";
 import userdarkIcon from "@/assets/showcase/user dark.png";
 import mailIcon from "@/assets/showcase/mail.png";
@@ -15,6 +15,7 @@ import "./Auth.css";
 
 const Register = () => {
   const { toast } = useToast();
+  // Controlled form pattern: all input values are sourced from React state.
   const [data, setData] = useState({
     fullName: "",
     email: "",
@@ -80,8 +81,8 @@ const Register = () => {
       toast({
         title: `${fieldName} is required`,
         description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
             Please enter your {fieldName.toLowerCase()}.
           </span>
         ),
@@ -104,8 +105,8 @@ const Register = () => {
       toast({
         title: "Password mismatch",
         description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={errorIcon} alt="" aria-hidden className="h-4 w-4" />
+          <span className="toast-inline">
+            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
             Password and confirm password should be the same.
           </span>
         ),
@@ -117,8 +118,8 @@ const Register = () => {
     toast({
       title: "Demo registration successful",
       description: (
-        <span className="inline-flex items-center gap-2">
-          <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
+        <span className="toast-inline">
+          <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
           Frontend demo only. Use Rushmanth / 1234 to login.
         </span>
       ),
@@ -138,6 +139,9 @@ const Register = () => {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="input-group">
+              <label htmlFor="register-full-name" className="sr-only">
+                Full Name
+              </label>
               <img
                 className="left-icon"
                 src={userdarkIcon}
@@ -145,6 +149,7 @@ const Register = () => {
                 aria-hidden
               />
               <input
+                id="register-full-name"
                 type="text"
                 name="fullName"
                 value={data.fullName}
@@ -155,8 +160,12 @@ const Register = () => {
             </div>
 
             <div className="input-group">
+              <label htmlFor="register-email" className="sr-only">
+                Email
+              </label>
               <img className="left-icon" src={mailIcon} alt="" aria-hidden />
               <input
+                id="register-email"
                 type="email"
                 name="email"
                 value={data.email}
@@ -167,8 +176,12 @@ const Register = () => {
             </div>
 
             <div className="input-group">
+              <label htmlFor="register-phone" className="sr-only">
+                Phone
+              </label>
               <img className="left-icon" src={phoneIcon} alt="" aria-hidden />
               <input
+                id="register-phone"
                 type="tel"
                 name="phone"
                 value={data.phone}
@@ -179,8 +192,12 @@ const Register = () => {
             </div>
 
             <div className="input-group">
+              <label htmlFor="register-password" className="sr-only">
+                Password
+              </label>
               <img className="left-icon" src={lockIcon} alt="" aria-hidden />
               <input
+                id="register-password"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={data.password}
@@ -199,8 +216,12 @@ const Register = () => {
             </div>
 
             <div className="input-group">
+              <label htmlFor="register-confirm-password" className="sr-only">
+                Confirm Password
+              </label>
               <img className="left-icon" src={lockIcon} alt="" aria-hidden />
               <input
+                id="register-confirm-password"
                 type="password"
                 name="confirmPassword"
                 value={data.confirmPassword}
@@ -212,7 +233,11 @@ const Register = () => {
               />
             </div>
 
-            <button type="submit" className="auth-submit">
+            <button
+              type="submit"
+              className="auth-submit"
+              aria-label="Submit registration form"
+            >
               Register
             </button>
           </form>

@@ -67,15 +67,6 @@ function createToast(toastData) {
   return {
     id,
     dismiss: () => dismissToastById(id),
-    update: (nextData) => {
-      dispatch({
-        type: "UPDATE_TOAST",
-        toast: {
-          ...nextData,
-          id,
-        },
-      });
-    },
   };
 }
 
@@ -161,4 +152,4 @@ function useToast() {
   };
 }
 
-export { reducer, toast, useToast };
+export { useToast };

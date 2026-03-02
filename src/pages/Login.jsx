@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
-import Header from "@/showcase/Header";
+import Header from "@/components/Header";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -10,16 +10,20 @@ import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
-const DEMO_USERNAME = "Rushmanth21@gmail.com";
+const DEMO_EMAIL = "Rushmanth21@gmail.com";
 const DEMO_PASSWORD = "1234";
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [data, setData] = useState({ username: "", password: "" });
-  const [errors, setErrors] = useState({ username: false, password: false });
+  const location = useLocation();
+  // Controlled inputs: React state is the single source of truth.
+  const [data, setData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Uncontrolled comparison: optional field managed via ref (not part of re-render state).
+  const referenceCodeRef = useRef(null);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -32,14 +36,14 @@ const Login = () => {
 
   const validateForm = () => {
     const nextErrors = {
-      username: data.username.trim() === "",
+      email: data.email.trim() === "",
       password: data.password.trim() === "",
     };
     setErrors(nextErrors);
 
     const missingFields = [];
-    if (nextErrors.username) {
-      missingFields.push("Username");
+    if (nextErrors.email) {
+      missingFields.push("Email");
     }
     if (nextErrors.password) {
       missingFields.push("Password");
@@ -53,8 +57,8 @@ const Login = () => {
       toast({
         title: `${fieldName} is required`,
         description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
             Please enter your {fieldName.toLowerCase()}.
           </span>
         ),
@@ -74,10 +78,11 @@ const Login = () => {
 
     try {
       setIsSubmitting(true);
-      const inputUsername = data.username.trim();
+      const inputEmail = data.email.trim();
       const inputPassword = data.password;
+      const referenceCode = referenceCodeRef.current?.value.trim() || "";
 
-      if (inputUsername !== DEMO_USERNAME || inputPassword !== DEMO_PASSWORD) {
+      if (inputEmail !== DEMO_EMAIL || inputPassword !== DEMO_PASSWORD) {
         throw new Error("Invalid username or password.");
       }
 
@@ -85,29 +90,31 @@ const Login = () => {
       localStorage.setItem(
         "authUser",
         JSON.stringify({
-          fullName: DEMO_USERNAME,
-          username: DEMO_USERNAME,
+          fullName: DEMO_EMAIL,
+          email: DEMO_EMAIL,
+          referenceCode,
         })
       );
 
       toast({
         title: "Login successful",
         description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={successIcon} alt="" aria-hidden className="h-4 w-4" />
-            Welcome back, {DEMO_USERNAME}.
+          <span className="toast-inline">
+            <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Welcome back, {DEMO_EMAIL}.
           </span>
         ),
         duration: 4000,
       });
 
-      navigate("/", { replace: true });
+      const redirectTo = location.state?.from?.pathname || "/";
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       toast({
         title: "Login failed",
         description: (
-          <span className="inline-flex items-center gap-2">
-            <img src={warningIcon} alt="" aria-hidden className="h-4 w-4" />
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
             {error.message}
           </span>
         ),
@@ -130,20 +137,28 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="input-group">
+              <label htmlFor="login-email" className="sr-only">
+                Email
+              </label>
               <img className="left-icon" src={mailIcon} alt="" aria-hidden />
               <input
-                type="text"
-                name="username"
-                value={data.username}
+                id="login-email"
+                type="email"
+                name="email"
+                value={data.email}
                 onChange={handleChange}
-                placeholder="Enter your username"
-                className={errors.username ? "error" : ""}
+                placeholder="Enter your email"
+                className={errors.email ? "error" : ""}
               />
             </div>
 
             <div className="input-group">
+              <label htmlFor="login-password" className="sr-only">
+                Password
+              </label>
               <img className="left-icon" src={lockIcon} alt="" aria-hidden />
               <input
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={data.password}
@@ -161,13 +176,35 @@ const Login = () => {
               </button>
             </div>
 
+            <label htmlFor="login-reference-code" className="sr-only">
+              Reference Code (Optional)
+            </label>
+            <input
+              id="login-reference-code"
+              type="text"
+              ref={referenceCodeRef}
+              defaultValue="academic-demo"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+
             <div className="forgot-password">
-              <button type="button" className="forgot-password-link">
+              <button
+                type="button"
+                className="forgot-password-link"
+                aria-label="Forgot password"
+              >
                 Forgot Password?
               </button>
             </div>
 
-            <button type="submit" className="auth-submit" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={isSubmitting}
+              aria-label="Submit login form"
+            >
               {isSubmitting ? "Signing in..." : "Get Started"}
             </button>
           </form>
