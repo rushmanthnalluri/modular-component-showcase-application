@@ -310,17 +310,16 @@ export default ToastNotification;`,
     screenshot: profileCardScreenshot,
     code: {
       jsx: `import React, { Component } from "react";
-import profileAvatar from "@/assets/showcase/profile-avatar.svg";
 import "./ProfileCard.css";
 
 class ProfileCard extends Component {
   render() {
-    const skills = ["React", "Vite", "Tailwind"];
+    const skills = ["React", "Vite", "CSS"];
 
     return (
       <div className="profile-card">
         <div className="profile-card-avatar-wrapper">
-          <img src={profileAvatar} alt="Profile avatar" className="profile-card-avatar" />
+          <div className="profile-card-avatar" aria-hidden="true" />
         </div>
         <h3 className="profile-card-title">Team Member</h3>
         <p className="profile-card-role">UI Component Engineer</p>

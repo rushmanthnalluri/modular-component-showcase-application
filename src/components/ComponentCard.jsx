@@ -1,6 +1,8 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import "./ShowcaseComponents.css";
 
+// Props contract: parent passes display data; card remains a pure presentational component.
 const ComponentCard = ({
   id,
   name,
@@ -28,4 +30,4 @@ const ComponentCard = ({
   );
 };
 
-export default ComponentCard;
+export default React.memo(ComponentCard);

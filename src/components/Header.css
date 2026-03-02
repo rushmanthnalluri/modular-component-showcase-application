@@ -11,51 +11,51 @@
 
 .app-header-content {
   height: 80px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
 }
 
 .brand {
-  font-size: 26px;
+  font-size: clamp(20px, 2.6vw, 26px);
   font-weight: bold;
   color: #1a1a1a;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .brand span {
   color: #f97316;
 }
 
-.desktop-nav {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.desktop-nav a {
-  text-decoration: none;
-  color: #475569;
-  font-size: 14px;
-}
-
-.desktop-nav a:hover {
-  color: #111827;
-}
-
 .desktop-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  justify-self: end;
 }
 
+.theme-toggle,
 .btn-outline,
 .btn-dark {
   border-radius: 6px;
   text-decoration: none;
   padding: 8px 12px;
   font-size: 13px;
+}
+
+.theme-toggle {
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: #f8fafc;
 }
 
 .btn-outline {
@@ -77,6 +77,7 @@
   background: #ffffff;
   height: 34px;
   padding: 0 10px;
+  margin-left: auto;
 }
 
 .mobile-nav-wrap {
@@ -97,13 +98,31 @@
   font-size: 14px;
 }
 
+.mobile-nav .theme-toggle {
+  align-self: flex-start;
+}
+
 @media (max-width: 860px) {
-  .desktop-nav,
+  .app-header-content {
+    display: flex;
+    justify-content: space-between;
+  }
+
   .desktop-actions {
     display: none;
   }
 
   .mobile-menu-btn {
     display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    height: 72px;
+  }
+
+  .app-header-content {
+    height: 72px;
   }
 }

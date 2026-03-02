@@ -1,4 +1,4 @@
-import { Layout } from "@/showcase";
+import Layout from "@/components/Layout";
 
 const Help = () => {
   return (

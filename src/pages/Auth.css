@@ -148,6 +148,17 @@
   color: #475569;
 }
 
+.toast-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast-inline-icon {
+  width: 16px;
+  height: 16px;
+}
+
 @media (max-width: 560px) {
   .auth-page {
     padding: 14px;
