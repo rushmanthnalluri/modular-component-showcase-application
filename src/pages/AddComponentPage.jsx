@@ -16,32 +16,26 @@ const INITIAL_FORM = {
   screenshot: "",
 };
 
-const isValidImageUrl = (value) => {
-  if (!value.trim()) {
-    return true;
-  }
-
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-};
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
 
 const AddComponentPage = () => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
-  const { name, description, jsxCode, cssCode, category, thumbnail, screenshot } = formValues;
+  const [fileNames, setFileNames] = useState({ thumbnail: "", screenshot: "" });
+  const { name, description, jsxCode, cssCode, category } = formValues;
   const isValid = Boolean(
     name.trim() &&
       description.trim() &&
       jsxCode.trim() &&
       cssCode.trim() &&
-      category.trim() &&
-      isValidImageUrl(thumbnail) &&
-      isValidImageUrl(screenshot)
+      category.trim()
   );
   const canAddComponent = canAccessAddComponent(getAuthUser());
 
@@ -61,7 +55,7 @@ const AddComponentPage = () => {
     if (value.trim() !== "") {
       setErrors((previous) => ({
         ...previous,
-        [name]: name === "thumbnail" || name === "screenshot" ? !isValidImageUrl(value) : false,
+        [name]: false,
       }));
       return;
     }
@@ -72,6 +66,56 @@ const AddComponentPage = () => {
     }));
   };
 
+  const handleFileChange = async (event) => {
+    const { name, files } = event.target;
+    const selectedFile = files?.[0];
+
+    if (!selectedFile) {
+      setFormValues((previous) => ({
+        ...previous,
+        [name]: "",
+      }));
+      setFileNames((previous) => ({
+        ...previous,
+        [name]: "",
+      }));
+      setErrors((previous) => ({
+        ...previous,
+        [name]: false,
+      }));
+      return;
+    }
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setErrors((previous) => ({
+        ...previous,
+        [name]: true,
+      }));
+      return;
+    }
+
+    try {
+      const imageDataUrl = await readFileAsDataUrl(selectedFile);
+      setFormValues((previous) => ({
+        ...previous,
+        [name]: imageDataUrl,
+      }));
+      setFileNames((previous) => ({
+        ...previous,
+        [name]: selectedFile.name,
+      }));
+      setErrors((previous) => ({
+        ...previous,
+        [name]: false,
+      }));
+    } catch {
+      setErrors((previous) => ({
+        ...previous,
+        [name]: true,
+      }));
+    }
+  };
+
   const validate = () => {
     const nextErrors = {
       name: formValues.name.trim() === "",
@@ -79,8 +123,8 @@ const AddComponentPage = () => {
       jsxCode: formValues.jsxCode.trim() === "",
       cssCode: formValues.cssCode.trim() === "",
       category: formValues.category.trim() === "",
-      thumbnail: !isValidImageUrl(formValues.thumbnail),
-      screenshot: !isValidImageUrl(formValues.screenshot),
+      thumbnail: false,
+      screenshot: false,
     };
 
     setErrors(nextErrors);
@@ -152,32 +196,32 @@ const AddComponentPage = () => {
               <span className="field-error">Category is required.</span>
             ) : null}
 
-            <label htmlFor="component-display-image">Display Image URL</label>
+            <label htmlFor="component-display-image">Display Image File</label>
             <input
               id="component-display-image"
               name="thumbnail"
-              type="url"
-              value={formValues.thumbnail}
-              onChange={handleChange}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
               className={errors.thumbnail ? "error" : ""}
-              placeholder="https://example.com/display-image.png"
             />
+            {fileNames.thumbnail ? <span>{fileNames.thumbnail}</span> : null}
             {errors.thumbnail ? (
-              <span className="field-error">Please enter a valid http(s) URL.</span>
+              <span className="field-error">Please select a valid image file.</span>
             ) : null}
 
-            <label htmlFor="component-preview-image">Code Preview Image URL</label>
+            <label htmlFor="component-preview-image">Code Preview Image File</label>
             <input
               id="component-preview-image"
               name="screenshot"
-              type="url"
-              value={formValues.screenshot}
-              onChange={handleChange}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
               className={errors.screenshot ? "error" : ""}
-              placeholder="https://example.com/code-preview-image.png"
             />
+            {fileNames.screenshot ? <span>{fileNames.screenshot}</span> : null}
             {errors.screenshot ? (
-              <span className="field-error">Please enter a valid http(s) URL.</span>
+              <span className="field-error">Please select a valid image file.</span>
             ) : null}
 
             <label htmlFor="component-jsx">JSX Code</label>
