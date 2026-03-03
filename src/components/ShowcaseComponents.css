@@ -72,16 +72,16 @@
 }
 
 .code-block-wrap {
-  border: 1px solid hsl(var(--border));
+  border: 1px solid #d7dee7;
   border-radius: 10px;
   overflow: hidden;
-  background: hsl(var(--card));
+  background: #ffffff;
 }
 
 .code-block-head {
   height: 44px;
-  border-bottom: 1px solid hsl(var(--border));
-  background: hsl(var(--bg-secondary));
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -90,14 +90,13 @@
 
 .code-language {
   font-size: 12px;
-  color: hsl(var(--foreground));
+  color: #475569;
   font-weight: 600;
 }
 
 .code-block-head button {
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--bg-secondary));
-  color: hsl(var(--foreground));
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
@@ -105,11 +104,11 @@
 }
 
 .code-block-head button:hover {
-  background: hsl(var(--bg-main));
+  background: #f1f5f9;
 }
 
 .code-block-body {
-  background: hsl(var(--card));
+  background: #ffffff;
   overflow: auto;
   max-height: 520px;
 }

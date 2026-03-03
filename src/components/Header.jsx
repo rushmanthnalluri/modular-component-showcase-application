@@ -54,7 +54,7 @@ const Header = () => {
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
           >
-            {theme === "dark" ? "☀" : "☾"}
+            {theme === "dark" ? "Light" : "Dark"}
           </button>
           {isAuthenticated ? (
             <>
@@ -103,7 +103,7 @@ const Header = () => {
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
             >
-              {theme === "dark" ? "☀" : "☾"}
+              {theme === "dark" ? "Light Theme" : "Dark Theme"}
             </button>
             {isAuthenticated ? (
               <>
