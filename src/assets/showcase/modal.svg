@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="modalBg" x1="42" y1="28" x2="602" y2="332" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8F0F8"/>
+      <stop offset="1" stop-color="#F6E9DD"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#modalBg)"/>
+  <rect x="110" y="52" width="420" height="256" rx="16" fill="#0F172A" fill-opacity=".24"/>
+  <rect x="140" y="84" width="360" height="192" rx="16" fill="#FFFFFF"/>
+  <rect x="140" y="84" width="360" height="44" rx="16" fill="#E2E8F0"/>
+  <circle cx="470" cy="106" r="11" fill="#94A3B8"/>
+  <path d="M464 100L476 112M476 100L464 112" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <text x="176" y="112" fill="#334155" font-family="Arial, sans-serif" font-size="16" font-weight="700">Modal</text>
+  <rect x="176" y="150" width="188" height="14" rx="7" fill="#CBD5E1"/>
+  <rect x="176" y="172" width="232" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="176" y="190" width="206" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="176" y="226" width="92" height="32" rx="10" fill="#1E293B"/>
+  <text x="222" y="247" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Close</text>
+</svg>

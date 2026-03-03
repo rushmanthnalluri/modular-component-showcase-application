@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
+import { authenticateUser } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -81,27 +82,43 @@ const Login = () => {
       const inputEmail = data.email.trim();
       const inputPassword = data.password;
       const referenceCode = referenceCodeRef.current?.value.trim() || "";
+      const registeredUser = authenticateUser({
+        email: inputEmail,
+        password: inputPassword,
+      });
 
-      if (inputEmail !== DEMO_EMAIL || inputPassword !== DEMO_PASSWORD) {
+      const isDemoCredentials = inputEmail === DEMO_EMAIL && inputPassword === DEMO_PASSWORD;
+
+      if (!registeredUser && !isDemoCredentials) {
         throw new Error("Invalid username or password.");
       }
 
+      const authUser = registeredUser
+        ? {
+            fullName: registeredUser.fullName,
+            email: registeredUser.email,
+            phone: registeredUser.phone,
+            referenceCode,
+            role: registeredUser.role,
+            isVerifiedDeveloper: Boolean(registeredUser.isVerifiedDeveloper),
+          }
+        : {
+            fullName: DEMO_EMAIL,
+            email: DEMO_EMAIL,
+            referenceCode,
+            role: "admin",
+            isVerifiedDeveloper: true,
+          };
+
       localStorage.setItem("authToken", "demo-auth-token");
-      localStorage.setItem(
-        "authUser",
-        JSON.stringify({
-          fullName: DEMO_EMAIL,
-          email: DEMO_EMAIL,
-          referenceCode,
-        })
-      );
+      localStorage.setItem("authUser", JSON.stringify(authUser));
 
       toast({
         title: "Login successful",
         description: (
           <span className="toast-inline">
             <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
-            Welcome back, {DEMO_EMAIL}.
+            Welcome back, {authUser.fullName || authUser.email}.
           </span>
         ),
         duration: 4000,

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
+import { registerUser } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import userdarkIcon from "@/assets/showcase/user dark.png";
 import mailIcon from "@/assets/showcase/mail.png";
@@ -15,6 +16,7 @@ import "./Auth.css";
 
 const Register = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   // Controlled form pattern: all input values are sourced from React state.
   const [data, setData] = useState({
     fullName: "",
@@ -22,6 +24,7 @@ const Register = () => {
     phone: "",
     password: "",
     confirmPassword: "",
+    role: "user",
   });
   const [errors, setErrors] = useState({
     fullName: false,
@@ -29,6 +32,7 @@ const Register = () => {
     phone: false,
     password: false,
     confirmPassword: false,
+    role: false,
   });
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +57,7 @@ const Register = () => {
       phone: data.phone.trim() === "",
       password: data.password.trim() === "",
       confirmPassword: data.confirmPassword.trim() === "",
+      role: !["developer", "user"].includes(data.role),
     };
     setErrors(nextErrors);
 
@@ -71,6 +76,9 @@ const Register = () => {
     }
     if (nextErrors.confirmPassword) {
       missingFields.push("Confirm password");
+    }
+    if (nextErrors.role) {
+      missingFields.push("Account type");
     }
 
     return missingFields;
@@ -115,16 +123,38 @@ const Register = () => {
       return;
     }
 
-    toast({
-      title: "Demo registration successful",
-      description: (
-        <span className="toast-inline">
-          <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
-          Frontend demo only. Use Rushmanth / 1234 to login.
-        </span>
-      ),
-      duration: 4000,
-    });
+    try {
+      registerUser({
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        role: data.role,
+      });
+
+      toast({
+        title: "Registration successful",
+        description: (
+          <span className="toast-inline">
+            <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Account created as {data.role}. Please login to continue.
+          </span>
+        ),
+        duration: 4000,
+      });
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: (
+          <span className="toast-inline">
+            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
+            {error.message}
+          </span>
+        ),
+        duration: 4000,
+      });
+    }
   };
 
   return (
@@ -189,6 +219,22 @@ const Register = () => {
                 placeholder="+91 98765 43210"
                 className={errors.phone ? "error" : ""}
               />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-role" className="sr-only">
+                Account Type
+              </label>
+              <select
+                id="register-role"
+                name="role"
+                value={data.role}
+                onChange={handleChange}
+                className={errors.role ? "error" : ""}
+              >
+                <option value="user">User</option>
+                <option value="developer">Developer</option>
+              </select>
             </div>
 
             <div className="input-group">

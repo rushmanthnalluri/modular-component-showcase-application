@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
+import { canAccessAddComponent, getAuthUser } from "@/services/authAccess";
 import "./Header.css";
 
 const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [canAddComponent, setCanAddComponent] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setIsAuthenticated(Boolean(localStorage.getItem("authToken")));
+    setCanAddComponent(canAccessAddComponent(getAuthUser()));
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("authUser");
     setIsAuthenticated(false);
+    setCanAddComponent(false);
     setIsMenuOpen(false);
     navigate("/login", { replace: true });
   };
@@ -53,14 +57,21 @@ const Header = () => {
             {theme === "dark" ? "Light" : "Dark"}
           </button>
           {isAuthenticated ? (
-            <button
-              type="button"
-              className="btn-dark"
-              onClick={handleLogout}
-              aria-label="Logout"
-            >
-              Logout
-            </button>
+            <>
+              {canAddComponent ? (
+                <Link className="btn-outline" to="/add-component">
+                  Add Component
+                </Link>
+              ) : null}
+              <button
+                type="button"
+                className="btn-dark"
+                onClick={handleLogout}
+                aria-label="Logout"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <>
               <Link className="btn-outline" to="/login">
@@ -95,14 +106,21 @@ const Header = () => {
               {theme === "dark" ? "Light Theme" : "Dark Theme"}
             </button>
             {isAuthenticated ? (
-              <button
-                type="button"
-                className="btn-dark"
-                onClick={handleLogout}
-                aria-label="Logout"
-              >
-                Logout
-              </button>
+              <>
+                {canAddComponent ? (
+                  <Link to="/add-component" onClick={() => setIsMenuOpen(false)}>
+                    Add Component
+                  </Link>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn-dark"
+                  onClick={handleLogout}
+                  aria-label="Logout"
+                >
+                  Logout
+                </button>
+              </>
             ) : (
               <>
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>
