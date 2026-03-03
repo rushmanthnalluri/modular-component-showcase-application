@@ -18,6 +18,12 @@ import profileCardThumb from "@/assets/showcase/profile-card.svg";
 import profileCardScreenshot from "@/assets/showcase/profile-card-screenshot.svg";
 import toastNotificationThumb from "@/assets/showcase/toast-notification.svg";
 import toastNotificationScreenshot from "@/assets/showcase/toast-notification-screenshot.svg";
+import modalThumb from "@/assets/showcase/modal.svg";
+import modalScreenshot from "@/assets/showcase/modal-screenshot.svg";
+import accordionThumb from "@/assets/showcase/accordion.svg";
+import accordionScreenshot from "@/assets/showcase/accordion-screenshot.svg";
+import tabsThumb from "@/assets/showcase/tabs.svg";
+import tabsScreenshot from "@/assets/showcase/tabs-screenshot.svg";
 
 export const categories = [
   { id: "all", name: "All Components", icon: Palette },
@@ -391,6 +397,200 @@ export default ProfileCard;`,
 .profile-card-skill:hover {
   color: #fdba74;
   background: rgba(249, 115, 22, 0.2);
+}`,
+    },
+  },
+  {
+    id: "accessible-modal",
+    name: "Modal",
+    description: "Accessible modal dialog with controlled open state and Escape-key close.",
+    category: "feedback",
+    tags: ["modal", "dialog", "accessibility"],
+    thumbnail: modalThumb,
+    screenshot: modalScreenshot,
+    code: {
+      jsx: `import React, { useEffect, useState } from "react";
+import "./Modal.css";
+
+const Modal = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
+
+  return (
+    <div>
+      <button type="button" onClick={() => setIsOpen(true)}>
+        Open Modal
+      </button>
+
+      {isOpen ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setIsOpen(false)}>
+          <div
+            className="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="modal-title">Accessible Modal</h2>
+            <p>This dialog closes with the close button, backdrop click, or Escape key.</p>
+            <button type="button" onClick={() => setIsOpen(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export default Modal;`,
+      css: `.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.modal-panel {
+  width: min(420px, 92vw);
+  border-radius: 12px;
+  padding: 20px;
+  background: #ffffff;
+  color: #0f172a;
+}`,
+    },
+  },
+  {
+    id: "stateful-accordion",
+    name: "Accordion",
+    description: "Expand and collapse sections with state-driven conditional rendering.",
+    category: "navigation",
+    tags: ["accordion", "collapse", "state"],
+    thumbnail: accordionThumb,
+    screenshot: accordionScreenshot,
+    code: {
+      jsx: `import React, { useState } from "react";
+import "./Accordion.css";
+
+const items = [
+  { id: "a1", title: "What is React state?", content: "State stores component data over time." },
+  { id: "a2", title: "Why controlled UI?", content: "It keeps behavior predictable and testable." },
+  { id: "a3", title: "What is conditional rendering?", content: "Render elements only when conditions are true." },
+];
+
+const Accordion = () => {
+  const [openItemId, setOpenItemId] = useState("a1");
+
+  const toggleItem = (id) => {
+    setOpenItemId((previousId) => (previousId === id ? "" : id));
+  };
+
+  return (
+    <div className="accordion">
+      {items.map((item) => (
+        <section key={item.id} className="accordion-item">
+          <button type="button" onClick={() => toggleItem(item.id)}>
+            {item.title}
+          </button>
+          {openItemId === item.id ? <p>{item.content}</p> : null}
+        </section>
+      ))}
+    </div>
+  );
+};
+
+export default Accordion;`,
+      css: `.accordion {
+  border: 1px solid #dbe2eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px;
+}
+
+.accordion-item:last-child {
+  border-bottom: none;
+}`,
+    },
+  },
+  {
+    id: "derived-state-tabs",
+    name: "Tabs",
+    description: "Tabbed interface with active panel derived from selected tab state.",
+    category: "navigation",
+    tags: ["tabs", "panel", "derived-state"],
+    thumbnail: tabsThumb,
+    screenshot: tabsScreenshot,
+    code: {
+      jsx: `import React, { useMemo, useState } from "react";
+import "./Tabs.css";
+
+const tabItems = [
+  { id: "overview", label: "Overview", content: "Overview panel content." },
+  { id: "api", label: "API", content: "API panel content." },
+  { id: "examples", label: "Examples", content: "Examples panel content." },
+];
+
+const Tabs = () => {
+  const [activeTabId, setActiveTabId] = useState("overview");
+
+  const activeTab = useMemo(
+    () => tabItems.find((item) => item.id === activeTabId) || tabItems[0],
+    [activeTabId]
+  );
+
+  return (
+    <div className="tabs">
+      <div className="tabs-list" role="tablist" aria-label="Documentation tabs">
+        {tabItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTabId === item.id}
+            onClick={() => setActiveTabId(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <section role="tabpanel" className="tabs-panel">
+        {activeTab.content}
+      </section>
+    </div>
+  );
+};
+
+export default Tabs;`,
+      css: `.tabs-list {
+  display: flex;
+  gap: 8px;
+}
+
+.tabs-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #dbe2eb;
+  border-radius: 10px;
 }`,
     },
   },

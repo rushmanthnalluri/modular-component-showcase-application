@@ -1,14 +1,46 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import Layout from "@/components/Layout";
-import { components } from "@/data/components.data";
+import { fetchComponentById } from "@/services/mockApi";
 import "./ComponentDetails.css";
 
 const ComponentCode = () => {
   const { id } = useParams();
-  const item = components.find((componentItem) => componentItem.id === id);
+  const [item, setItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadItem = async () => {
+      setIsLoading(true);
+      const component = await fetchComponentById(id);
+
+      if (isMounted) {
+        setItem(component);
+        setIsLoading(false);
+      }
+    };
+
+    loadItem();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   if (!item) {
+    if (isLoading) {
+      return (
+        <Layout>
+          <div className="layout-container details-state">
+            <h2>Loading component...</h2>
+          </div>
+        </Layout>
+      );
+    }
+
     return (
       <Layout>
         <div className="layout-container details-state">

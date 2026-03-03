@@ -2,14 +2,35 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import Layout from "@/components/Layout";
-import { components } from "@/data/components.data";
+import { fetchComponentById } from "@/services/mockApi";
 import "./ComponentDetails.css";
 
 const ComponentDetail = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("jsx");
-  const item = components.find((component) => component.id === id);
+  const [item, setItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [previewSrc, setPreviewSrc] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadItem = async () => {
+      setIsLoading(true);
+      const component = await fetchComponentById(id);
+
+      if (isMounted) {
+        setItem(component);
+        setIsLoading(false);
+      }
+    };
+
+    loadItem();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   useEffect(() => {
     setPreviewSrc(item?.screenshot || item?.thumbnail || "");
@@ -24,6 +45,16 @@ const ComponentDetail = () => {
   };
 
   if (!item) {
+    if (isLoading) {
+      return (
+        <Layout>
+          <div className="layout-container details-state">
+            <h2>Loading component...</h2>
+          </div>
+        </Layout>
+      );
+    }
+
     return (
       <Layout>
         <div className="layout-container details-state">
@@ -49,12 +80,6 @@ const ComponentDetail = () => {
           <span className="component-tag">{item.category}</span>
         </div>
         <p className="details-desc">{item.description}</p>
-        <p className="details-desc">
-          <Link to={`/component/${item.id}/code`} className="back-btn">
-            Open Dedicated Code Route
-          </Link>
-        </p>
-
         <div className="details-grid">
           <div className="preview-box">
             <div className="preview-head">

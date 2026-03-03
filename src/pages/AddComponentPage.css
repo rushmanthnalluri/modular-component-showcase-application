@@ -1,0 +1,93 @@
+.add-component-page {
+  padding-top: 112px;
+  padding-bottom: 32px;
+}
+
+.add-component-card {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #dbe2eb;
+  box-shadow: 0 10px 20px #cfcfcf;
+  padding: 24px;
+}
+
+.add-component-card h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #1c1c1e;
+}
+
+.add-component-card p {
+  margin: 8px 0 18px;
+  color: #475569;
+}
+
+.add-component-card form {
+  display: grid;
+  gap: 8px;
+}
+
+.add-component-card label {
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.add-component-card input,
+.add-component-card select,
+.add-component-card textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #111827;
+  font-size: 14px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.add-component-card textarea {
+  resize: vertical;
+}
+
+.add-component-card input.error,
+.add-component-card select.error,
+.add-component-card textarea.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+.add-component-submit {
+  margin-top: 10px;
+  border: none;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #1c1c1e;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.add-component-submit:hover {
+  background: #363636;
+}
+
+@media (max-width: 560px) {
+  .add-component-page {
+    padding-top: 96px;
+  }
+
+  .add-component-card {
+    padding: 16px;
+  }
+}
