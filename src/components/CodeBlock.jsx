@@ -34,52 +34,6 @@ const darkColors = {
   default: "#f1f5f9",
 };
 
-const customStyle = {
-  'code[class*="language-"]': {
-    color: themeColors.default,
-    background: "transparent",
-    textShadow: "none",
-    fontFamily: "JetBrains Mono, monospace",
-    fontSize: "0.875rem",
-    lineHeight: "1.5",
-  },
-  'pre[class*="language-"]': {
-    color: themeColors.default,
-    background: "transparent",
-    textShadow: "none",
-    fontFamily: "JetBrains Mono, monospace",
-    fontSize: "0.875rem",
-    lineHeight: "1.5",
-    margin: 0,
-    padding: 0,
-  },
-  comment: {
-    color: themeColors.comment,
-    fontStyle: "italic",
-  },
-  punctuation: {
-    color: themeColors.punctuation,
-  },
-  string: {
-    color: themeColors.string,
-    fontStyle: "italic",
-  },
-  number: {
-    color: themeColors.number,
-  },
-  function: {
-    color: themeColors.function,
-  },
-  keyword: {
-    color: themeColors.keyword,
-  },
-  operator: {
-    color: themeColors.operator,
-  },
-  "class-name": {
-    color: themeColors.className,
-  },
-};
 
 const CodeBlock = ({ code, language = "jsx" }) => {
   const [copied, setCopied] = useState(false);
