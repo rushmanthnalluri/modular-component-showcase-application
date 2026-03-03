@@ -9,6 +9,7 @@ import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AddComponentPage from "./pages/AddComponentPage";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,14 @@ const App = () => {
           <Route path="/help" element={<Help />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route
+            path="/add-component"
+            element={(
+              <ProtectedRoute>
+                <AddComponentPage />
+              </ProtectedRoute>
+            )}
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
