@@ -68,7 +68,7 @@ const Footer = () => {
 
         <div className="footer-bottom">
           <p>
-            Copyright {currentYear} Modular Component Showcase. All rights
+            © {currentYear} Modular Component Showcase. All rights
             reserved.
           </p>
         </div>
