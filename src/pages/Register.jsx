@@ -14,6 +14,8 @@ import errorIcon from "@/assets/showcase/error.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
+const PHONE_DIGITS_REGEX = /^\d{10,15}$/;
+
 const Register = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,9 +41,10 @@ const Register = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    const nextValue = name === "phone" ? value.replace(/\D/g, "").slice(0, 15) : value;
 
-    setData((prev) => ({ ...prev, [name]: value }));
-    if (value.trim() !== "") {
+    setData((prev) => ({ ...prev, [name]: nextValue }));
+    if (nextValue.trim() !== "") {
       setErrors((prev) => ({ ...prev, [name]: false }));
     }
 
@@ -116,6 +119,21 @@ const Register = () => {
           <span className="toast-inline">
             <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
             Password and confirm password should be the same.
+          </span>
+        ),
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (!PHONE_DIGITS_REGEX.test(data.phone.trim())) {
+      setErrors((prev) => ({ ...prev, phone: true }));
+      toast({
+        title: "Invalid phone number",
+        description: (
+          <span className="toast-inline">
+            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Phone number must contain 10 to 15 digits only.
           </span>
         ),
         duration: 4000,
@@ -216,7 +234,10 @@ const Register = () => {
                 name="phone"
                 value={data.phone}
                 onChange={handleChange}
-                placeholder="+91 98765 43210"
+                placeholder="9876543210"
+                inputMode="numeric"
+                pattern="[0-9]{10,15}"
+                maxLength={15}
                 className={errors.phone ? "error" : ""}
               />
             </div>

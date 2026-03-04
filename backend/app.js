@@ -114,6 +114,14 @@ function createComponentId(name) {
     return `${base}-${suffix}`;
 }
 
+function normalizePhone(phone) {
+    return String(phone || "").replace(/\D/g, "");
+}
+
+function isValidPhone(phone) {
+    return /^\d{10,15}$/.test(phone);
+}
+
 function createAuthToken(userId) {
     return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
 }
@@ -166,9 +174,13 @@ app.get("/health", (_req, res) => {
 app.post("/api/auth/register", async (req, res) => {
     try {
         const { fullName = "", email = "", phone = "", password = "", role = "user" } = req.body || {};
+        const normalizedPhone = normalizePhone(phone);
         
         if (!fullName.trim() || !email.trim() || !password.trim()) {
             return res.status(400).json({ message: "Full name, email and password are required." });
+        }
+        if (!isValidPhone(normalizedPhone)) {
+            return res.status(400).json({ message: "Phone number must be 10 to 15 digits." });
         }
         if (password.length < 6) {
             return res.status(400).json({ message: "Password should be at least 6 characters." });
@@ -186,7 +198,7 @@ app.post("/api/auth/register", async (req, res) => {
         await User.create({
             fullName: fullName.trim(),
             email: normalizedEmail,
-            phone: phone.trim(),
+            phone: normalizedPhone,
             passwordHash,
             role: normalizedRole,
             isVerifiedDeveloper: normalizedRole === "developer",
@@ -231,6 +243,42 @@ app.post("/api/auth/login", async (req, res) => {
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "Unable to login right now." });
+    }
+});
+
+app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+        const { email = "", phone = "", newPassword = "" } = req.body || {};
+        if (!email.trim() || !phone.trim() || !newPassword.trim()) {
+            return res.status(400).json({ message: "Email, phone and new password are required." });
+        }
+
+        const normalizedPhone = normalizePhone(phone);
+        if (!isValidPhone(normalizedPhone)) {
+            return res.status(400).json({ message: "Phone number must be 10 to 15 digits." });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password should be at least 6 characters." });
+        }
+
+        const user = await User.findOne({ email: email.trim().toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: "Account not found." });
+        }
+
+        const savedPhone = normalizePhone(user.phone);
+        if (savedPhone !== normalizedPhone) {
+            return res.status(400).json({ message: "Phone number does not match this account." });
+        }
+
+        user.passwordHash = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        return res.json({ message: "Password reset successful. Please login with your new password." });
+    } catch (error) {
+        console.error("Forgot password error:", error.message, error.stack);
+        return res.status(500).json({ message: "Unable to reset password right now." });
     }
 });
 

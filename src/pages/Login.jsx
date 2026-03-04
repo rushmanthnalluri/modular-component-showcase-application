@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
-import { authenticateUser } from "@/services/authAccess";
+import { authenticateUser, forgotPassword } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -61,6 +61,50 @@ const Login = () => {
         duration: 4000,
       });
     });
+  };
+
+  const handleForgotPassword = async () => {
+    const email = window.prompt("Enter your registered email:")?.trim() || "";
+    if (!email) {
+      return;
+    }
+
+    const phone = (window.prompt("Enter your registered phone number (digits only):") || "")
+      .replace(/\D/g, "")
+      .trim();
+    if (!phone) {
+      return;
+    }
+
+    const newPassword = window.prompt("Enter your new password (minimum 6 characters):") || "";
+    if (!newPassword) {
+      return;
+    }
+
+    try {
+      await forgotPassword({ email, phone, newPassword });
+      toast({
+        title: "Password reset successful",
+        description: (
+          <span className="toast-inline">
+            <img src={successIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Use your new password to login.
+          </span>
+        ),
+        duration: 4000,
+      });
+    } catch (error) {
+      toast({
+        title: "Password reset failed",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            {error.message}
+          </span>
+        ),
+        duration: 4000,
+      });
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -164,6 +208,7 @@ const Login = () => {
                 type="button"
                 className="forgot-password-link"
                 aria-label="Forgot password"
+                onClick={handleForgotPassword}
               >
                 Forgot Password?
               </button>
