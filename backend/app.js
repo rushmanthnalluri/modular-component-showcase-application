@@ -4,11 +4,13 @@ import cors from "cors";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { randomBytes } from "node:crypto";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 const app = express();
 let mongoMode = "disconnected";
 let memoryServer = null;
+const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
 
 const defaultLocalOrigins = ["http://localhost:5173", "http://localhost:8080", "http://localhost:8081"];
 
@@ -86,7 +88,7 @@ function createComponentId(name) {
 }
 
 function createAuthToken(userId) {
-    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
 }
 
 async function requireAuth(req, res, next) {
@@ -97,7 +99,7 @@ async function requireAuth(req, res, next) {
             return res.status(401).json({ message: "Authentication required." });
         }
 
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const payload = jwt.verify(token, jwtSecret);
         const user = await User.findById(payload.userId).select(
             "fullName email phone role isVerifiedDeveloper"
         );
@@ -263,8 +265,7 @@ const PORT = Number(process.env.PORT || 5000);
 const mongoUri = process.env.MONGODB_URI;
 
 if (!process.env.JWT_SECRET) {
-    console.error("JWT_SECRET is required in backend/.env");
-    process.exit(1);
+    console.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
 }
 
 async function connectWithFallback() {

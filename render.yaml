@@ -15,6 +15,6 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: FRONTEND_ORIGINS
         sync: false
