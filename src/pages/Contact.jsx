@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { APP_INFO } from "@/data/app.constants";
 import { Linkedin, Mail, Phone } from "lucide-react";
 import "./Contact.css";
 
@@ -20,14 +21,18 @@ const Contact = () => {
                   <Mail size={16} />
                   <span>Email</span>
                 </span>
-                <span>rushmanth21@gmail.com</span>
+                <a href={`mailto:${APP_INFO.supportEmail}`} className="contact-link">
+                  {APP_INFO.supportEmail}
+                </a>
               </div>
               <div className="contact-item">
                 <span className="contact-label">
                   <Phone size={16} />
                   <span>Phone</span>
                 </span>
-                <span>9912387093</span>
+                <a href={`tel:${APP_INFO.supportPhoneRaw}`} className="contact-link">
+                  {APP_INFO.supportPhoneDisplay}
+                </a>
               </div>
               <div className="contact-item">
                 <span className="contact-label">
@@ -35,12 +40,12 @@ const Contact = () => {
                   <span>LinkedIn</span>
                 </span>
                 <a
-                  href="https://www.linkedin.com/in/rushmanthnalluri/"
+                  href={APP_INFO.linkedInUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="contact-link"
                 >
-                  rushmanthnalluri
+                  {APP_INFO.linkedInHandle}
                 </a>
               </div>
             </div>
