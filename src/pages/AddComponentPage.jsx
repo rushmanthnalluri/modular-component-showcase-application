@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { categories } from "@/data/components.data";
@@ -29,6 +29,8 @@ const AddComponentPage = () => {
   const [formValues, setFormValues] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [fileNames, setFileNames] = useState({ thumbnail: "", screenshot: "" });
+  const [canAddComponent, setCanAddComponent] = useState(null);
+  const [submitError, setSubmitError] = useState("");
   const { name, description, jsxCode, cssCode, category } = formValues;
   const isValid = Boolean(
     name.trim() &&
@@ -37,7 +39,22 @@ const AddComponentPage = () => {
       cssCode.trim() &&
       category.trim()
   );
-  const canAddComponent = canAccessAddComponent(getAuthUser());
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAuthUser = async () => {
+      const authUser = await getAuthUser();
+      if (isMounted) {
+        setCanAddComponent(canAccessAddComponent(authUser));
+      }
+    };
+
+    loadAuthUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const availableCategories = useMemo(
     () => categories.filter((category) => category.id !== "all"),
@@ -131,16 +148,25 @@ const AddComponentPage = () => {
     return !Object.values(nextErrors).some(Boolean);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitError("");
 
     if (!validate()) {
       return;
     }
 
-    addCustomComponent(formValues);
-    navigate("/", { replace: true });
+    try {
+      await addCustomComponent(formValues);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setSubmitError(error.message || "Unable to save component right now.");
+    }
   };
+
+  if (canAddComponent === null) {
+    return null;
+  }
 
   if (!canAddComponent) {
     return <Navigate to="/" replace />;
@@ -253,6 +279,7 @@ const AddComponentPage = () => {
             >
               Add Component
             </button>
+            {submitError ? <span className="field-error">{submitError}</span> : null}
           </form>
         </div>
       </div>

@@ -1,8 +1,11 @@
-const REGISTERED_USERS_KEY = "registeredUsers";
+import { apiRequest } from "@/services/apiClient";
 
-export function getAuthUser() {
+const AUTH_USER_KEY = "authUser";
+const AUTH_TOKEN_KEY = "authToken";
+
+function readStoredAuthUser() {
   try {
-    const raw = localStorage.getItem("authUser");
+    const raw = localStorage.getItem(AUTH_USER_KEY);
     if (!raw) {
       return null;
     }
@@ -14,58 +17,73 @@ export function getAuthUser() {
   }
 }
 
-function getStoredUsers() {
-  try {
-    const raw = localStorage.getItem(REGISTERED_USERS_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+function notifyAuthChange() {
+  window.dispatchEvent(new Event("auth-state-changed"));
 }
 
-function setStoredUsers(users) {
-  localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+export async function getAuthUser() {
+  return readStoredAuthUser();
 }
 
-export function registerUser({ fullName, email, phone, password, role }) {
-  const users = getStoredUsers();
-  const normalizedEmail = email.trim().toLowerCase();
+export async function registerUser({ fullName, email, phone, password, role }) {
+  await apiRequest("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      fullName,
+      email,
+      phone,
+      password,
+      role,
+    }),
+  });
+}
 
-  if (users.some((user) => String(user.email || "").toLowerCase() === normalizedEmail)) {
-    throw new Error("An account with this email already exists.");
-  }
+export async function authenticateUser({ email, password }) {
+  const payload = await apiRequest("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 
-  const normalizedRole = role === "developer" ? "developer" : "user";
+  localStorage.setItem(AUTH_TOKEN_KEY, payload.token);
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload.user));
+  notifyAuthChange();
 
-  const newUser = {
-    fullName: fullName.trim(),
-    email: normalizedEmail,
-    phone: phone.trim(),
-    password,
-    role: normalizedRole,
-    isVerifiedDeveloper: normalizedRole === "developer",
+  return payload.user;
+}
+
+export async function logoutUser() {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+  notifyAuthChange();
+}
+
+export function subscribeToAuthUser(onChange) {
+  const emitState = () => {
+    onChange(readStoredAuthUser());
   };
 
-  setStoredUsers([...users, newUser]);
-  return newUser;
+  const handleStorage = (event) => {
+    if (!event.key || event.key === AUTH_USER_KEY || event.key === AUTH_TOKEN_KEY) {
+      emitState();
+    }
+  };
+
+  const handleCustom = () => {
+    emitState();
+  };
+
+  emitState();
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener("auth-state-changed", handleCustom);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener("auth-state-changed", handleCustom);
+  };
 }
 
-export function authenticateUser({ email, password }) {
-  const users = getStoredUsers();
-  const normalizedEmail = email.trim().toLowerCase();
-
-  const user = users.find(
-    (item) =>
-      String(item.email || "").toLowerCase() === normalizedEmail &&
-      item.password === password
-  );
-
-  return user || null;
+export function isAuthenticated() {
+  return Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
 }
 
 export function canAccessAddComponent(user) {

@@ -1,53 +1,38 @@
 import { components } from "@/data/components.data";
+import { apiRequest } from "@/services/apiClient";
 
-const STORAGE_KEY = "customComponents";
-
-function createSlug(value) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+function mapCloudComponent(rawItem) {
+  return {
+    id: String(rawItem.id || ""),
+    name: String(rawItem.name || "Untitled Component"),
+    description: String(rawItem.description || ""),
+    category: String(rawItem.category || "all"),
+    tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
+    thumbnail: String(rawItem.thumbnail || ""),
+    screenshot: String(rawItem.screenshot || ""),
+    code: {
+      jsx: String(rawItem.code?.jsx || ""),
+      css: String(rawItem.code?.css || ""),
+    },
+  };
 }
 
-function getStoredCustomComponents() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
+async function getCloudComponents() {
+  const payload = await apiRequest("/components", {
+    method: "GET",
+  });
 
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return payload
+    .map((item) => mapCloudComponent(item))
+    .filter((item) => item.id);
 }
 
-function setStoredCustomComponents(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-function createUniqueId(name, existingItems) {
-  const base = createSlug(name) || "custom-component";
-  let candidate = base;
-  let suffix = 1;
-
-  while (existingItems.some((item) => item.id === candidate)) {
-    suffix += 1;
-    candidate = `${base}-${suffix}`;
-  }
-
-  return candidate;
-}
-
-export function getAllComponents() {
-  const customComponents = getStoredCustomComponents();
+export async function getAllComponents() {
+  const customComponents = await getCloudComponents();
   return [...components, ...customComponents];
 }
 
-export function addCustomComponent({
+export async function addCustomComponent({
   name,
   description,
   jsxCode,
@@ -56,29 +41,24 @@ export function addCustomComponent({
   thumbnail = "",
   screenshot = "",
 }) {
-  const allComponents = getAllComponents();
-  const id = createUniqueId(name, allComponents);
   const trimmedName = name.trim();
   const trimmedDescription = description.trim();
   const trimmedThumbnail = thumbnail.trim();
   const trimmedScreenshot = screenshot.trim();
+  const trimmedCategory = category.trim();
 
-  const newComponent = {
-    id,
-    name: trimmedName,
-    description: trimmedDescription,
-    category,
-    tags: [category, "user-added", ...trimmedName.toLowerCase().split(/\s+/)].slice(0, 5),
-    thumbnail: trimmedThumbnail,
-    screenshot: trimmedScreenshot,
-    code: {
-      jsx: jsxCode.trim(),
-      css: cssCode.trim(),
-    },
-  };
+  const payload = await apiRequest("/components", {
+    method: "POST",
+    body: JSON.stringify({
+      name: trimmedName,
+      description: trimmedDescription,
+      category: trimmedCategory,
+      jsxCode: jsxCode.trim(),
+      cssCode: cssCode.trim(),
+      thumbnail: trimmedThumbnail,
+      screenshot: trimmedScreenshot,
+    }),
+  });
 
-  const updatedCustomComponents = [...getStoredCustomComponents(), newComponent];
-  setStoredCustomComponents(updatedCustomComponents);
-
-  return newComponent;
+  return mapCloudComponent(payload);
 }
