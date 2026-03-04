@@ -207,18 +207,18 @@ const Register = () => {
               />
             </div>
 
-            <div className="input-group">
-              <label htmlFor="register-email" className="sr-only">
-                Email
-              </label>
-              <img className="left-icon" src={mailIcon} alt="" aria-hidden />
-              <input
-                id="register-email"
-                type="email"
-                name="email"
-                value={data.email}
-                onChange={handleChange}
-                placeholder="Email"
+            <div className="captcha-group">
+              {captcha.image ? (
+                <img
+                  className="captcha-image"
+                  src={`data:image/png;base64,${captcha.image}`}
+                  alt="Captcha"
+                />
+              ) : (
+                <div className="captcha-placeholder">Loading captcha...</div>
+              )}
+              <button
+                type="button"
                 className={errors.email ? "error" : ""}
               />
             </div>

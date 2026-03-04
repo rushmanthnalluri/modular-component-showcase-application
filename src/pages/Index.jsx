@@ -55,7 +55,6 @@ const Index = () => {
   }, [location.search]);
 
   const filteredComponents = useMemo(() => {
-    // Declarative rendering: derived data is computed from current state and props.
     const searchText = searchQuery.trim().toLowerCase();
 
     return componentItems.filter((item) => {
@@ -84,8 +83,6 @@ const Index = () => {
                 Explore reusable components and prop-driven interactions in a
                 clean single-page React application.
               </p>
-              {/* Lifted state pattern: Index owns search state; SearchBar updates it via props. */}
-              {/* State-based re-rendering: setSearchQuery triggers React to re-evaluate this tree. */}
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
           </div>
@@ -94,7 +91,6 @@ const Index = () => {
         <section id="components" className="index-components">
           <div className="layout-container">
             <div id="categories" className="category-block">
-              {/* Lifted state pattern: Index owns category state; CategoryFilter receives value + setter. */}
               <CategoryFilter
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}
@@ -108,7 +104,6 @@ const Index = () => {
               </div>
             ) : filteredComponents.length > 0 ? (
               <div className="component-grid">
-                {/* Declarative list rendering: UI is produced from data, not manual DOM operations. */}
                 {filteredComponents.map((component) => (
                   <ComponentCard
                     key={component.id}

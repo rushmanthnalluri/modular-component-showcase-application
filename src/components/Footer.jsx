@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { APP_INFO } from "@/data/app.constants";
 import "./Footer.css";
 
 const quickLinks = [
@@ -12,7 +13,7 @@ const quickLinks = [
 const supportLinks = [
   { name: "Privacy", to: "/privacy" },
   { name: "Terms", to: "/terms" },
-  { name: "Contact Team", to: "/contact" },
+  { name: "Contact", to: "/contact" },
   { name: "Help", to: "/help" },
 ];
 
@@ -25,20 +26,26 @@ const Footer = () => {
         <div className="footer-main" role="presentation">
           <section className="footer-section footer-left" aria-label="Footer brand and contact">
             <Link to="/" className="footer-brand">
-              Modular Showcase<span>.</span>
+              {APP_INFO.shortName}<span>.</span>
             </Link>
             <p className="footer-description">
               Internal component library for building modular and reusable user
               interfaces.
             </p>
             <div className="footer-contact">
-              <p>Team: Modular Component Showcase</p>
               <p>
-                Email:{" "}
-                <a href="mailto:rushmanth21@gmail.com">rushmanth21@gmail.com</a>
+                <span className="footer-contact-label">Email:</span>
+                <span className="footer-contact-value">
+                  <a href={`mailto:${APP_INFO.supportEmail}`}>{APP_INFO.supportEmail}</a>
+                </span>
               </p>
               <p>
-                Phone: <a href="tel:+919912387093">9912387093</a>
+                <span className="footer-contact-label">Phone:</span>
+                <span className="footer-contact-value">
+                  <a href={`tel:${APP_INFO.supportPhoneRaw}`}>
+                    {APP_INFO.supportPhoneDisplay}
+                  </a>
+                </span>
               </p>
             </div>
           </section>
@@ -68,7 +75,7 @@ const Footer = () => {
 
         <div className="footer-bottom">
           <p>
-            Copyright {currentYear} Modular Component Showcase. All rights
+            Copyright {currentYear} {APP_INFO.fullName}. All rights
             reserved.
           </p>
         </div>

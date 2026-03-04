@@ -52,10 +52,22 @@
   color: #0f172a;
   background: #ffffff;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 34px;
+  padding: 0;
 }
 
 .theme-toggle:hover {
   background: #f8fafc;
+}
+
+.theme-toggle-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .btn-outline {
@@ -125,4 +137,22 @@
   .app-header-content {
     height: 72px;
   }
+}
+
+html[data-theme="dark"] .app-header {
+  background: hsl(var(--card));
+  border-bottom-color: hsl(var(--border));
+}
+
+html[data-theme="dark"] .brand {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .mobile-nav-wrap {
+  background: hsl(var(--card));
+  border-top-color: hsl(var(--border));
+}
+
+html[data-theme="dark"] .mobile-nav a {
+  color: hsl(var(--foreground));
 }

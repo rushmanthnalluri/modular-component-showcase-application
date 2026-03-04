@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "checkJs": false
+  },
+  "include": [
+    "src/**/*",
+    "scripts/**/*.mjs",
+    "vite.config.js",
+    "eslint.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "backend/node_modules",
+    "server/node_modules"
+  ]
+}
