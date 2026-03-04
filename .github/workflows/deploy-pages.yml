@@ -38,18 +38,14 @@ jobs:
       - name: Resolve production API URL
         env:
           DISPATCH_API_BASE_URL: ${{ github.event.inputs.api_base_url }}
-          INPUT_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
           if [ -n "$DISPATCH_API_BASE_URL" ]; then
             echo "VITE_API_BASE_URL=$DISPATCH_API_BASE_URL" >> "$GITHUB_ENV"
             echo "Using manual dispatch VITE_API_BASE_URL=$DISPATCH_API_BASE_URL"
-          elif [ -z "$INPUT_API_BASE_URL" ]; then
+          else
             FALLBACK_API_BASE_URL="https://modular-component-showcase-application.onrender.com/api"
             echo "VITE_API_BASE_URL=$FALLBACK_API_BASE_URL" >> "$GITHUB_ENV"
             echo "Using fallback VITE_API_BASE_URL=$FALLBACK_API_BASE_URL"
-          else
-            echo "VITE_API_BASE_URL=$INPUT_API_BASE_URL" >> "$GITHUB_ENV"
-            echo "Using repository VITE_API_BASE_URL=$INPUT_API_BASE_URL"
           fi
 
       - name: Build app
