@@ -96,3 +96,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+html[data-theme="dark"] .hero-content h1 span:first-child {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .hero-content h1 span:last-child {
+  color: hsl(var(--accent));
+}

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "checkJs": false
+  },
+  "include": [
+    "app.js",
+    "controller/**/*.js",
+    "model/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
