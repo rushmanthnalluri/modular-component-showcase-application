@@ -48,7 +48,7 @@ function startProcess(command, args, label) {
   const child = spawn(command, args, {
     cwd: rootDir,
     stdio: "inherit",
-    shell: process.platform === "win32",
+    shell: false,
     env: process.env,
   });
 
@@ -60,8 +60,9 @@ function startProcess(command, args, label) {
 }
 
 async function run() {
-  const backend = startProcess("npm", ["--prefix", "backend", "run", "start"], "Backend");
-  const frontend = startProcess("npm", ["run", "dev"], "Frontend");
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const backend = startProcess(npmCommand, ["--prefix", "backend", "run", "start"], "Backend");
+  const frontend = startProcess(npmCommand, ["run", "dev"], "Frontend");
 
   const cleanup = () => {
     terminate(frontend);
