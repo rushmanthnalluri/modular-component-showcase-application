@@ -45,12 +45,20 @@ function terminate(child) {
 }
 
 function startProcess(command, args, label) {
-  const child = spawn(command, args, {
-    cwd: rootDir,
-    stdio: "inherit",
-    shell: false,
-    env: process.env,
-  });
+  const runOnWindows = process.platform === "win32";
+  const child = runOnWindows
+    ? spawn([command, ...args].join(" "), {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: true,
+        env: process.env,
+      })
+    : spawn(command, args, {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: false,
+        env: process.env,
+      });
 
   child.on("error", (error) => {
     console.error(`${label} failed to start: ${error.message}`);
