@@ -44,7 +44,7 @@ jobs:
             echo "VITE_API_BASE_URL=$DISPATCH_API_BASE_URL" >> "$GITHUB_ENV"
             echo "Using manual dispatch VITE_API_BASE_URL=$DISPATCH_API_BASE_URL"
           elif [ -z "$INPUT_API_BASE_URL" ]; then
-            FALLBACK_API_BASE_URL="https://modular-showcase-api.onrender.com/api"
+            FALLBACK_API_BASE_URL="https://modular-component-showcase-application.onrender.com/api"
             echo "VITE_API_BASE_URL=$FALLBACK_API_BASE_URL" >> "$GITHUB_ENV"
             echo "Using fallback VITE_API_BASE_URL=$FALLBACK_API_BASE_URL"
           else
