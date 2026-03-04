@@ -30,18 +30,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate production API URL
+      - name: Resolve production API URL
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
+          INPUT_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
         run: |
-          if [ -z "$VITE_API_BASE_URL" ]; then
-            echo "VITE_API_BASE_URL is not set in repository Variables or Secrets.";
-            exit 1;
+          if [ -z "$INPUT_API_BASE_URL" ]; then
+            FALLBACK_API_BASE_URL="https://modular-showcase-api.onrender.com/api"
+            echo "VITE_API_BASE_URL=$FALLBACK_API_BASE_URL" >> "$GITHUB_ENV"
+            echo "Using fallback VITE_API_BASE_URL=$FALLBACK_API_BASE_URL"
+          else
+            echo "VITE_API_BASE_URL=$INPUT_API_BASE_URL" >> "$GITHUB_ENV"
+            echo "Using repository VITE_API_BASE_URL=$INPUT_API_BASE_URL"
           fi
 
       - name: Build app
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
         run: npm run build
 
       - name: Add SPA fallback
