@@ -292,11 +292,6 @@ const PORT = Number(process.env.PORT || 5000);
 const mongoUri = process.env.MONGODB_URI;
 
 if (!process.env.JWT_SECRET) {
-    if (isProduction) {
-        console.error("JWT_SECRET is required in production.");
-        process.exit(1);
-    }
-
     console.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
 }
 
