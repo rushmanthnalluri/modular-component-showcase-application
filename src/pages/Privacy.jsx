@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { privacyContent } from "@/data/legal.content";
 
 const Privacy = () => {
   return (
@@ -6,10 +7,15 @@ const Privacy = () => {
       <section className="contact-page">
         <div className="layout-container">
           <div className="contact-card">
-            <h1>Privacy</h1>
+            <h1>{privacyContent.title}</h1>
+            <p>{privacyContent.intro}</p>
+            {privacyContent.sections.map((section) => (
+              <p key={section.label}>
+                <strong>{section.label}:</strong> {section.text}
+              </p>
+            ))}
             <p>
-              This page explains how the Modular Showcase app handles and
-              protects project-related information.
+              <strong>Last updated:</strong> {privacyContent.lastUpdated}.
             </p>
           </div>
         </div>
