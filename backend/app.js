@@ -1,16 +1,35 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { randomBytes } from "node:crypto";
+import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 const app = express();
 let mongoMode = "disconnected";
 let memoryServer = null;
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
+
+app.set("trust proxy", 1);
+
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many authentication attempts. Please try again later." },
+});
 
 const defaultLocalOrigins = ["http://localhost:5173", "http://localhost:8080", "http://localhost:8081"];
 
@@ -34,7 +53,12 @@ app.use(
         },
     })
 );
-app.use(express.json({ limit: "15mb" }));
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+}));
+app.use(globalLimiter);
+app.use(express.json({ limit: "1mb" }));
+app.use("/api/auth", authLimiter);
 
 const userSchema = new mongoose.Schema(
     {
