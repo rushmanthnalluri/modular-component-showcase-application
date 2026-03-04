@@ -38,6 +38,12 @@ export async function registerUser({ fullName, email, phone, password, role }) {
   });
 }
 
+export async function fetchRegisterCaptcha(length = 6) {
+  return apiRequest(`/captcha/getcaptcha/${length}`, {
+    method: "GET",
+  });
+}
+
 export async function authenticateUser({ email, password }) {
   const payload = await apiRequest("/auth/login", {
     method: "POST",
