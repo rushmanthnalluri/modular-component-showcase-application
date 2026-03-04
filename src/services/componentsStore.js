@@ -28,8 +28,12 @@ async function getCloudComponents() {
 }
 
 export async function getAllComponents() {
-  const customComponents = await getCloudComponents();
-  return [...components, ...customComponents];
+  try {
+    const customComponents = await getCloudComponents();
+    return [...components, ...customComponents];
+  } catch {
+    return [...components];
+  }
 }
 
 export async function addCustomComponent({
