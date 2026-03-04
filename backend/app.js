@@ -12,6 +12,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 const app = express();
 let mongoMode = "disconnected";
 let memoryServer = null;
+const isProduction = process.env.NODE_ENV === "production";
+const allowMemoryFallback = !isProduction || process.env.ALLOW_MEMORY_FALLBACK === "true";
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
 
 app.set("trust proxy", 1);
@@ -34,7 +36,7 @@ const authLimiter = rateLimit({
 const defaultLocalOrigins = ["http://localhost:5173", "http://localhost:8080", "http://localhost:8081"];
 
 const allowedOrigins = Array.from(new Set([
-    ...defaultLocalOrigins,
+    ...(isProduction ? [] : defaultLocalOrigins),
     ...String(process.env.FRONTEND_ORIGINS || "")
     .split(",")
     .map((origin) => origin.trim())
@@ -289,21 +291,42 @@ const PORT = Number(process.env.PORT || 5000);
 const mongoUri = process.env.MONGODB_URI;
 
 if (!process.env.JWT_SECRET) {
+    if (isProduction) {
+        console.error("JWT_SECRET is required in production.");
+        process.exit(1);
+    }
+
     console.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
 }
 
+if (isProduction && allowedOrigins.length === 0) {
+    console.error("FRONTEND_ORIGINS must be configured in production.");
+    process.exit(1);
+}
+
 async function connectWithFallback() {
-    try {
-        if (!mongoUri) {
-            throw new Error("MONGODB_URI is not set");
+    if (!mongoUri) {
+        if (!allowMemoryFallback) {
+            console.error("MONGODB_URI is required in production when memory fallback is disabled.");
+            process.exit(1);
         }
 
-        await mongoose.connect(mongoUri);
-        mongoMode = "atlas";
-        console.log("MongoDB Atlas connected");
-        return;
+        console.warn("MONGODB_URI is not set. Falling back to in-memory MongoDB.");
+    }
+
+    try {
+        if (mongoUri) {
+            await mongoose.connect(mongoUri);
+            mongoMode = "atlas";
+            console.log("MongoDB Atlas connected");
+            return;
+        }
     } catch (atlasError) {
         console.error("MongoDB Atlas connection failed:", atlasError.message);
+
+        if (!allowMemoryFallback) {
+            process.exit(1);
+        }
     }
 
     try {
