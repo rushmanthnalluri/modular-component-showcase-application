@@ -34,9 +34,10 @@ const authLimiter = rateLimit({
 });
 
 const defaultLocalOrigins = ["http://localhost:5173", "http://localhost:8080", "http://localhost:8081"];
+const defaultProductionOrigins = ["https://rushmanthnalluri.github.io"];
 
 const allowedOrigins = Array.from(new Set([
-    ...(isProduction ? [] : defaultLocalOrigins),
+    ...(isProduction ? defaultProductionOrigins : defaultLocalOrigins),
     ...String(process.env.FRONTEND_ORIGINS || "")
     .split(",")
     .map((origin) => origin.trim())
