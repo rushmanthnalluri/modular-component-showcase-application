@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import captchaRouter from "./controller/captchaController.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -61,6 +62,8 @@ app.use(helmet({
 }));
 app.use(globalLimiter);
 app.use(express.json({ limit: "1mb" }));
+app.use("/captcha", captchaRouter);
+app.use("/api/captcha", captchaRouter);
 app.use("/api/auth", authLimiter);
 
 const userSchema = new mongoose.Schema(
