@@ -6,6 +6,8 @@ import {
   logoutUser,
   subscribeToAuthUser,
 } from "@/services/authAccess";
+import lightModeIcon from "@/assets/theme/light-mode.svg";
+import darkModeIcon from "@/assets/theme/dark-mode.svg";
 import "./Header.css";
 
 const Header = () => {
@@ -61,7 +63,11 @@ const Header = () => {
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
           >
-            {theme === "dark" ? "Light" : "Dark"}
+            <img
+              className="theme-toggle-icon"
+              src={theme === "dark" ? lightModeIcon : darkModeIcon}
+              alt={theme === "dark" ? "Light mode" : "Dark mode"}
+            />
           </button>
           {isAuthenticated ? (
             <>
@@ -110,7 +116,11 @@ const Header = () => {
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
             >
-              {theme === "dark" ? "Light Theme" : "Dark Theme"}
+              <img
+                className="theme-toggle-icon"
+                src={theme === "dark" ? lightModeIcon : darkModeIcon}
+                alt={theme === "dark" ? "Light mode" : "Dark mode"}
+              />
             </button>
             {isAuthenticated ? (
               <>

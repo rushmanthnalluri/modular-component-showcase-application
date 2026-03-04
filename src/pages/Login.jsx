@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
-import { authenticateUser, forgotPassword } from "@/services/authAccess";
+import { authenticateUser, fetchRegisterCaptcha, forgotPassword } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
@@ -20,6 +20,32 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captcha, setCaptcha] = useState({ text: "", image: "" });
+  const [captchaInput, setCaptchaInput] = useState("");
+
+  const loadCaptcha = async () => {
+    const payload = await fetchRegisterCaptcha(6);
+    setCaptcha({
+      text: String(payload?.text || ""),
+      image: String(payload?.image || ""),
+    });
+    setCaptchaInput("");
+  };
+
+  useEffect(() => {
+    loadCaptcha().catch(() => {
+      toast({
+        title: "Captcha unavailable",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Unable to load captcha. Please refresh and try again.
+          </span>
+        ),
+        duration: 4000,
+      });
+    });
+  }, [toast]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -116,6 +142,26 @@ const Login = () => {
       return;
     }
 
+    const captchaMatches =
+      captchaInput.trim().toLowerCase() !== "" &&
+      captcha.text.trim().toLowerCase() !== "" &&
+      captchaInput.trim().toLowerCase() === captcha.text.trim().toLowerCase();
+
+    if (!captchaMatches) {
+      toast({
+        title: "Invalid captcha",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Please enter the captcha exactly as shown.
+          </span>
+        ),
+        duration: 4000,
+      });
+      await loadCaptcha().catch(() => {});
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const authUser = await authenticateUser({
@@ -147,6 +193,7 @@ const Login = () => {
         ),
         duration: 4000,
       });
+      await loadCaptcha().catch(() => {});
     } finally {
       setIsSubmitting(false);
     }
@@ -201,6 +248,41 @@ const Login = () => {
               >
                 <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
               </button>
+            </div>
+
+            <div className="captcha-group">
+              {captcha.image ? (
+                <img
+                  className="captcha-image"
+                  src={`data:image/png;base64,${captcha.image}`}
+                  alt="Captcha"
+                />
+              ) : (
+                <div className="captcha-placeholder">Loading captcha...</div>
+              )}
+              <button
+                type="button"
+                className="captcha-refresh"
+                onClick={() => {
+                  loadCaptcha().catch(() => {});
+                }}
+              >
+                Refresh Captcha
+              </button>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="login-captcha" className="sr-only">
+                Captcha
+              </label>
+              <input
+                id="login-captcha"
+                type="text"
+                name="captcha"
+                value={captchaInput}
+                onChange={(event) => setCaptchaInput(event.target.value)}
+                placeholder="Enter captcha"
+              />
             </div>
 
             <div className="forgot-password">
