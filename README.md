@@ -101,7 +101,7 @@ src/
 - `/login`, `/register`
 - `*` fallback (Not Found)
 
-Protected-route simulation is implemented for the nested code route using `localStorage` auth token checks.
+Protected route access is controlled using authenticated user state from backend login sessions.
 
 ## 9) Theme Persistence
 
@@ -111,11 +111,44 @@ Protected-route simulation is implemented for the nested code route using `local
 
 ## 10) Deployment Instructions
 
+Before running locally or deploying, configure backend + database so authentication and custom components are shared across devices.
+
+### Backend (Render)
+
+1. Push this repository to GitHub.
+2. In Render, create a **Blueprint** service and select this repository.
+3. Render will read `render.yaml` and deploy `backend/` automatically.
+4. Set these environment variables in Render:
+  - `MONGODB_URI`
+  - `JWT_SECRET`
+  - `FRONTEND_ORIGINS` (include your GitHub Pages URL and local dev origin such as `http://localhost:8080`, `http://localhost:8081`, or `http://localhost:5173`)
+
+### Frontend (GitHub Pages)
+
+1. In GitHub repository settings, enable **Pages** with **GitHub Actions** source.
+2. In repository **Variables** (or **Secrets**), add:
+  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
+3. Push to `main` to trigger `.github/workflows/deploy-pages.yml`.
+4. The app is published to `https://<username>.github.io/<repo>/`.
+
+### Local setup
+
+1. Copy `.env.example` to `.env` and set `VITE_API_BASE_URL=http://localhost:5000/api`.
+2. Copy `backend/.env.example` to `backend/.env` and set required values.
+
 ```bash
 npm install
 npm run lint
 npm run build
 npm run preview
+npm run verify:connection
+npm run verify:connection:auto
+npm run verify:all
+
+# Backend
+cd backend
+npm install
+npm run dev
 ```
 
 - Vite uses optimized production bundling in `npm run build`.
