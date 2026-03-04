@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
-import { canAccessAddComponent, getAuthUser } from "@/services/authAccess";
+import {
+  canAccessAddComponent,
+  logoutUser,
+  subscribeToAuthUser,
+} from "@/services/authAccess";
 import "./Header.css";
 
 const Header = () => {
@@ -12,13 +16,16 @@ const Header = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    setIsAuthenticated(Boolean(localStorage.getItem("authToken")));
-    setCanAddComponent(canAccessAddComponent(getAuthUser()));
+    const unsubscribe = subscribeToAuthUser((authUser) => {
+      setIsAuthenticated(Boolean(authUser));
+      setCanAddComponent(canAccessAddComponent(authUser));
+    });
+
+    return unsubscribe;
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authUser");
+  const handleLogout = async () => {
+    await logoutUser();
     setIsAuthenticated(false);
     setCanAddComponent(false);
     setIsMenuOpen(false);
