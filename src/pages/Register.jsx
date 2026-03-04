@@ -99,7 +99,7 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const missingFields = validateForm();
@@ -124,7 +124,7 @@ const Register = () => {
     }
 
     try {
-      registerUser({
+      await registerUser({
         fullName: data.fullName,
         email: data.email,
         phone: data.phone,
