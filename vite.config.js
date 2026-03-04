@@ -11,6 +11,17 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            react: ["react", "react-dom", "react-router-dom"],
+            ui: ["@radix-ui/react-toast", "lucide-react"],
+            syntax: ["react-syntax-highlighter"],
+          },
+        },
+      },
+    },
     plugins: [react()],
     resolve: {
       alias: {
