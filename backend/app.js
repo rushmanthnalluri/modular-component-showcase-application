@@ -13,7 +13,7 @@ const app = express();
 let mongoMode = "disconnected";
 let memoryServer = null;
 const isProduction = process.env.NODE_ENV === "production";
-const allowMemoryFallback = !isProduction || process.env.ALLOW_MEMORY_FALLBACK === "true";
+const allowMemoryFallback = process.env.ALLOW_MEMORY_FALLBACK !== "false";
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
 
 app.set("trust proxy", 1);
