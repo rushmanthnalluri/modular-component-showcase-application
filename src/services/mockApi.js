@@ -2,7 +2,7 @@ import { getAllComponents } from "@/services/componentsStore";
 
 export async function fetchComponents() {
   await new Promise((resolve) => setTimeout(resolve, 120));
-  return getAllComponents();
+  return await getAllComponents();
 }
 
 export async function fetchComponentById(id) {

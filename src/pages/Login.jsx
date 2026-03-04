@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
@@ -11,9 +11,6 @@ import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
-const DEMO_EMAIL = "Rushmanth21@gmail.com";
-const DEMO_PASSWORD = "1234";
-
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -23,8 +20,6 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Uncontrolled comparison: optional field managed via ref (not part of re-render state).
-  const referenceCodeRef = useRef(null);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -79,39 +74,10 @@ const Login = () => {
 
     try {
       setIsSubmitting(true);
-      const inputEmail = data.email.trim();
-      const inputPassword = data.password;
-      const referenceCode = referenceCodeRef.current?.value.trim() || "";
-      const registeredUser = authenticateUser({
-        email: inputEmail,
-        password: inputPassword,
+      const authUser = await authenticateUser({
+        email: data.email.trim(),
+        password: data.password,
       });
-
-      const isDemoCredentials = inputEmail === DEMO_EMAIL && inputPassword === DEMO_PASSWORD;
-
-      if (!registeredUser && !isDemoCredentials) {
-        throw new Error("Invalid username or password.");
-      }
-
-      const authUser = registeredUser
-        ? {
-            fullName: registeredUser.fullName,
-            email: registeredUser.email,
-            phone: registeredUser.phone,
-            referenceCode,
-            role: registeredUser.role,
-            isVerifiedDeveloper: Boolean(registeredUser.isVerifiedDeveloper),
-          }
-        : {
-            fullName: DEMO_EMAIL,
-            email: DEMO_EMAIL,
-            referenceCode,
-            role: "admin",
-            isVerifiedDeveloper: true,
-          };
-
-      localStorage.setItem("authToken", "demo-auth-token");
-      localStorage.setItem("authUser", JSON.stringify(authUser));
 
       toast({
         title: "Login successful",
@@ -192,19 +158,6 @@ const Login = () => {
                 <img className="right-icon" src={eyeIcon} alt="" aria-hidden />
               </button>
             </div>
-
-            <label htmlFor="login-reference-code" className="sr-only">
-              Reference Code (Optional)
-            </label>
-            <input
-              id="login-reference-code"
-              type="text"
-              ref={referenceCodeRef}
-              defaultValue="academic-demo"
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden="true"
-            />
 
             <div className="forgot-password">
               <button

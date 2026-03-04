@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:connection": "node scripts/verify-connection.mjs",
+    "verify:connection:auto": "node scripts/verify-connection-auto.mjs",
+    "verify:all": "node scripts/verify-all.mjs"
   },
   "dependencies": {
     "@radix-ui/react-toast": "^1.2.14",
