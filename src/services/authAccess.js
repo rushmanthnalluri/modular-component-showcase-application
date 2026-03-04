@@ -51,6 +51,17 @@ export async function authenticateUser({ email, password }) {
   return payload.user;
 }
 
+export async function forgotPassword({ email, phone, newPassword }) {
+  await apiRequest("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      phone,
+      newPassword,
+    }),
+  });
+}
+
 export async function logoutUser() {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
