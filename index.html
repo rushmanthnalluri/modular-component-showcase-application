@@ -3,6 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        const redirect = sessionStorage.getItem("spa-redirect");
+        if (!redirect) {
+          return;
+        }
+
+        sessionStorage.removeItem("spa-redirect");
+        if (redirect.startsWith("/") && redirect !== window.location.pathname + window.location.search + window.location.hash) {
+          window.history.replaceState(null, "", redirect);
+        }
+      })();
+    </script>
     <title>Modular Component Showcase</title>
     <meta
       name="description"
