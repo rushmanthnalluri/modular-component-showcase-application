@@ -149,6 +149,46 @@
   color: #1f2937;
 }
 
+.forgot-password-panel {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0 0 16px;
+}
+
+.forgot-password-panel .input-group {
+  margin-bottom: 12px;
+}
+
+.forgot-password-panel .input-group:last-of-type {
+  margin-bottom: 10px;
+}
+
+.forgot-password-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.forgot-password-actions .auth-submit,
+.forgot-password-actions .auth-cancel {
+  height: 38px;
+}
+
+.auth-cancel {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.auth-cancel:hover {
+  background: #f3f4f6;
+}
+
 .auth-switch a {
   font-weight: bold;
   color: #0f172a;
