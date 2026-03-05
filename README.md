@@ -11,11 +11,13 @@ A professional full-stack platform for browsing, previewing, and contributing re
 ## Highlights
 
 - Discover components with search and category filters
+- Share discovery links using query-based URLs (for example `?q=button&category=forms`)
 - View component details and code examples
 - Register and login with role-based access controls
 - Add custom components through protected workflows
 - Reset passwords through a working forgot-password flow
 - Support dark/light theme preferences and toast notifications
+- SEO-ready metadata, robots policy, and sitemap for better global discoverability
 
 ## Architecture
 
@@ -141,6 +143,7 @@ npm --prefix backend run start
 - The workflow supports:
   - Manual `api_base_url` override via workflow dispatch
   - Fallback API URL when no override is supplied
+- SEO/discovery assets are served from `public/robots.txt` and `public/sitemap.xml`
 
 ## Quality and Verification
 

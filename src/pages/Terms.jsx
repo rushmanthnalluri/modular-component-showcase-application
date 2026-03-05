@@ -14,9 +14,6 @@ const Terms = () => {
                 <strong>{section.label}:</strong> {section.text}
               </p>
             ))}
-            <p>
-              <strong>Last updated:</strong> {termsContent.lastUpdated}.
-            </p>
           </div>
         </div>
       </section>
