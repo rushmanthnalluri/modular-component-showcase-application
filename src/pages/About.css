@@ -1,0 +1,62 @@
+.about-page {
+  padding: 40px 0;
+}
+
+.about-page-card {
+  max-width: 860px;
+  margin: 0 auto;
+  border: 1px solid #d7dee7;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px #e9eef5;
+  padding: 24px;
+}
+
+.about-page-card h1 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 34px;
+}
+
+.about-page-card p {
+  margin: 0 0 12px;
+  color: #475569;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.about-page-link {
+  display: inline-block;
+  text-decoration: none;
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.about-page-link:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+
+html[data-theme="dark"] .about-page-card {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .about-page-card h1 {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .about-page-card p {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .about-page-link {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
