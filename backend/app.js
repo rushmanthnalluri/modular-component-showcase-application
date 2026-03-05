@@ -14,8 +14,21 @@ const app = express();
 let mongoMode = "disconnected";
 let memoryServer = null;
 const isProduction = process.env.NODE_ENV === "production";
-const allowMemoryFallback = process.env.ALLOW_MEMORY_FALLBACK !== "false";
+const allowMemoryFallback =
+    typeof process.env.ALLOW_MEMORY_FALLBACK === "string"
+        ? process.env.ALLOW_MEMORY_FALLBACK !== "false"
+        : !isProduction;
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
+let reconnectTimer = null;
+let reconnectAttempt = 0;
+
+const mongoConnectOptions = {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+    maxPoolSize: 10,
+    minPoolSize: 1,
+};
 
 app.set("trust proxy", 1);
 
@@ -363,7 +376,7 @@ async function connectWithFallback() {
 
     try {
         if (mongoUri) {
-            await mongoose.connect(mongoUri);
+            await mongoose.connect(mongoUri, mongoConnectOptions);
             mongoMode = "atlas";
             console.log("MongoDB Atlas connected");
             return;
@@ -379,7 +392,7 @@ async function connectWithFallback() {
     try {
         memoryServer = await MongoMemoryServer.create();
         const memoryUri = memoryServer.getUri("modularcomponent");
-        await mongoose.connect(memoryUri);
+        await mongoose.connect(memoryUri, mongoConnectOptions);
         mongoMode = "memory";
         console.log("MongoDB memory fallback connected");
         
@@ -395,6 +408,57 @@ async function connectWithFallback() {
     }
 }
 
+function clearReconnectTimer() {
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+}
+
+function scheduleAtlasReconnect() {
+    if (!mongoUri || mongoMode === "memory" || reconnectTimer) {
+        return;
+    }
+
+    reconnectAttempt += 1;
+    const delayMs = Math.min(30000, 1000 * 2 ** Math.min(reconnectAttempt, 5));
+    mongoMode = "atlas-reconnecting";
+
+    reconnectTimer = setTimeout(async () => {
+        reconnectTimer = null;
+
+        try {
+            console.warn(`MongoDB reconnect attempt ${reconnectAttempt}...`);
+            await mongoose.connect(mongoUri, mongoConnectOptions);
+            reconnectAttempt = 0;
+            mongoMode = "atlas";
+            console.log("MongoDB Atlas reconnected");
+        } catch (error) {
+            console.error("MongoDB reconnect failed:", error.message);
+            scheduleAtlasReconnect();
+        }
+    }, delayMs);
+}
+
+mongoose.connection.on("connected", () => {
+    clearReconnectTimer();
+    reconnectAttempt = 0;
+    if (mongoMode !== "memory") {
+        mongoMode = "atlas";
+    }
+});
+
+mongoose.connection.on("disconnected", () => {
+    if (mongoMode !== "memory") {
+        console.warn("MongoDB disconnected");
+        scheduleAtlasReconnect();
+    }
+});
+
+mongoose.connection.on("error", (error) => {
+    console.error("MongoDB connection error:", error.message);
+});
+
 connectWithFallback().then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
@@ -402,6 +466,7 @@ connectWithFallback().then(() => {
 });
 
 process.on("SIGINT", async () => {
+    clearReconnectTimer();
     if (memoryServer) {
         await memoryServer.stop();
     }

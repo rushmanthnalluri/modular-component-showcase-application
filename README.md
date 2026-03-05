@@ -81,6 +81,7 @@ Recommended:
 - `MONGODB_URI=<your_mongodb_connection_string>`
 - `JWT_SECRET=<long_random_secret>`
 - `FRONTEND_ORIGINS=http://localhost:5173,http://localhost:8080,http://localhost:8081`
+- `ALLOW_MEMORY_FALLBACK=true` (local only; set to `false` in production)
 
 ### 4) Run the app
 
