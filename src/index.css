@@ -292,6 +292,11 @@ a:focus-visible {
   padding: 20px;
 }
 
+.error-boundary-icon {
+  width: 52px;
+  height: 52px;
+}
+
 .toast-content {
   display: grid;
   gap: 4px;
