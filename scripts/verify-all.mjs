@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 
 const rootDir = process.cwd();
+const backendTimeoutMs = Number(process.env.VERIFY_BACKEND_TIMEOUT_MS || 90000);
+const frontendTimeoutMs = Number(process.env.VERIFY_FRONTEND_TIMEOUT_MS || 45000);
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -88,10 +90,10 @@ async function run() {
   });
 
   try {
-    await waitForAny(["http://localhost:5000/health"], 45000, "Backend");
+    await waitForAny(["http://localhost:5000/health"], backendTimeoutMs, "Backend");
     const frontendUrl = await waitForAny(
       ["http://localhost:8080", "http://localhost:8081", "http://localhost:5173"],
-      45000,
+      frontendTimeoutMs,
       "Frontend"
     );
 
