@@ -7,6 +7,7 @@ import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";
 import lockIcon from "@/assets/showcase/lock.png";
 import eyeIcon from "@/assets/showcase/eye.png";
+import loadingIcon from "@/assets/showcase/loading.svg";
 import warningIcon from "@/assets/showcase/warning.png";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
@@ -215,7 +216,7 @@ const Login = () => {
         title: "Password reset failed",
         description: (
           <span className="toast-inline">
-            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             {error.message}
           </span>
         ),
@@ -280,7 +281,7 @@ const Login = () => {
         title: "Login failed",
         description: (
           <span className="toast-inline">
-            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             {error.message}
           </span>
         ),

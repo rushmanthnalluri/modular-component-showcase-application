@@ -1,4 +1,5 @@
 import { Component } from "react";
+import loadingIcon from "@/assets/showcase/loading.svg";
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -20,6 +21,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <main className="error-boundary-fallback" role="alert">
+          <img src={loadingIcon} alt="Error state" className="error-boundary-icon" />
           <h1>Something went wrong.</h1>
           <p>{this.state.errorMessage}</p>
           <button

@@ -10,7 +10,7 @@ import lockIcon from "@/assets/showcase/lock.png";
 import eyeIcon from "@/assets/showcase/eye.png";
 import phoneIcon from "@/assets/showcase/phone.png";
 import warningIcon from "@/assets/showcase/warning.png";
-import errorIcon from "@/assets/showcase/error.png";
+import loadingIcon from "@/assets/showcase/loading.svg";
 import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
@@ -117,7 +117,7 @@ const Register = () => {
         title: "Password mismatch",
         description: (
           <span className="toast-inline">
-            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
+            <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             Password and confirm password should be the same.
           </span>
         ),
@@ -132,7 +132,7 @@ const Register = () => {
         title: "Invalid phone number",
         description: (
           <span className="toast-inline">
-            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
+            <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             Phone number must contain 10 to 15 digits only.
           </span>
         ),
@@ -166,7 +166,7 @@ const Register = () => {
         title: "Registration failed",
         description: (
           <span className="toast-inline">
-            <img src={errorIcon} alt="" aria-hidden className="toast-inline-icon" />
+            <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             {error.message}
           </span>
         ),
