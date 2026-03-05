@@ -14,9 +14,6 @@ const Privacy = () => {
                 <strong>{section.label}:</strong> {section.text}
               </p>
             ))}
-            <p>
-              <strong>Last updated:</strong> {privacyContent.lastUpdated}.
-            </p>
           </div>
         </div>
       </section>

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { Search } from "lucide-react";
 import "./ShowcaseComponents.css";
 

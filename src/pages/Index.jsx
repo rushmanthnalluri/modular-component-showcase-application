@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import CategoryFilter from "@/components/CategoryFilter";
 import ComponentCard from "@/components/ComponentCard";
 import Layout from "@/components/Layout";
@@ -9,11 +9,16 @@ import { categories } from "@/data/components.data";
 import "./Index.css";
 
 const Index = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [componentItems, setComponentItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const validCategoryIds = useMemo(
+    () => categories.map((category) => category.id),
+    []
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -44,7 +49,9 @@ const Index = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const categoryFromQuery = searchParams.get("category");
-    const validCategoryIds = categories.map((category) => category.id);
+    const queryFromUrl = searchParams.get("q") || "";
+
+    setSearchQuery(queryFromUrl);
 
     if (categoryFromQuery && validCategoryIds.includes(categoryFromQuery)) {
       setActiveCategory(categoryFromQuery);
@@ -52,7 +59,35 @@ const Index = () => {
     }
 
     setActiveCategory("all");
-  }, [location.search]);
+  }, [location.search, validCategoryIds]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (activeCategory === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", activeCategory);
+    }
+
+    const normalizedQuery = searchQuery.trim();
+    if (normalizedQuery) {
+      params.set("q", normalizedQuery);
+    } else {
+      params.delete("q");
+    }
+
+    const nextSearch = params.toString() ? `?${params.toString()}` : "";
+    if (nextSearch !== location.search) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch,
+        },
+        { replace: true }
+      );
+    }
+  }, [activeCategory, searchQuery, location.pathname, location.search, navigate]);
 
   const filteredComponents = useMemo(() => {
     const searchText = searchQuery.trim().toLowerCase();
