@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
@@ -20,8 +20,13 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetSubmitting, setIsResetSubmitting] = useState(false);
   const [captcha, setCaptcha] = useState({ text: "", image: "" });
   const [captchaInput, setCaptchaInput] = useState("");
+  const [showForgotPasswordForm, setShowForgotPasswordForm] = useState(false);
+  const [forgotData, setForgotData] = useState({ email: "", phone: "", newPassword: "" });
+  const forgotEmailRef = useRef(null);
+  const forgotPasswordButtonRef = useRef(null);
 
   const loadCaptcha = async () => {
     const payload = await fetchRegisterCaptcha(6);
@@ -46,6 +51,33 @@ const Login = () => {
       });
     });
   }, [toast]);
+
+  useEffect(() => {
+    if (!showForgotPasswordForm) {
+      return;
+    }
+
+    forgotEmailRef.current?.focus();
+  }, [showForgotPasswordForm]);
+
+  useEffect(() => {
+    if (!showForgotPasswordForm) {
+      return;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !isResetSubmitting) {
+        event.preventDefault();
+        closeForgotPasswordPanel(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showForgotPasswordForm, isResetSubmitting]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -89,25 +121,83 @@ const Login = () => {
     });
   };
 
-  const handleForgotPassword = async () => {
-    const email = window.prompt("Enter your registered email:")?.trim() || "";
-    if (!email) {
+  const handleForgotPasswordClick = () => {
+    setForgotData((prev) => ({
+      ...prev,
+      email: data.email.trim() || prev.email,
+    }));
+    setShowForgotPasswordForm(true);
+  };
+
+  const handleForgotPasswordChange = (event) => {
+    const { name, value } = event.target;
+    setForgotData((prev) => ({
+      ...prev,
+      [name]: name === "phone" ? value.replace(/\D/g, "") : value,
+    }));
+  };
+
+  const closeForgotPasswordPanel = (shouldFocusTrigger = false) => {
+    setShowForgotPasswordForm(false);
+    setForgotData({ email: "", phone: "", newPassword: "" });
+
+    if (shouldFocusTrigger) {
+      window.setTimeout(() => {
+        forgotPasswordButtonRef.current?.focus();
+      }, 0);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async () => {
+    const email = forgotData.email.trim();
+    const phone = forgotData.phone.trim();
+    const newPassword = forgotData.newPassword;
+
+    if (!email || !phone || !newPassword) {
+      toast({
+        title: "All fields are required",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Enter email, phone number, and new password.
+          </span>
+        ),
+        duration: 4000,
+      });
       return;
     }
 
-    const phone = (window.prompt("Enter your registered phone number (digits only):") || "")
-      .replace(/\D/g, "")
-      .trim();
-    if (!phone) {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Please enter a valid email address.
+          </span>
+        ),
+        duration: 4000,
+      });
       return;
     }
 
-    const newPassword = window.prompt("Enter your new password (minimum 6 characters):") || "";
-    if (!newPassword) {
+    if (newPassword.length < 6) {
+      toast({
+        title: "Weak password",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            New password must be at least 6 characters.
+          </span>
+        ),
+        duration: 4000,
+      });
       return;
     }
 
     try {
+      setIsResetSubmitting(true);
       await forgotPassword({ email, phone, newPassword });
       toast({
         title: "Password reset successful",
@@ -119,6 +209,7 @@ const Login = () => {
         ),
         duration: 4000,
       });
+      closeForgotPasswordPanel(true);
     } catch (error) {
       toast({
         title: "Password reset failed",
@@ -130,6 +221,8 @@ const Login = () => {
         ),
         duration: 4000,
       });
+    } finally {
+      setIsResetSubmitting(false);
     }
   };
 
@@ -290,11 +383,84 @@ const Login = () => {
                 type="button"
                 className="forgot-password-link"
                 aria-label="Forgot password"
-                onClick={handleForgotPassword}
+                ref={forgotPasswordButtonRef}
+                onClick={handleForgotPasswordClick}
               >
                 Forgot Password?
               </button>
             </div>
+
+            {showForgotPasswordForm ? (
+              <div className="forgot-password-panel" aria-label="Forgot password reset form">
+                <div className="input-group">
+                  <label htmlFor="forgot-email" className="sr-only">
+                    Registered email
+                  </label>
+                  <img className="left-icon" src={mailIcon} alt="" aria-hidden />
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    name="email"
+                    ref={forgotEmailRef}
+                    value={forgotData.email}
+                    onChange={handleForgotPasswordChange}
+                    placeholder="Registered email"
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="forgot-phone" className="sr-only">
+                    Registered phone number
+                  </label>
+                  <img className="left-icon" src={mailIcon} alt="" aria-hidden />
+                  <input
+                    id="forgot-phone"
+                    type="text"
+                    name="phone"
+                    inputMode="numeric"
+                    value={forgotData.phone}
+                    onChange={handleForgotPasswordChange}
+                    placeholder="Registered phone number"
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="forgot-new-password" className="sr-only">
+                    New password
+                  </label>
+                  <img className="left-icon" src={lockIcon} alt="" aria-hidden />
+                  <input
+                    id="forgot-new-password"
+                    type="password"
+                    name="newPassword"
+                    value={forgotData.newPassword}
+                    onChange={handleForgotPasswordChange}
+                    placeholder="New password"
+                  />
+                </div>
+
+                <div className="forgot-password-actions">
+                  <button
+                    type="button"
+                    className="auth-submit"
+                    onClick={handleForgotPasswordSubmit}
+                    disabled={isResetSubmitting}
+                  >
+                    {isResetSubmitting ? "Resetting..." : "Reset Password"}
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-cancel"
+                    onClick={() => {
+                      closeForgotPasswordPanel(true);
+                    }}
+                    disabled={isResetSubmitting}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <button
               type="submit"
