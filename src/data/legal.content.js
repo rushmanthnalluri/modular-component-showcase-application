@@ -1,5 +1,3 @@
-import { APP_INFO } from "@/data/app.constants";
-
 export const privacyContent = {
   title: "Privacy",
   intro:
@@ -31,7 +29,6 @@ export const privacyContent = {
         "you can request profile updates or deletion by contacting support through the Contact page.",
     },
   ],
-  lastUpdated: "March 4, 2026",
 };
 
 export const termsContent = {
@@ -59,13 +56,7 @@ export const termsContent = {
       text:
         'this project is provided "as is" without guarantees of uninterrupted service.',
     },
-    {
-      label: "Project ownership",
-      text:
-        "this application is designed, built, and maintained by a single developer.",
-    },
   ],
-  lastUpdated: "March 4, 2026",
 };
 
 export const helpContent = {
@@ -88,13 +79,8 @@ export const helpContent = {
         "only authorized roles can access Add Component. Contact support if your access is incorrect.",
     },
     {
-      label: "Theme issue",
-      text:
-        "use the sun/moon icon in the header to switch between light and dark mode.",
-    },
-    {
       label: "Need direct support",
-      text: `use the Contact page or email ${APP_INFO.supportEmail}.`,
+      text: "use the Contact page or email rushmanth21@gmail.com.",
     },
   ],
 };
