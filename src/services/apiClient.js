@@ -1,28 +1,7 @@
+import { APIURL, callApi } from "@/lib";
+
 const RENDER_API_BASE_URL = "https://modular-component-showcase-application.onrender.com/api";
-
-function getDefaultApiBaseUrl() {
-  if (typeof window === "undefined") {
-    return import.meta.env.VITE_API_BASE_URL || RENDER_API_BASE_URL;
-  }
-
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") {
-    return "http://localhost:5000/api";
-  }
-
-  return RENDER_API_BASE_URL;
-}
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || getDefaultApiBaseUrl();
-
-async function parseError(response) {
-  try {
-    const payload = await response.json();
-    return payload?.message || "Request failed.";
-  } catch {
-    return "Request failed.";
-  }
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${APIURL}/api`;
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem("authToken");
@@ -40,22 +19,33 @@ export async function apiRequest(path, options = {}) {
     headers,
   };
 
-  let response;
-
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, requestConfig);
+    return await callApi(
+      requestConfig.method || "GET",
+      `${API_BASE_URL}${path}`,
+      requestConfig.body,
+      undefined,
+      { headers: requestConfig.headers }
+    );
   } catch (primaryError) {
     if (API_BASE_URL === RENDER_API_BASE_URL) {
       throw primaryError;
     }
 
-    response = await fetch(`${RENDER_API_BASE_URL}${path}`, requestConfig);
-  }
+    try {
+      return await callApi(
+        requestConfig.method || "GET",
+        `${RENDER_API_BASE_URL}${path}`,
+        requestConfig.body,
+        undefined,
+        { headers: requestConfig.headers }
+      );
+    } catch (fallbackError) {
+      if (fallbackError instanceof Error) {
+        throw fallbackError;
+      }
 
-  if (!response.ok) {
-    const message = await parseError(response);
-    throw new Error(message);
+      throw new Error("Request failed.");
+    }
   }
-
-  return response.status === 204 ? null : response.json();
 }
