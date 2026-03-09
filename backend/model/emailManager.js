@@ -41,13 +41,15 @@ function getFromAddress() {
 }
 
 export async function sendEmail({ to, subject, text, html }) {
-  return transporter.sendMail({
+  const mailoptions = {
     from: getFromAddress(),
     to,
     subject,
     text,
     html,
-  });
+  };
+
+  return transporter.sendMail(mailoptions);
 }
 
 export async function sendPasswordResetNotification(toEmail) {
