@@ -5,11 +5,11 @@ import helmet from "helmet";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controller/captchaController.js";
+import { sendPasswordResetNotification } from "./model/emailManager.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -291,6 +291,12 @@ app.post("/api/auth/forgot-password", async (req, res) => {
 
         user.passwordHash = await bcrypt.hash(newPassword, 10);
         await user.save();
+
+        try {
+            await sendPasswordResetNotification(user.email);
+        } catch (mailError) {
+            console.warn("Password reset email failed:", mailError.message);
+        }
 
         return res.json({ message: "Password reset successful. Please login with your new password." });
     } catch (error) {
