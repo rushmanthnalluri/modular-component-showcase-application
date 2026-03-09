@@ -1,9 +1,46 @@
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { APP_INFO } from "@/data/app.constants";
 import { Linkedin, Mail, Phone } from "lucide-react";
+import { useToast } from "@/use-toast";
+import { sendSupportTicketEmail } from "@/services/emailService";
 import "./Contact.css";
 
 const Contact = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email to receive the ticket reply.",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await sendSupportTicketEmail(normalizedEmail);
+      toast({
+        title: "Ticket created",
+        description: `Ticket mail sent to ${normalizedEmail}.`,
+      });
+      setEmail("");
+    } catch (error) {
+      toast({
+        title: "Ticket failed",
+        description: error.message || "Unable to create support ticket.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <section className="contact-page">
@@ -49,6 +86,26 @@ const Contact = () => {
                 </a>
               </div>
             </div>
+
+            <form className="support-ticket-form" onSubmit={handleSubmit} noValidate>
+              <h2>Raise Support Ticket</h2>
+              <p>Enter your email and we will send the ticket reply to your inbox.</p>
+              <label htmlFor="ticket-email" className="support-label">
+                Your Email
+              </label>
+              <input
+                id="ticket-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="name@example.com"
+                className="support-input"
+                autoComplete="email"
+              />
+              <button type="submit" className="support-submit" disabled={isSubmitting}>
+                {isSubmitting ? "Sending..." : "Create Ticket"}
+              </button>
+            </form>
           </div>
         </div>
       </section>
