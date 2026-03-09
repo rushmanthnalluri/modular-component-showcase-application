@@ -53,11 +53,12 @@ export async function sendEmail({ toEmail, subject, text, html }) {
 }
 
 export async function sendPasswordResetNotification(toEmail) {
-  const subject = "Your password was changed";
-  const text = "Your account password was changed successfully. If this was not you, contact support immediately.";
+  const ticketId = Math.random().toString(36).slice(2, 10).toUpperCase();
+  const subject = `Ticket created ticket id ${ticketId}`;
+  const text = `Ticket created successfully. Ticket ID: ${ticketId}`;
   const html = [
-    "<p>Your account password was changed successfully.</p>",
-    "<p>If this was not you, contact support immediately.</p>",
+    "<p>Ticket created successfully.</p>",
+    `<p>Ticket ID: <strong>${ticketId}</strong></p>`,
   ].join("");
 
   return sendEmail({
