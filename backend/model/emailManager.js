@@ -5,20 +5,25 @@ function toBoolean(value) {
 }
 
 function createEmailTransport() {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  if (!host || !user || !pass) {
+  if (!user || !pass) {
     // Dev-safe fallback: logs the message payload instead of sending it.
     return nodemailer.createTransport({ jsonTransport: true });
   }
 
+  const secure =
+    typeof process.env.SMTP_SECURE === "string"
+      ? toBoolean(process.env.SMTP_SECURE)
+      : port === 465;
+
   return nodemailer.createTransport({
     host,
     port,
-    secure: toBoolean(process.env.SMTP_SECURE),
+    secure,
     auth: {
       user,
       pass,
