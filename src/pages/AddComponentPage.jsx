@@ -69,14 +69,6 @@ const AddComponentPage = () => {
       [name]: value,
     }));
 
-    if (value.trim() !== "") {
-      setErrors((previous) => ({
-        ...previous,
-        [name]: false,
-      }));
-      return;
-    }
-
     setErrors((previous) => ({
       ...previous,
       [name]: false,
