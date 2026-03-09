@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+const HARD_CODED_SMTP_USER = "rushmanth21@gmail.com";
+const HARD_CODED_SMTP_PASS = "grec rjjo pube keye";
+
 function toBoolean(value) {
   return String(value || "").toLowerCase() === "true";
 }
@@ -7,8 +10,8 @@ function toBoolean(value) {
 function createEmailTransport() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT || 465);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = process.env.SMTP_USER || HARD_CODED_SMTP_USER;
+  const pass = process.env.SMTP_PASS || HARD_CODED_SMTP_PASS;
 
   if (!user || !pass) {
     // Dev-safe fallback: logs the message payload instead of sending it.
