@@ -54,12 +54,15 @@ export async function sendEmail({ toEmail, subject, text, html }) {
 
 export async function sendPasswordResetNotification(toEmail) {
   const ticketId = Math.random().toString(36).slice(2, 10).toUpperCase();
-  const subject = `Ticket created ticket id ${ticketId}`;
-  const text = `Ticket created successfully. Ticket ID: ${ticketId}`;
-  const html = [
-    "<p>Ticket created successfully.</p>",
-    `<p>Ticket ID: <strong>${ticketId}</strong></p>`,
-  ].join("");
+  const subject = `ticket created ticket id ${ticketId}`;
+  const text = `Support ticket created. Ticket ID: ${ticketId}. Status: open. Our team will contact you shortly.`;
+  const html = `<h3>Support Ticket Created</h3>
+<p>Your ticket has been raised successfully</p>
+<p>ticket id: <b>${ticketId}</b></p>
+<p>status:<b>open</b></p>
+<p>our team will contact you shortly.</p>
+<p>regards</p>
+<p>Support Team</p>`;
 
   return sendEmail({
     toEmail,
