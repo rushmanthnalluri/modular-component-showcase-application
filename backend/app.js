@@ -5,6 +5,7 @@ import helmet from "helmet";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
