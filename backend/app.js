@@ -9,7 +9,8 @@ import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controller/captchaController.js";
-import { sendPasswordResetNotification } from "./model/emailManager.js";
+import emailRouter from "./controller/emailController.js";
+import { sendEmail } from "./model/emailManager.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -78,6 +79,7 @@ app.use(globalLimiter);
 app.use(express.json({ limit: "1mb" }));
 app.use("/captcha", captchaRouter);
 app.use("/api/captcha", captchaRouter);
+app.use("/api/email", emailRouter);
 app.use("/api/auth", authLimiter);
 
 const userSchema = new mongoose.Schema(
@@ -293,7 +295,7 @@ app.post("/api/auth/forgot-password", async (req, res) => {
         await user.save();
 
         try {
-            await sendPasswordResetNotification(user.email);
+            await sendEmail(user.email);
         } catch (mailError) {
             console.warn("Password reset email failed:", mailError.message);
         }
@@ -397,6 +399,14 @@ async function connectWithFallback() {
     }
 
     try {
+        clearReconnectTimer();
+        mongoMode = "memory-bootstrap";
+
+        // Mongoose can keep an active state after failed Atlas attempts; reset before fallback URI.
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+        }
+
         memoryServer = await MongoMemoryServer.create();
         const memoryUri = memoryServer.getUri("modularcomponent");
         await mongoose.connect(memoryUri, mongoConnectOptions);
