@@ -1,153 +1,188 @@
 # Modular Component Showcase Application
 
-A professional full-stack platform for browsing, previewing, and contributing reusable UI components.
+A full-stack React + Express application for discovering reusable UI components, viewing code examples, and contributing new components through authenticated developer workflows.
 
-## Live Access
+## Live URLs
 
-- App: https://rushmanthnalluri.github.io/modular-component-showcase-application/
-- API Base: https://modular-component-showcase-application.onrender.com/api
-- API Health: https://modular-component-showcase-application.onrender.com/health
+- Frontend: https://rushmanthnalluri.github.io/modular-component-showcase-application/
+- API base: https://modular-component-showcase-application.onrender.com/api
+- API health: https://modular-component-showcase-application.onrender.com/health
 
-## Highlights
+## What This Project Includes
 
-- Discover components with search and category filters
-- Share discovery links using query-based URLs (for example `?q=button&category=forms`)
-- View component details and code examples
-- Register and login with role-based access controls
-- Add custom components through protected workflows
-- Reset passwords through a working forgot-password flow
-- Support dark/light theme preferences and toast notifications
-- SEO-ready metadata, robots policy, and sitemap for better global discoverability
+- Component browsing with search and category filters
+- Detail and protected code-view pages per component
+- Auth flows: register, login, forgot-password reset
+- Role-aware component submission (`developer` or `admin` access)
+- Toast notifications and theme context support
+- SEO assets in `public/robots.txt` and `public/sitemap.xml`
+- Verification scripts for frontend/backend connectivity and protected API flow
 
-## Architecture
+## Tech Stack
 
-### Frontend
+- Frontend: React 18, Vite, React Router
+- Backend: Express 5, Mongoose, JWT, bcrypt
+- Security and API hardening: CORS, Helmet, express-rate-limit
+- Database strategy: MongoDB Atlas with optional in-memory fallback for local resilience
+- Hosting: GitHub Pages (frontend), Render (backend)
 
-- React 18 + Vite
-- React Router for route-level pages
-- Service layer for API/auth abstraction
-
-### Backend
-
-- Node.js + Express
-- MongoDB (Atlas) with safe fallback behavior
-- JWT-based authentication and protected endpoints
-- CORS, Helmet, and rate limiting for API hardening
-
-### Delivery
-
-- GitHub Pages for frontend hosting
-- Render for backend hosting
-- GitHub Actions for automated frontend deployment
-
-## Repository Structure
+## Project Structure
 
 ```text
-src/
-  components/          reusable UI components
-  context/             app-level context providers
-  data/                static component dataset
-  pages/               route pages
-  services/            API and auth integration
-backend/
-  app.js               Express server and routes
-scripts/
-  verify-connection.mjs
-  verify-connection-auto.mjs
-  verify-all.mjs
+.
+|- src/
+|  |- components/       # UI building blocks
+|  |- context/          # Theme/context providers
+|  |- data/             # Local seed/static showcase data
+|  |- pages/            # Route-level screens
+|  |- services/         # API/auth/storage helpers
+|  |- App.jsx           # Main route configuration
+|  `- main.jsx          # App bootstrap
+|- backend/
+|  |- app.js            # Express app, auth, components APIs
+|  |- controller/       # Captcha and email endpoints
+|  `- model/            # Captcha and email manager utilities
+|- scripts/
+|  |- verify-connection.mjs
+|  |- verify-connection-auto.mjs
+|  `- verify-all.mjs
+|- render.yaml          # Render service config
+`- package.json         # Root scripts and frontend deps
 ```
 
-## Local Setup
+## Local Development
 
-### 1) Install dependencies
+### 1. Prerequisites
+
+- Node.js 20+
+- npm 9+
+
+### 2. Install dependencies
+
+From project root:
 
 ```bash
 npm install
 ```
 
-### 2) Configure frontend environment
+Note: root `postinstall` also installs backend dependencies.
 
-Create a `.env` file at the project root:
+### 3. Configure environment variables
+
+### Frontend (`.env` at project root)
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-### 3) Configure backend environment
+### Backend (`backend/.env`)
 
-Copy `backend/.env.example` to `backend/.env` and provide values.
+Create from template:
 
-Recommended:
+```powershell
+Copy-Item backend/.env.example backend/.env
+```
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Recommended values:
 
 - `PORT=5000`
-- `MONGODB_URI=<your_mongodb_connection_string>`
+- `MONGODB_URI=<your_atlas_connection_string>`
 - `JWT_SECRET=<long_random_secret>`
 - `FRONTEND_ORIGINS=http://localhost:5173,http://localhost:8080,http://localhost:8081`
-- `ALLOW_MEMORY_FALLBACK=true` (local only; set to `false` in production)
+- `ALLOW_MEMORY_FALLBACK=true` (use `false` in production)
 
-### 4) Run the app
+### 4. Start frontend and backend
 
-Frontend:
+Frontend (root):
 
 ```bash
 npm run dev
 ```
 
-Backend:
+Backend (root):
 
 ```bash
-npm --prefix backend run start
+npm run start
+```
+
+Optional backend watch mode:
+
+```bash
+npm --prefix backend run dev
 ```
 
 ## NPM Scripts
 
-- `npm run dev` — run Vite development server
-- `npm run build` — build production frontend bundle
-- `npm run preview` — preview production build
-- `npm run lint` — run ESLint
-- `npm run start` — start backend via root script
-- `npm run verify:connection` — verify API connectivity
-- `npm run verify:connection:auto` — auto-detect frontend URL and verify
-- `npm run verify:all` — end-to-end local verification flow
+Root scripts:
 
-## API Summary
+- `npm run dev` - Start Vite dev server
+- `npm run build` - Build frontend for production
+- `npm run preview` - Preview production frontend build
+- `npm run lint` - Run ESLint
+- `npm run start` - Start backend (`backend/app.js`)
+- `npm run verify:connection` - Verify frontend reachability + API auth/component flow
+- `npm run verify:connection:auto` - Auto-detect frontend URL then run verification
+- `npm run verify:all` - Start backend + frontend and run full verification
 
-### Health
+Backend scripts:
+
+- `npm --prefix backend run start` - Start backend server
+- `npm --prefix backend run dev` - Start backend with nodemon
+
+## API Endpoints
+
+Health:
 
 - `GET /health`
 
-### Authentication
+Authentication:
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/forgot-password`
 
-### Components
+Components:
 
 - `GET /api/components`
-- `POST /api/components` (authenticated + authorized)
+- `POST /api/components` (requires bearer token and developer/admin access)
 
-## Deployment
+Other routers:
+
+- `/captcha` and `/api/captcha`
+- `/api/email`
+
+## Frontend Routes
+
+- `/`
+- `/component/:id`
+- `/component/:id/code` (protected)
+- `/add-component` (protected)
+- `/contact`, `/about`, `/privacy`, `/terms`, `/help`
+- `/login`, `/register`
+
+## Deployment Notes
 
 ### Backend (Render)
 
-- Render service config is defined in `render.yaml`
-- Ensure environment variables are configured:
-  - `MONGODB_URI`
-  - `FRONTEND_ORIGINS` (include your GitHub Pages domain)
-  - `JWT_SECRET` (recommended for token continuity)
+- Service definition exists in `render.yaml`
+- Runtime: Node 20
+- Root dir: `backend`
+- Health check: `/health`
+- Required env vars on Render: `MONGODB_URI`, `FRONTEND_ORIGINS`, `JWT_SECRET`
 
 ### Frontend (GitHub Pages)
 
-- Workflow file: `.github/workflows/deploy-pages.yml`
-- The workflow supports:
-  - Manual `api_base_url` override via workflow dispatch
-  - Fallback API URL when no override is supplied
-- SEO/discovery assets are served from `public/robots.txt` and `public/sitemap.xml`
+- Deploy from built Vite assets
+- Ensure frontend is configured with the correct backend API base URL
+- Keep `FRONTEND_ORIGINS` in backend aligned with deployed frontend origin(s)
 
-## Quality and Verification
+## Verification Checklist
 
-Run these checks before deployment:
+Run before release:
 
 ```bash
 npm run lint
@@ -157,23 +192,23 @@ npm run verify:all
 
 ## Troubleshooting
 
-### Register/Login fails in browser
+Auth requests fail:
 
-- Verify backend is healthy at `/health`
-- Confirm `FRONTEND_ORIGINS` includes your frontend origin
-- Ensure deployed frontend points to the correct backend API URL
+- Check backend health at `/health`
+- Confirm current frontend origin is listed in `FRONTEND_ORIGINS`
+- Verify frontend `VITE_API_BASE_URL` target
 
-### Forgot password fails
+No components returned:
 
-- Confirm backend deployment includes `POST /api/auth/forgot-password`
-- Validate email + phone combination matches an existing account
+- Confirm `GET /api/components` works directly
+- Check backend DB mode in `/health` response (`atlas`, `memory`, or reconnecting states)
 
-### Components appear empty
+Forgot password fails:
 
-- Verify `GET /api/components` responds successfully
-- Confirm frontend API base URL is set correctly
+- Ensure email exists and phone matches stored account phone
+- Confirm backend includes `POST /api/auth/forgot-password`
 
 ---
 
-Maintained as a production-oriented learning and showcase platform for modular UI development.
+Maintained as a modular UI showcase platform with practical full-stack auth and deployment workflows.
 
