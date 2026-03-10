@@ -103,6 +103,12 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.support-textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
 .support-submit {
   border: 0;
   border-radius: 8px;
