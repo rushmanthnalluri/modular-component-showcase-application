@@ -9,7 +9,7 @@ function generateText(length) {
   return ticketid;
 }
 
-export async function sendEmail(toEmail) {
+export async function sendEmail(toEmail, ticket = null) {
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -21,12 +21,20 @@ export async function sendEmail(toEmail) {
   });
 
   const ticketId = generateText(6);
+  const ticketTitle = String(ticket?.title || "General Support");
+  const ticketCategory = String(ticket?.category || "General");
+  const ticketDescription = String(ticket?.description || "No description provided.");
+
   const mailOptions = {
     to: toEmail,
-    subject: `Ticket created - Ticket ID: ${ticketId}`,
+    subject: `Ticket created - ${ticketTitle} - Ticket ID: ${ticketId}`,
     html: `<h3>Support Ticket Created</h3>
                <p>Your ticket has been successfully created.</p>
                <p>Ticket ID: <b>${ticketId}</b></p>
+               <p>Title: <b>${ticketTitle}</b></p>
+               <p>Category: <b>${ticketCategory}</b></p>
+               <p>Description:</p>
+               <p>${ticketDescription}</p>
                <p>Status: <b>Open</b></p>
                <p>Our support team will contact you shortly.</p>
                <br/>
