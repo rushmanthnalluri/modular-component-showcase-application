@@ -59,9 +59,31 @@ const Contact = () => {
         email: "",
       });
     } catch (error) {
+      const errorMessage = String(error?.message || "");
+      const isNotFound = errorMessage.includes("404");
+
+      if (isNotFound) {
+        const subject = encodeURIComponent(`Support Ticket: ${payload.title}`);
+        const body = encodeURIComponent(
+          [
+            `Category: ${payload.category}`,
+            `From: ${payload.toemail}`,
+            "",
+            payload.description,
+          ].join("\n")
+        );
+
+        window.location.href = `mailto:${APP_INFO.supportEmail}?subject=${subject}&body=${body}`;
+        toast({
+          title: "Backend ticket API unavailable",
+          description: "Opened your email app with ticket details prefilled.",
+        });
+        return;
+      }
+
       toast({
         title: "Ticket failed",
-        description: error.message || "Unable to create support ticket.",
+        description: errorMessage || "Unable to create support ticket.",
       });
     } finally {
       setIsSubmitting(false);
