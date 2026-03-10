@@ -1,9 +1,9 @@
 import { apiRequest } from "@/services/apiClient";
 
-export async function sendSupportTicketEmail(toemail) {
+export async function sendSupportTicketEmail(ticket) {
   const payload = await apiRequest("/email/send", {
     method: "POST",
-    body: JSON.stringify({ toemail }),
+    body: JSON.stringify(ticket),
   });
 
   if (!payload || Number(payload.code) !== 200) {
