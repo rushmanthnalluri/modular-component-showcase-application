@@ -16,9 +16,10 @@ let mongoMode = "disconnected";
 let memoryServer = null;
 const isProduction = process.env.NODE_ENV === "production";
 const allowMemoryFallback =
-    typeof process.env.ALLOW_MEMORY_FALLBACK === "string"
+    !isProduction &&
+    (typeof process.env.ALLOW_MEMORY_FALLBACK === "string"
         ? process.env.ALLOW_MEMORY_FALLBACK !== "false"
-        : !isProduction;
+        : true);
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
 let reconnectTimer = null;
 let reconnectAttempt = 0;
@@ -381,6 +382,10 @@ const mongoUri = process.env.MONGODB_URI;
 
 if (!process.env.JWT_SECRET) {
     console.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
+}
+
+if (isProduction && process.env.ALLOW_MEMORY_FALLBACK === "true") {
+    console.warn("ALLOW_MEMORY_FALLBACK is ignored in production. Configure MONGODB_URI for persistent data.");
 }
 
 if (isProduction && allowedOrigins.length === 0) {
