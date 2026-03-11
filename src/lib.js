@@ -32,7 +32,26 @@ export async function callApi(rmethod, url, data, responseHandler, requestOption
 
   const response = await fetch(url, options);
   if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
+    // Read the API's own error message from the response body.
+    let apiMessage = "";
+    try {
+      const errBody = await response.json();
+      apiMessage = String(errBody?.message || errBody?.msg || "");
+    } catch {
+      // ignore JSON parse errors on error responses
+    }
+
+    if (response.status === 401) {
+      const hadToken = Boolean(localStorage.getItem("authToken"));
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUser");
+      window.dispatchEvent(new Event("auth-state-changed"));
+      if (hadToken && !apiMessage) {
+        throw new Error("Session expired. Please log in again.");
+      }
+    }
+
+    throw new Error(apiMessage || `${response.status}: ${response.statusText}`);
   }
 
   const payload = response.status === 204 ? null : await response.json();
