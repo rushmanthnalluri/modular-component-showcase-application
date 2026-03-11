@@ -9,7 +9,6 @@ import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controller/captchaController.js";
-import emailRouter from "./controller/emailController.js";
 import { sendEmail } from "./model/emailManager.js";
 
 const app = express();
@@ -79,8 +78,24 @@ app.use(globalLimiter);
 app.use(express.json({ limit: "1mb" }));
 app.use("/captcha", captchaRouter);
 app.use("/api/captcha", captchaRouter);
-app.use("/api/email", emailRouter);
 app.use("/api/auth", authLimiter);
+
+app.post("/api/email/send", async (req, res) => {
+    const toEmail = String(req.body?.toemail || req.body?.toEmail || "").trim();
+    const title = String(req.body?.title || "").trim();
+    const category = String(req.body?.category || "").trim();
+    const description = String(req.body?.description || "").trim();
+
+    if (!toEmail || !title || !category || !description) {
+        return res.status(400).json({
+            code: 400,
+            msg: "title, category, description and toemail are required",
+        });
+    }
+
+    const response = await sendEmail(toEmail, { title, category, description });
+    res.json(response);
+});
 
 const userSchema = new mongoose.Schema(
     {
