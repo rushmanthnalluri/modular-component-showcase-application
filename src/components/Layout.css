@@ -10,6 +10,33 @@
   padding-top: 80px;
 }
 
+.memory-mode-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  background: #fefce8;
+  border-bottom: 2px solid #fbbf24;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+.memory-mode-banner-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  color: #92400e;
+  flex-shrink: 0;
+}
+
 .layout-container {
   width: 100%;
   max-width: 1380px;
