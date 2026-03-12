@@ -192,3 +192,32 @@
 .component-link:hover {
   background: #111827;
 }
+
+.component-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.component-delete-btn {
+  display: inline-block;
+  border-radius: 8px;
+  border: 1px solid #dc2626;
+  background: transparent;
+  color: #dc2626;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.component-delete-btn:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.component-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
