@@ -99,10 +99,6 @@ export function subscribeToAuthUser(onChange) {
   };
 }
 
-export function isAuthenticated() {
-  return Boolean(localStorage.getItem(AUTH_TOKEN_KEY));
-}
-
 export function canAccessAddComponent(user) {
   if (!user) {
     return false;
