@@ -5,6 +5,8 @@ import ComponentCard from "@/components/ComponentCard";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import { fetchComponents } from "@/services/mockApi";
+import { deleteComponent } from "@/services/componentsStore";
+import { subscribeToAuthUser } from "@/services/authAccess";
 import { categories } from "@/data/components.data";
 import "./Index.css";
 
@@ -15,6 +17,9 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [authUser, setAuthUser] = useState(null);
+
+  useEffect(() => subscribeToAuthUser(setAuthUser), []);
   const validCategoryIds = useMemo(
     () => categories.map((category) => category.id),
     []
@@ -45,6 +50,11 @@ const Index = () => {
       isActive = false;
     };
   }, []);
+
+  const handleDelete = async (id) => {
+    await deleteComponent(id);
+    setComponentItems((prev) => prev.filter((c) => c.id !== id));
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -146,6 +156,8 @@ const Index = () => {
                     name={component.name}
                     description={component.description}
                     thumbnail={component.thumbnail}
+                    canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
+                    onDelete={handleDelete}
                   />
                 ))}
               </div>

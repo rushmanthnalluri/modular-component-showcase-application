@@ -1,14 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./ShowcaseComponents.css";
 
-// Props contract: parent passes display data; card remains a pure presentational component.
 const ComponentCard = ({
   id,
   name,
   description,
   thumbnail,
+  canDelete,
+  onDelete,
 }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(id);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="component-card">
       <div className="component-card-img-wrap">
@@ -22,9 +35,22 @@ const ComponentCard = ({
       <div className="component-card-body">
         <h3>{name}</h3>
         <p>{description}</p>
-        <Link to={`/component/${id}`} className="component-link">
-          View Component
-        </Link>
+        <div className="component-card-actions">
+          <Link to={`/component/${id}`} className="component-link">
+            View Component
+          </Link>
+          {canDelete && (
+            <button
+              type="button"
+              className="component-delete-btn"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              aria-label={`Delete ${name}`}
+            >
+              {isDeleting ? "Deleting…" : "Delete"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

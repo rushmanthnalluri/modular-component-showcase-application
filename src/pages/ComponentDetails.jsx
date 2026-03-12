@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import Layout from "@/components/Layout";
 import { fetchComponentById } from "@/services/mockApi";
+import { deleteComponent } from "@/services/componentsStore";
+import { subscribeToAuthUser } from "@/services/authAccess";
 import "./ComponentDetails.css";
 
 const ComponentDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("jsx");
   const [item, setItem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [previewSrc, setPreviewSrc] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => subscribeToAuthUser(setAuthUser), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,6 +50,21 @@ const ComponentDetail = () => {
     }
     setPreviewSrc("");
   };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${item.name}"? This cannot be undone.`)) return;
+    setIsDeleting(true);
+    try {
+      await deleteComponent(item.id);
+      navigate("/", { replace: true });
+    } catch {
+      setIsDeleting(false);
+    }
+  };
+
+  const canDelete = Boolean(
+    authUser && item && (authUser.id === item.createdBy || authUser.role === "admin")
+  );
 
   if (!item) {
     if (isLoading) {
@@ -78,6 +100,16 @@ const ComponentDetail = () => {
         <div className="details-head">
           <h1>{item.name}</h1>
           <span className="component-tag">{item.category}</span>
+          {canDelete && (
+            <button
+              type="button"
+              className="component-delete-btn"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting…" : "Delete Component"}
+            </button>
+          )}
         </div>
         <p className="details-desc">{item.description}</p>
         <div className="details-grid">
