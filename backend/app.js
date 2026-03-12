@@ -332,6 +332,28 @@ app.get("/api/components", async (_req, res) => {
     }
 });
 
+app.delete("/api/components/:id", requireAuth, async (req, res) => {
+    try {
+        const component = await Component.findOne({ id: req.params.id });
+        if (!component) {
+            return res.status(404).json({ message: "Component not found." });
+        }
+
+        const isOwner = String(component.createdBy) === String(req.user._id);
+        const isAdmin = String(req.user.role).toLowerCase() === "admin";
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: "You can only delete your own components." });
+        }
+
+        await Component.deleteOne({ id: req.params.id });
+        return res.json({ message: "Component deleted." });
+    } catch (error) {
+        console.error("Delete component error:", error.message);
+        return res.status(500).json({ message: "Unable to delete component." });
+    }
+});
+
 app.post("/api/components", requireAuth, requireDeveloper, async (req, res) => {
     try {
         const {
