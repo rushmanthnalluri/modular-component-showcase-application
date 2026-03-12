@@ -10,6 +10,7 @@ function mapCloudComponent(rawItem) {
     tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
     thumbnail: String(rawItem.thumbnail || ""),
     screenshot: String(rawItem.screenshot || ""),
+    createdBy: String(rawItem.createdBy || ""),
     code: {
       jsx: String(rawItem.code?.jsx || ""),
       css: String(rawItem.code?.css || ""),
@@ -65,4 +66,10 @@ export async function addCustomComponent({
   });
 
   return mapCloudComponent(payload);
+}
+
+export async function deleteComponent(id) {
+  await apiRequest(`/components/${id}`, {
+    method: "DELETE",
+  });
 }
