@@ -12,6 +12,8 @@ const quickLinks = [
 const supportLinks = [
   { name: "Privacy", to: "/privacy" },
   { name: "Terms", to: "/terms" },
+  { name: "Contact", to: "/contact" },
+  { name: "Help", to: "/help" },
 ];
 
 const Footer = () => {

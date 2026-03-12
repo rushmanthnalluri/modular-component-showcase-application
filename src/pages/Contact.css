@@ -1,0 +1,125 @@
+.contact-page {
+  padding: 40px 0;
+}
+
+.contact-card {
+  max-width: 760px;
+  margin: 0 auto;
+  border: 1px solid #d7dee7;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px #e9eef5;
+  padding: 24px;
+}
+
+.contact-card h1 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 34px;
+}
+
+.contact-card p {
+  margin: 0 0 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.contact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-item {
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.contact-item span:last-child {
+  color: #475569;
+}
+
+.contact-link {
+  text-decoration: none;
+  color: #2563eb;
+  font-size: 14px;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+.support-ticket-form {
+  margin-top: 18px;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.support-ticket-form h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.support-ticket-form p {
+  margin: 0;
+}
+
+.support-label {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.support-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.support-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.support-textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.support-submit {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.support-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

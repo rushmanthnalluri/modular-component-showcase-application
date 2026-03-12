@@ -5,7 +5,9 @@ import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ComponentDetail from "./pages/ComponentDetails";
 import ComponentCode from "./pages/ComponentCode";
+import Contact from "./pages/Contact";
 import About from "./pages/About";
+import Help from "./pages/Help";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AddComponentPage from "./pages/AddComponentPage";
@@ -37,9 +39,11 @@ const App = () => {
               )}
             />
           </Route>
+          <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
