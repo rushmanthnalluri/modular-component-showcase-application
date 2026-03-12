@@ -13,9 +13,8 @@ function getDefaultApiUrl() {
 
 // Keep a single source for backend URL so API calls can share one utility.
 export const APIURL = import.meta.env.VITE_API_URL || getDefaultApiUrl();
-export const IMGURL = import.meta.env.BASE_URL;
 
-export async function callApi(rmethod, url, data, responseHandler, requestOptions = {}) {
+export async function callApi(rmethod, url, data, requestOptions = {}) {
   const method = String(rmethod || "GET").toUpperCase();
   const customHeaders = requestOptions.headers || {};
   const options = {
@@ -54,11 +53,5 @@ export async function callApi(rmethod, url, data, responseHandler, requestOption
     throw new Error(apiMessage || `${response.status}: ${response.statusText}`);
   }
 
-  const payload = response.status === 204 ? null : await response.json();
-
-  if (typeof responseHandler === "function") {
-    responseHandler(payload);
-  }
-
-  return payload;
+  return response.status === 204 ? null : await response.json();
 }

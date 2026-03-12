@@ -24,7 +24,6 @@ export async function apiRequest(path, options = {}) {
       requestConfig.method || "GET",
       `${API_BASE_URL}${path}`,
       requestConfig.body,
-      undefined,
       { headers: requestConfig.headers }
     );
   } catch (primaryError) {
@@ -37,7 +36,6 @@ export async function apiRequest(path, options = {}) {
         requestConfig.method || "GET",
         `${RENDER_API_BASE_URL}${path}`,
         requestConfig.body,
-        undefined,
         { headers: requestConfig.headers }
       );
     } catch (fallbackError) {
