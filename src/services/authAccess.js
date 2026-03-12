@@ -112,3 +112,11 @@ export function canAccessAddComponent(user) {
   const isVerifiedDeveloper = Boolean(user.isVerifiedDeveloper);
   return role === "admin" || role === "developer" || isVerifiedDeveloper;
 }
+
+export function canAccessAdmin(user) {
+  if (!user) {
+    return false;
+  }
+
+  return String(user.role || "").toLowerCase() === "admin";
+}
