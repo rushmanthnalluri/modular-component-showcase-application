@@ -7,8 +7,6 @@ const quickLinks = [
   { name: "Home", to: "/" },
   { name: "About Me", to: "/about" },
   { name: "Components", to: "/#components" },
-  { name: "Contact", to: "/contact" },
-  { name: "Help", to: "/help" },
 ];
 
 const supportLinks = [
