@@ -85,7 +85,10 @@ const ComponentPlayground = ({
         <p>{definition.summary}</p>
         <div className="playground-control-grid">
           {controls.map((control) => (
-            <label key={control.id} className="playground-control">
+            <label
+              key={control.id}
+              className={control.type === "checkbox" ? "playground-control playground-control--checkbox" : "playground-control"}
+            >
               <span>{control.label}</span>
               {(() => {
                 const controlValue = values[control.id] ?? control.defaultValue;
