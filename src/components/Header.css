@@ -45,6 +45,12 @@
   text-decoration: none;
   padding: 8px 12px;
   font-size: 13px;
+  line-height: 1;
+  min-height: 34px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .theme-toggle {
@@ -52,9 +58,6 @@
   color: #0f172a;
   background: #ffffff;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 40px;
   height: 34px;
   padding: 0;

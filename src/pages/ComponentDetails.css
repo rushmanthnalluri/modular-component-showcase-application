@@ -123,7 +123,7 @@
 }
 
 .preview-head {
-  height: 44px;
+  min-height: 44px;
   border-bottom: 1px solid hsl(var(--border-light));
   background: hsl(var(--bg-main));
   display: flex;
@@ -145,6 +145,11 @@
   border-radius: 6px;
   font-size: 12px;
   padding: 5px 10px;
+  min-height: 30px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -200,6 +205,7 @@
 .code-tabs {
   display: flex;
   gap: 8px;
+  align-items: center;
   border-bottom: 1px solid hsl(var(--border-light));
   background: hsl(var(--bg-main));
   padding: 8px;
@@ -212,6 +218,11 @@
   color: hsl(var(--text-secondary));
   padding: 7px 12px;
   font-size: 12px;
+  min-height: 32px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 

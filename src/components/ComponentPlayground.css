@@ -61,12 +61,14 @@
   border-radius: 8px;
   border: 1px solid hsl(var(--border));
   padding: 8px 10px;
+  min-height: 40px;
   background: hsl(var(--bg-main));
   color: hsl(var(--foreground));
 }
 
 .playground-control textarea {
   resize: vertical;
+  min-height: 88px;
 }
 
 .playground-control input[type="checkbox"] {
@@ -76,10 +78,11 @@
 
 .playground-control--checkbox {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   min-height: 100%;
+  padding-top: 2px;
 }
 
 .playground-control--checkbox span {
