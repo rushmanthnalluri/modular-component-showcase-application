@@ -325,7 +325,7 @@ const ComponentDetail = () => {
                 {shareCopied ? "Link Copied" : "Copy Share Link"}
               </button>
             </div>
-            <div className="preview-body">
+            <div className={hasGeneratedTab ? "preview-body preview-body--playground" : "preview-body"}>
               <ComponentPlayground
                 componentId={item.id}
                 componentName={item.name}
