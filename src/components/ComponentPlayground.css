@@ -23,14 +23,16 @@
 }
 
 .playground-controls h3 {
-  margin: 0;
+  margin: 0 0 4px;
   font-size: 14px;
+  line-height: 1.3;
 }
 
 .playground-controls p {
-  margin: 6px 0 12px;
+  margin: 0 0 14px;
   color: hsl(var(--muted-foreground));
   font-size: 12px;
+  line-height: 1.45;
 }
 
 .playground-control-grid {
@@ -78,20 +80,21 @@
 
 .playground-control--checkbox {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 100%;
-  padding-top: 2px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 40px;
+  padding-top: 0;
 }
 
 .playground-control--checkbox span {
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.2;
 }
 
 .playground-control--checkbox input[type="checkbox"] {
   flex-shrink: 0;
+  margin: 0;
 }
 
 .playground-control-input {
