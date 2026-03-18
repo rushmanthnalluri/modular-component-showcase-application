@@ -74,23 +74,11 @@
   height: 40px;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .playground-control textarea::-webkit-scrollbar {
-  width: 6px;
-}
-
-.playground-control textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.playground-control textarea::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 999px;
-}
-
-.playground-control textarea::-webkit-scrollbar-button {
   display: none;
   width: 0;
   height: 0;
