@@ -71,14 +71,14 @@ export default GradientButton;`,
   color: #ffffff;
   cursor: pointer;
   background: linear-gradient(90deg, #0d9488, #0891b2, #f97316);
-  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.22);
+  box-shadow: none;
   transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
 }
 
 .gradient-button:hover {
   transform: scale(1.05);
   filter: brightness(0.95);
-  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.3);
+  box-shadow: none;
 }`,
     },
   },
@@ -116,7 +116,7 @@ export default GlassCard;`,
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   border: 1px solid #fed7aa;
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: none;
   transition: all 0.3s ease;
 }
 
@@ -364,7 +364,7 @@ export default ProfileCard;`,
   margin: 0 auto 16px auto;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 10px 16px rgba(15, 23, 42, 0.35);
+  box-shadow: none;
 }
 
 .profile-card-avatar {

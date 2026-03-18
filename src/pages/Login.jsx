@@ -317,6 +317,8 @@ const Login = () => {
                 onChange={handleChange}
                 placeholder="Enter your email"
                 className={errors.email ? "error" : ""}
+                autoComplete="email"
+                aria-invalid={errors.email ? "true" : "false"}
               />
             </div>
 
@@ -333,6 +335,8 @@ const Login = () => {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 className={errors.password ? "error" : ""}
+                autoComplete="current-password"
+                aria-invalid={errors.password ? "true" : "false"}
               />
               <button
                 type="button"
@@ -376,6 +380,7 @@ const Login = () => {
                 value={captchaInput}
                 onChange={(event) => setCaptchaInput(event.target.value)}
                 placeholder="Enter captcha"
+                autoComplete="off"
               />
             </div>
 
@@ -386,13 +391,20 @@ const Login = () => {
                 aria-label="Forgot password"
                 ref={forgotPasswordButtonRef}
                 onClick={handleForgotPasswordClick}
+                aria-expanded={showForgotPasswordForm}
+                aria-controls="forgot-password-panel"
               >
                 Forgot Password?
               </button>
             </div>
 
             {showForgotPasswordForm ? (
-              <div className="forgot-password-panel" aria-label="Forgot password reset form">
+              <div
+                className="forgot-password-panel"
+                id="forgot-password-panel"
+                role="region"
+                aria-label="Forgot password reset form"
+              >
                 <div className="input-group">
                   <label htmlFor="forgot-email" className="sr-only">
                     Registered email
@@ -406,6 +418,7 @@ const Login = () => {
                     value={forgotData.email}
                     onChange={handleForgotPasswordChange}
                     placeholder="Registered email"
+                    autoComplete="email"
                   />
                 </div>
 
@@ -422,6 +435,7 @@ const Login = () => {
                     value={forgotData.phone}
                     onChange={handleForgotPasswordChange}
                     placeholder="Registered phone number"
+                    autoComplete="tel"
                   />
                 </div>
 
@@ -437,6 +451,7 @@ const Login = () => {
                     value={forgotData.newPassword}
                     onChange={handleForgotPasswordChange}
                     placeholder="New password"
+                    autoComplete="new-password"
                   />
                 </div>
 

@@ -160,11 +160,11 @@
   border: 1px solid rgba(255, 255, 255, 0.45);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.74));
   padding: 18px;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+  box-shadow: none;
 }
 
-.demo-glass-card--elevated {
-  box-shadow: 0 20px 30px rgba(15, 23, 42, 0.2);
+ .demo-glass-card--elevated {
+  box-shadow: none;
 }
 
 .demo-glass-card h3 {
@@ -195,15 +195,15 @@
 }
 
 .demo-neon-input--neutral .demo-neon-input {
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.18);
+  box-shadow: none;
 }
 
-.demo-neon-input--success .demo-neon-input {
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+ .demo-neon-input--success .demo-neon-input {
+  box-shadow: none;
 }
 
-.demo-neon-input--error .demo-neon-input {
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.26);
+ .demo-neon-input--error .demo-neon-input {
+  box-shadow: none;
 }
 
 .demo-neon-input-wrap span {
