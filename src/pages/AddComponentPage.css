@@ -27,14 +27,14 @@
 
 .add-component-card form {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .add-component-card label {
   font-size: 14px;
   color: #1f2937;
   font-weight: 600;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .add-component-card input,
@@ -47,11 +47,13 @@
   color: #111827;
   font-size: 14px;
   padding: 10px 12px;
+  min-height: 42px;
   box-sizing: border-box;
 }
 
 .add-component-card textarea {
   resize: vertical;
+  min-height: 96px;
 }
 
 .add-component-card input.error,
@@ -76,6 +78,10 @@
   background: #1c1c1e;
   color: #ffffff;
   font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .add-component-submit:hover {
