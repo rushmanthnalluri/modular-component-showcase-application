@@ -31,19 +31,10 @@ const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
   );
 });
 Toast.displayName = ToastPrimitives.Root.displayName;
-const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
-  <ToastPrimitives.Action
-    ref={ref}
-    className={joinClasses("toast-action", className)}
-    {...props}
-  />
-));
-ToastAction.displayName = ToastPrimitives.Action.displayName;
 const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
   <ToastPrimitives.Close
     ref={ref}
     className={joinClasses("toast-close", className)}
-    toast-close=""
     {...props}
   >
     <X className="toast-close-icon" />
@@ -69,7 +60,6 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
 export {
   Toast,
-  ToastAction,
   ToastClose,
   ToastDescription,
   ToastProvider,
