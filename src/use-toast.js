@@ -78,16 +78,6 @@ function reducer(state, action) {
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
       };
 
-    case "UPDATE_TOAST":
-      return {
-        ...state,
-        toasts: state.toasts.map((toastItem) => {
-          return toastItem.id === action.toast.id
-            ? { ...toastItem, ...action.toast }
-            : toastItem;
-        }),
-      };
-
     case "DISMISS_TOAST": {
       const { toastId } = action;
 

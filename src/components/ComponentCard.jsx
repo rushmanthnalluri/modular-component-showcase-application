@@ -47,7 +47,7 @@ const ComponentCard = ({
               disabled={isDeleting}
               aria-label={`Delete ${name}`}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           )}
         </div>
@@ -57,3 +57,4 @@ const ComponentCard = ({
 };
 
 export default React.memo(ComponentCard);
+

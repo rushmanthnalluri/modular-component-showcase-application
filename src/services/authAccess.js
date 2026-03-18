@@ -1,7 +1,6 @@
 import { apiRequest } from "@/services/apiClient";
 
 const AUTH_USER_KEY = "authUser";
-const AUTH_TOKEN_KEY = "authToken";
 
 function readStoredAuthUser() {
   try {
@@ -21,7 +20,7 @@ function notifyAuthChange() {
   window.dispatchEvent(new Event("auth-state-changed"));
 }
 
-export async function getAuthUser() {
+export function getAuthUser() {
   return readStoredAuthUser();
 }
 
@@ -50,7 +49,6 @@ export async function authenticateUser({ email, password }) {
     body: JSON.stringify({ email, password }),
   });
 
-  localStorage.setItem(AUTH_TOKEN_KEY, payload.token);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload.user));
   notifyAuthChange();
 
@@ -69,7 +67,15 @@ export async function forgotPassword({ email, phone, newPassword }) {
 }
 
 export async function logoutUser() {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  } catch {
+    // Clear local auth state even when the backend session has already expired.
+  }
+
   localStorage.removeItem(AUTH_USER_KEY);
   notifyAuthChange();
 }
@@ -80,7 +86,7 @@ export function subscribeToAuthUser(onChange) {
   };
 
   const handleStorage = (event) => {
-    if (!event.key || event.key === AUTH_USER_KEY || event.key === AUTH_TOKEN_KEY) {
+    if (!event.key || event.key === AUTH_USER_KEY) {
       emitState();
     }
   };
@@ -107,12 +113,4 @@ export function canAccessAddComponent(user) {
   const role = String(user.role || "").toLowerCase();
   const isVerifiedDeveloper = Boolean(user.isVerifiedDeveloper);
   return role === "admin" || role === "developer" || isVerifiedDeveloper;
-}
-
-export function canAccessAdmin(user) {
-  if (!user) {
-    return false;
-  }
-
-  return String(user.role || "").toLowerCase() === "admin";
 }

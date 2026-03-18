@@ -3,12 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "node --test tests/*.test.mjs",
+    "cleanup:verifier": "node scripts/cleanup-verifier-components.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",

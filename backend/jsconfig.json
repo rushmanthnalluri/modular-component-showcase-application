@@ -3,9 +3,9 @@
     "checkJs": false
   },
   "include": [
-    "app.js",
-    "controller/**/*.js",
-    "model/**/*.js"
+    "src/**/*.js",
+    "tests/**/*.mjs",
+    "src/**/*.mjs"
   ],
   "exclude": [
     "node_modules"

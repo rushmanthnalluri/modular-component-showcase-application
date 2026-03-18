@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   FileText,
   MessageSquare,
   MousePointerClick,
@@ -24,6 +25,10 @@ import accordionThumb from "@/assets/showcase/accordion.svg";
 import accordionScreenshot from "@/assets/showcase/accordion-screenshot.svg";
 import tabsThumb from "@/assets/showcase/tabs.svg";
 import tabsScreenshot from "@/assets/showcase/tabs-screenshot.svg";
+import dataTableThumb from "@/assets/showcase/data-table.svg";
+import dataTableScreenshot from "@/assets/showcase/data-table-screenshot.svg";
+import lineChartThumb from "@/assets/showcase/line-chart.svg";
+import lineChartScreenshot from "@/assets/showcase/line-chart-screenshot.svg";
 
 export const categories = [
   { id: "all", name: "All Components", icon: Palette },
@@ -32,6 +37,7 @@ export const categories = [
   { id: "forms", name: "Forms", icon: FileText },
   { id: "navigation", name: "Navigation", icon: Navigation },
   { id: "feedback", name: "Feedback", icon: MessageSquare },
+  { id: "data", name: "Data", icon: BarChart3 },
 ];
 
 export const components = [
@@ -590,7 +596,149 @@ export default Tabs;`,
   margin-top: 12px;
   padding: 12px;
   border: 1px solid #dbe2eb;
+      border-radius: 10px;
+}`,
+    },
+  },
+  {
+    id: "data-table",
+    name: "Data Table",
+    description: "Sortable table demo with threshold highlighting and optional row selection.",
+    category: "data",
+    tags: ["table", "sorting", "data"],
+    thumbnail: dataTableThumb,
+    screenshot: dataTableScreenshot,
+    code: {
+      jsx: `import React, { useMemo, useState } from "react";
+import "./DataTable.css";
+
+const rows = [
+  { id: "a1", component: "Button Variants", owner: "Priya", adoption: 92 },
+  { id: "a2", component: "Card Layout System", owner: "Rahul", adoption: 84 },
+  { id: "a3", component: "Navigation Shell", owner: "Kiran", adoption: 69 },
+];
+
+const DataTable = ({ threshold = 85 }) => {
+  const [sortDirection, setSortDirection] = useState("desc");
+
+  const sortedRows = useMemo(() => {
+    const copy = [...rows];
+    copy.sort((left, right) =>
+      sortDirection === "asc" ? left.adoption - right.adoption : right.adoption - left.adoption
+    );
+    return copy;
+  }, [sortDirection]);
+
+  return (
+    <table className="data-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Owner</th>
+          <th>
+            <button type="button" onClick={() => setSortDirection((d) => (d === "asc" ? "desc" : "asc"))}>
+              Adoption %
+            </button>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {sortedRows.map((row) => (
+          <tr key={row.id} className={row.adoption >= threshold ? "highlight" : ""}>
+            <td>{row.component}</td>
+            <td>{row.owner}</td>
+            <td>{row.adoption}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
+export default DataTable;`,
+      css: `.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #dbe2eb;
+  padding: 10px;
+  text-align: left;
+}
+
+.data-table .highlight td {
+  background: #e0f2fe;
+}`,
+    },
+  },
+  {
+    id: "live-line-chart",
+    name: "Live Line Chart",
+    description: "SVG line chart with async data-feed simulation and threshold marker.",
+    category: "data",
+    tags: ["chart", "line", "async"],
+    thumbnail: lineChartThumb,
+    screenshot: lineChartScreenshot,
+    code: {
+      jsx: `import React, { useEffect, useMemo, useState } from "react";
+import "./LiveLineChart.css";
+
+const seed = [54, 58, 60, 64, 62, 66, 70, 72];
+
+const toPath = (values, width, height, padding) => {
+  const stepX = (width - padding * 2) / Math.max(values.length - 1, 1);
+  const points = values.map((value, index) => {
+    const x = padding + index * stepX;
+    const y = height - padding - (value / 100) * (height - padding * 2);
+    return { x, y };
+  });
+  return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x + " " + point.y).join(" ");
+};
+
+const LiveLineChart = ({ threshold = 70 }) => {
+  const [values, setValues] = useState(seed);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setValues((current) => {
+        const last = current[current.length - 1] || 60;
+        const next = Math.max(20, Math.min(95, Math.round(last + (Math.random() * 12 - 6))));
+        return [...current.slice(-7), next];
+      });
+    }, 1200);
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  const path = useMemo(() => toPath(values, 520, 220, 22), [values]);
+
+  return (
+    <svg viewBox="0 0 520 220" className="live-chart" role="img" aria-label="Live line chart demo">
+      <line x1="22" y1={220 - 22 - (threshold / 100) * (220 - 44)} x2="498" y2={220 - 22 - (threshold / 100) * (220 - 44)} className="threshold" />
+      <path d={path} className="line" />
+    </svg>
+  );
+};
+
+export default LiveLineChart;`,
+      css: `.live-chart {
+  width: 100%;
+  border: 1px solid #dbe2eb;
   border-radius: 10px;
+  background: #ffffff;
+}
+
+.live-chart .threshold {
+  stroke: #f97316;
+  stroke-dasharray: 6 5;
+}
+
+.live-chart .line {
+  stroke: #0ea5e9;
+  stroke-width: 3;
+  fill: none;
 }`,
     },
   },

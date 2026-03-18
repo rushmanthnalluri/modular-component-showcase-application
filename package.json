@@ -9,10 +9,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:frontend": "vitest run --dir src",
+    "test": "npm run test:frontend && npm --prefix backend run test",
     "preview": "vite preview",
     "verify:connection": "node scripts/verify-connection.mjs",
     "verify:connection:auto": "node scripts/verify-connection-auto.mjs",
-    "verify:all": "node scripts/verify-all.mjs"
+    "verify:all": "node scripts/verify-all.mjs",
+    "review:smoke": "node scripts/review-smoke.mjs",
+    "cleanup:verifier": "npm --prefix backend run cleanup:verifier --"
   },
   "dependencies": {
     "@radix-ui/react-toast": "^1.2.14",
@@ -27,8 +31,10 @@
     "@vitejs/plugin-react-swc": "^3.11.0",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
-    "vite": "^7.3.0"
+    "vite": "^7.3.0",
+    "vitest": "^3.2.4"
   }
 }

@@ -1,6 +1,30 @@
 # Modular Component Showcase Application
 
-A full-stack React + Express application for discovering reusable UI components, previewing source code, and contributing custom components through authenticated workflows.
+## Description
+
+A SPA designed to demonstrate reusable UI components, their interactions, and behavior under different configurations. Focus is on component modularity, controlled state variations, prop-driven rendering, routing, and performance optimization. This is a meta-engineering project, ideal for practicing engineering concepts across all COs.
+
+## Key Architecture Goals
+
+- Modular component library with reusable and configurable UI elements.
+- Controlled state and props to manage dynamic behavior.
+- Route-based organization of component categories or demos.
+- Asynchronous simulation of interactions or dynamic data updates.
+- Performance optimization for multiple interactive components.
+- Conditional rendering to demonstrate different component states.
+- Accessibility-ready components with keyboard and focus handling.
+
+## Major Features
+
+- Library of reusable UI components (buttons, cards, tables, charts).
+- Interactive demos showcasing controlled state and prop variations.
+- Route-based navigation across component categories.
+- Async simulation of interactions or data feeding.
+- Conditional rendering for different component states and variants.
+- Performance-optimized rendering for multiple interactive demos.
+- Accessible demos with focus management and keyboard support.
+
+This implementation is delivered as a full-stack React + Express application for discovering reusable UI components, previewing source code, and contributing custom components through authenticated workflows.
 
 ## Live URLs
 
@@ -8,11 +32,12 @@ A full-stack React + Express application for discovering reusable UI components,
 - Backend API: https://modular-component-showcase-application.onrender.com/api
 - Health check: https://modular-component-showcase-application.onrender.com/health
 
-## Features
+## Implementation Highlights
 
 - Component gallery with search and category filters.
 - Component detail pages with protected code-view route.
 - Auth system: register, login, forgot-password reset.
+- Session auth via secure `httpOnly` cookie with CSRF protection for cookie-authenticated writes.
 - Role-based component submission (developer/admin or verified developer).
 - Owner/admin component deletion.
 - Contact page support ticket flow via backend email API (with mailto fallback).
@@ -41,9 +66,14 @@ A full-stack React + Express application for discovering reusable UI components,
 |  |- App.jsx
 |  `- main.jsx
 |- backend/
-|  |- app.js
-|  |- controller/
-|  `- model/
+|  |- src/
+|  |  |- app.js
+|  |  |- controller/
+|  |  |- middleware/
+|  |  |- model/
+|  |  |- routes/
+|  |  `- utils/
+|  `- tests/
 |- scripts/
 |  |- verify-connection.mjs
 |  |- verify-connection-auto.mjs
@@ -137,15 +167,20 @@ Root scripts:
 - `npm run build` - Build frontend.
 - `npm run preview` - Preview built frontend.
 - `npm run lint` - Run ESLint.
-- `npm run start` - Start backend (`backend/app.js`).
+- `npm run test:frontend` - Run Vitest frontend unit tests.
+- `npm run test` - Run frontend and backend tests.
+- `npm run start` - Start backend (`backend/src/app.js`).
 - `npm run verify:connection` - Verify frontend + backend + auth + create/list component flow.
 - `npm run verify:connection:auto` - Detect a live local frontend URL, then verify.
 - `npm run verify:all` - Start backend and frontend, wait for readiness, then verify.
+- `npm run review:smoke` - Start backend and frontend, smoke-check key SPA routes, then run verify flow.
+- `npm run cleanup:verifier` - Remove persisted verifier components from MongoDB.
 
 Backend scripts:
 
 - `npm --prefix backend run start`
 - `npm --prefix backend run dev`
+- `npm --prefix backend run cleanup:verifier -- --dry-run`
 
 ## API Overview
 
@@ -155,8 +190,10 @@ Health:
 
 Authentication:
 
+- `GET /api/auth/csrf`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/logout`
 - `POST /api/auth/forgot-password` (email + phone + newPassword)
 
 Components:
@@ -174,9 +211,15 @@ Support ticket email:
 
 - `POST /api/email/send`
 
+Security note:
+
+- Cookie-authenticated write requests require `X-CSRF-Token` with the token from `/api/auth/csrf`.
+- Bearer-token requests are still supported for verification tooling.
+
 ## Frontend Routes
 
 - `/`
+- `/category/:categoryId`
 - `/component/:id`
 - `/component/:id/code` (protected)
 - `/add-component` (protected)
@@ -214,6 +257,7 @@ Recommended pre-release checks:
 
 ```bash
 npm run lint
+npm run test
 npm run build
 npm run verify:all
 ```

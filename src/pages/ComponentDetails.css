@@ -57,6 +57,21 @@
   text-transform: capitalize;
 }
 
+.component-mode-badge {
+  border-radius: 999px;
+  border: 1px solid #d7dee7;
+  background: #f8fafc;
+  color: #475569;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.component-mode-badge--interactive {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .details-head .component-delete-btn {
   margin-left: auto;
   padding: 7px 16px;
@@ -114,6 +129,20 @@
   font-weight: 600;
 }
 
+.preview-share-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.preview-share-btn:hover {
+  background: #f1f5f9;
+}
+
 .preview-body {
   min-height: 320px;
   background: #ffffff;
@@ -164,4 +193,26 @@
   .details-grid {
     grid-template-columns: 1fr;
   }
+}
+
+html[data-theme="dark"] .component-mode-badge {
+  border-color: hsl(var(--border));
+  background: hsl(var(--bg-secondary));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .component-mode-badge--interactive {
+  border-color: rgba(249, 115, 22, 0.35);
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+}
+
+html[data-theme="dark"] .preview-share-btn {
+  border-color: hsl(var(--border));
+  background: hsl(var(--bg-secondary));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .preview-share-btn:hover {
+  background: hsl(var(--bg-main));
 }

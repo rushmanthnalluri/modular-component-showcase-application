@@ -31,29 +31,16 @@ const AddComponentPage = () => {
   const [fileNames, setFileNames] = useState({ thumbnail: "", screenshot: "" });
   const [canAddComponent, setCanAddComponent] = useState(null);
   const [submitError, setSubmitError] = useState("");
-  const { name, description, jsxCode, cssCode, category } = formValues;
+  const { name, description, jsxCode, category } = formValues;
   const isValid = Boolean(
     name.trim() &&
       description.trim() &&
       jsxCode.trim() &&
-      cssCode.trim() &&
       category.trim()
   );
   useEffect(() => {
-    let isMounted = true;
-
-    const loadAuthUser = async () => {
-      const authUser = await getAuthUser();
-      if (isMounted) {
-        setCanAddComponent(canAccessAddComponent(authUser));
-      }
-    };
-
-    loadAuthUser();
-
-    return () => {
-      isMounted = false;
-    };
+    const authUser = getAuthUser();
+    setCanAddComponent(canAccessAddComponent(authUser));
   }, []);
 
   const availableCategories = useMemo(
@@ -130,7 +117,7 @@ const AddComponentPage = () => {
       name: formValues.name.trim() === "",
       description: formValues.description.trim() === "",
       jsxCode: formValues.jsxCode.trim() === "",
-      cssCode: formValues.cssCode.trim() === "",
+      cssCode: false,
       category: formValues.category.trim() === "",
       thumbnail: false,
       screenshot: false,
@@ -262,7 +249,7 @@ const AddComponentPage = () => {
               rows={8}
               className={errors.cssCode ? "error" : ""}
             />
-            {errors.cssCode ? <span className="field-error">CSS code is required.</span> : null}
+            {errors.cssCode ? <span className="field-error">Invalid CSS code.</span> : null}
 
             <button
               type="submit"
