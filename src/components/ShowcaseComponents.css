@@ -14,6 +14,8 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  line-height: 1;
+  min-height: 36px;
   cursor: pointer;
 }
 
@@ -101,6 +103,11 @@
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
+  line-height: 1;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -179,13 +186,17 @@
 
 .component-link {
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   border: 1px solid #1f2937;
   background: #1f2937;
   color: #ffffff;
   padding: 8px 12px;
   font-size: 13px;
+  line-height: 1;
+  min-height: 36px;
   margin-top: auto;
 }
 
@@ -202,13 +213,17 @@
 }
 
 .component-delete-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   border: 1px solid #dc2626;
   background: transparent;
   color: #dc2626;
   padding: 8px 12px;
   font-size: 13px;
+  line-height: 1;
+  min-height: 36px;
   cursor: pointer;
 }
 
