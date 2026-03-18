@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/CategoryFilter";
 import ComponentCard from "@/components/ComponentCard";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import { fetchComponents } from "@/services/mockApi";
-import { deleteComponent } from "@/services/componentsStore";
+import { deleteComponent, getCloudComponentsStatus } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { categories } from "@/data/components.data";
 import "./Index.css";
@@ -13,17 +13,45 @@ import "./Index.css";
 const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { categoryId } = useParams();
   const [componentItems, setComponentItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
   const [authUser, setAuthUser] = useState(null);
+  const [cloudWarning, setCloudWarning] = useState("");
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
+
   const validCategoryIds = useMemo(
     () => categories.map((category) => category.id),
     []
   );
+  const activeCategory = useMemo(() => {
+    if (!categoryId) {
+      return "all";
+    }
+    return validCategoryIds.includes(categoryId) ? categoryId : "all";
+  }, [categoryId, validCategoryIds]);
+  const activeCategoryName = useMemo(
+    () => categories.find((category) => category.id === activeCategory)?.name || "All Components",
+    [activeCategory]
+  );
+
+  useEffect(() => {
+    if (!categoryId) {
+      return;
+    }
+
+    if (categoryId === "all" || !validCategoryIds.includes(categoryId)) {
+      navigate(
+        {
+          pathname: "/",
+          search: location.search,
+        },
+        { replace: true }
+      );
+    }
+  }, [categoryId, validCategoryIds, navigate, location.search]);
 
   useEffect(() => {
     let isActive = true;
@@ -37,6 +65,8 @@ const Index = () => {
         }
 
         setComponentItems(items);
+        const syncStatus = getCloudComponentsStatus();
+        setCloudWarning(syncStatus.degraded ? syncStatus.message : "");
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -53,34 +83,36 @@ const Index = () => {
 
   const handleDelete = async (id) => {
     await deleteComponent(id);
-    setComponentItems((prev) => prev.filter((c) => c.id !== id));
+    setComponentItems((prev) => prev.filter((component) => component.id !== id));
   };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const categoryFromQuery = searchParams.get("category");
     const queryFromUrl = searchParams.get("q") || "";
-
     setSearchQuery(queryFromUrl);
+  }, [location.search]);
 
-    if (categoryFromQuery && validCategoryIds.includes(categoryFromQuery)) {
-      setActiveCategory(categoryFromQuery);
+  const handleCategoryChange = (nextCategory) => {
+    const normalizedCategory = validCategoryIds.includes(nextCategory) ? nextCategory : "all";
+    const nextPath = normalizedCategory === "all" ? "/" : `/category/${normalizedCategory}`;
+
+    if (nextPath === location.pathname) {
       return;
     }
 
-    setActiveCategory("all");
-  }, [location.search, validCategoryIds]);
+    navigate(
+      {
+        pathname: nextPath,
+        search: location.search,
+      },
+      { replace: false }
+    );
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-
-    if (activeCategory === "all") {
-      params.delete("category");
-    } else {
-      params.set("category", activeCategory);
-    }
-
     const normalizedQuery = searchQuery.trim();
+
     if (normalizedQuery) {
       params.set("q", normalizedQuery);
     } else {
@@ -97,7 +129,7 @@ const Index = () => {
         { replace: true }
       );
     }
-  }, [activeCategory, searchQuery, location.pathname, location.search, navigate]);
+  }, [searchQuery, location.pathname, location.search, navigate]);
 
   const filteredComponents = useMemo(() => {
     const searchText = searchQuery.trim().toLowerCase();
@@ -128,6 +160,9 @@ const Index = () => {
                 Explore reusable components and prop-driven interactions in a
                 clean single-page React application.
               </p>
+              {activeCategory !== "all" ? (
+                <p className="category-route-note">Viewing route category: {activeCategoryName}</p>
+              ) : null}
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
           </div>
@@ -138,9 +173,14 @@ const Index = () => {
             <div id="categories" className="category-block">
               <CategoryFilter
                 activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
+                onCategoryChange={handleCategoryChange}
               />
             </div>
+            {cloudWarning ? (
+              <div className="sync-warning" role="status" aria-live="polite">
+                {cloudWarning} Showing bundled showcase components only.
+              </div>
+            ) : null}
 
             {isLoading ? (
               <div className="loader-wrap" role="status" aria-live="polite">

@@ -3,7 +3,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import {
   canAccessAddComponent,
-  canAccessAdmin,
   logoutUser,
   subscribeToAuthUser,
 } from "@/services/authAccess";
@@ -16,14 +15,12 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [canAddComponent, setCanAddComponent] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthUser((authUser) => {
       setIsAuthenticated(Boolean(authUser));
       setCanAddComponent(canAccessAddComponent(authUser));
-      setIsAdmin(canAccessAdmin(authUser));
     });
 
     return unsubscribe;
@@ -33,7 +30,6 @@ const Header = () => {
     await logoutUser();
     setIsAuthenticated(false);
     setCanAddComponent(false);
-    setIsAdmin(false);
     setIsMenuOpen(false);
     navigate("/login", { replace: true });
   };
@@ -75,11 +71,6 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
-              {isAdmin ? (
-                <Link className="btn-outline" to="/admin">
-                  Admin Panel
-                </Link>
-              ) : null}
               {canAddComponent ? (
                 <Link className="btn-outline" to="/add-component">
                   Add Component
@@ -133,11 +124,6 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
-                {isAdmin ? (
-                  <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
-                    Admin Panel
-                  </Link>
-                ) : null}
                 {canAddComponent ? (
                   <Link to="/add-component" onClick={() => setIsMenuOpen(false)}>
                     Add Component
