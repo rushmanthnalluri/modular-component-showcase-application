@@ -35,14 +35,16 @@
 
 .playground-control-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+  align-items: start;
 }
 
 .playground-control {
   display: grid;
   gap: 6px;
   font-size: 12px;
+  align-content: start;
 }
 
 .playground-control span {
@@ -70,6 +72,23 @@
 .playground-control input[type="checkbox"] {
   width: 18px;
   height: 18px;
+}
+
+.playground-control--checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.playground-control--checkbox span {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.playground-control--checkbox input[type="checkbox"] {
+  flex-shrink: 0;
 }
 
 .playground-control-input {
