@@ -166,8 +166,15 @@ const AddComponentPage = () => {
               value={formValues.name}
               onChange={handleChange}
               className={errors.name ? "error" : ""}
+              aria-invalid={errors.name ? "true" : "false"}
+              aria-describedby={errors.name ? "component-name-error" : undefined}
+              required
             />
-            {errors.name ? <span className="field-error">Name is required.</span> : null}
+            {errors.name ? (
+              <span id="component-name-error" className="field-error">
+                Name is required.
+              </span>
+            ) : null}
 
             <label htmlFor="component-description">Description</label>
             <textarea
@@ -177,9 +184,14 @@ const AddComponentPage = () => {
               onChange={handleChange}
               rows={3}
               className={errors.description ? "error" : ""}
+              aria-invalid={errors.description ? "true" : "false"}
+              aria-describedby={errors.description ? "component-description-error" : undefined}
+              required
             />
             {errors.description ? (
-              <span className="field-error">Description is required.</span>
+              <span id="component-description-error" className="field-error">
+                Description is required.
+              </span>
             ) : null}
 
             <label htmlFor="component-category">Category</label>
@@ -189,6 +201,9 @@ const AddComponentPage = () => {
               value={formValues.category}
               onChange={handleChange}
               className={errors.category ? "error" : ""}
+              aria-invalid={errors.category ? "true" : "false"}
+              aria-describedby={errors.category ? "component-category-error" : undefined}
+              required
             >
               <option value="">Select a category</option>
               {availableCategories.map((category) => (
@@ -198,7 +213,9 @@ const AddComponentPage = () => {
               ))}
             </select>
             {errors.category ? (
-              <span className="field-error">Category is required.</span>
+              <span id="component-category-error" className="field-error">
+                Category is required.
+              </span>
             ) : null}
 
             <label htmlFor="component-display-image">Display Image File</label>
@@ -209,10 +226,14 @@ const AddComponentPage = () => {
               accept="image/*"
               onChange={handleFileChange}
               className={errors.thumbnail ? "error" : ""}
+              aria-invalid={errors.thumbnail ? "true" : "false"}
+              aria-describedby={errors.thumbnail ? "component-thumbnail-error" : undefined}
             />
             {fileNames.thumbnail ? <span>{fileNames.thumbnail}</span> : null}
             {errors.thumbnail ? (
-              <span className="field-error">Please select a valid image file.</span>
+              <span id="component-thumbnail-error" className="field-error">
+                Please select a valid image file.
+              </span>
             ) : null}
 
             <label htmlFor="component-preview-image">Code Preview Image File</label>
@@ -223,10 +244,14 @@ const AddComponentPage = () => {
               accept="image/*"
               onChange={handleFileChange}
               className={errors.screenshot ? "error" : ""}
+              aria-invalid={errors.screenshot ? "true" : "false"}
+              aria-describedby={errors.screenshot ? "component-screenshot-error" : undefined}
             />
             {fileNames.screenshot ? <span>{fileNames.screenshot}</span> : null}
             {errors.screenshot ? (
-              <span className="field-error">Please select a valid image file.</span>
+              <span id="component-screenshot-error" className="field-error">
+                Please select a valid image file.
+              </span>
             ) : null}
 
             <label htmlFor="component-jsx">JSX Code</label>
@@ -237,8 +262,15 @@ const AddComponentPage = () => {
               onChange={handleChange}
               rows={8}
               className={errors.jsxCode ? "error" : ""}
+              aria-invalid={errors.jsxCode ? "true" : "false"}
+              aria-describedby={errors.jsxCode ? "component-jsx-error" : undefined}
+              required
             />
-            {errors.jsxCode ? <span className="field-error">JSX code is required.</span> : null}
+            {errors.jsxCode ? (
+              <span id="component-jsx-error" className="field-error">
+                JSX code is required.
+              </span>
+            ) : null}
 
             <label htmlFor="component-css">CSS Code</label>
             <textarea
@@ -248,8 +280,14 @@ const AddComponentPage = () => {
               onChange={handleChange}
               rows={8}
               className={errors.cssCode ? "error" : ""}
+              aria-invalid={errors.cssCode ? "true" : "false"}
+              aria-describedby={errors.cssCode ? "component-css-error" : undefined}
             />
-            {errors.cssCode ? <span className="field-error">Invalid CSS code.</span> : null}
+            {errors.cssCode ? (
+              <span id="component-css-error" className="field-error">
+                Invalid CSS code.
+              </span>
+            ) : null}
 
             <button
               type="submit"
