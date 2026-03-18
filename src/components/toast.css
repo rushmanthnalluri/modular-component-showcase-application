@@ -25,7 +25,7 @@
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   padding: 24px 32px 24px 24px;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+  box-shadow: none;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 

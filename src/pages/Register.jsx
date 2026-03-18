@@ -204,6 +204,8 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Full Name"
                 className={errors.fullName ? "error" : ""}
+                autoComplete="name"
+                aria-invalid={errors.fullName ? "true" : "false"}
               />
             </div>
 
@@ -220,6 +222,8 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="name@example.com"
                 className={errors.email ? "error" : ""}
+                autoComplete="email"
+                aria-invalid={errors.email ? "true" : "false"}
               />
             </div>
 
@@ -239,6 +243,8 @@ const Register = () => {
                 pattern="[0-9]{10,15}"
                 maxLength={15}
                 className={errors.phone ? "error" : ""}
+                autoComplete="tel"
+                aria-invalid={errors.phone ? "true" : "false"}
               />
             </div>
 
@@ -252,6 +258,7 @@ const Register = () => {
                 value={data.role}
                 onChange={handleChange}
                 className={errors.role ? "error" : ""}
+                aria-invalid={errors.role ? "true" : "false"}
               >
                 <option value="user">User</option>
                 <option value="developer">Developer</option>
@@ -271,6 +278,8 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Password"
                 className={errors.password ? "error" : ""}
+                autoComplete="new-password"
+                aria-invalid={errors.password ? "true" : "false"}
               />
               <button
                 type="button"
@@ -297,6 +306,8 @@ const Register = () => {
                 className={
                   errors.confirmPassword || passwordMismatch ? "error" : ""
                 }
+                autoComplete="new-password"
+                aria-invalid={errors.confirmPassword || passwordMismatch ? "true" : "false"}
               />
             </div>
 

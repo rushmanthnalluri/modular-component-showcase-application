@@ -107,7 +107,7 @@ const Contact = () => {
             <div className="contact-items">
               <div className="contact-item">
                 <span className="contact-label">
-                  <Mail size={16} />
+                  <Mail size={16} aria-hidden="true" />
                   <span>Email</span>
                 </span>
                 <a href={`mailto:${APP_INFO.supportEmail}`} className="contact-link">
@@ -116,7 +116,7 @@ const Contact = () => {
               </div>
               <div className="contact-item">
                 <span className="contact-label">
-                  <Phone size={16} />
+                  <Phone size={16} aria-hidden="true" />
                   <span>Phone</span>
                 </span>
                 <a href={`tel:${APP_INFO.supportPhoneRaw}`} className="contact-link">
@@ -125,7 +125,7 @@ const Contact = () => {
               </div>
               <div className="contact-item">
                 <span className="contact-label">
-                  <Linkedin size={16} />
+                  <Linkedin size={16} aria-hidden="true" />
                   <span>LinkedIn</span>
                 </span>
                 <a
@@ -153,6 +153,7 @@ const Contact = () => {
                 placeholder="Short title of your issue"
                 className="support-input"
                 maxLength={120}
+                required
               />
 
               <label htmlFor="ticket-category" className="support-label">
@@ -163,6 +164,7 @@ const Contact = () => {
                 value={form.category}
                 onChange={(event) => updateField("category", event.target.value)}
                 className="support-input"
+                required
               >
                 <option value="">Select category</option>
                 {categories.map((category) => (
@@ -183,6 +185,7 @@ const Contact = () => {
                 className="support-input support-textarea"
                 rows={5}
                 maxLength={1500}
+                required
               />
 
               <label htmlFor="ticket-email" className="support-label">
@@ -196,6 +199,7 @@ const Contact = () => {
                 placeholder="name@example.com"
                 className="support-input"
                 autoComplete="email"
+                required
               />
               <label
                 htmlFor="ticket-website"

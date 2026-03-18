@@ -5,8 +5,13 @@ import "./Layout.css";
 const Layout = ({ children }) => {
   return (
     <div className="layout-page">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <Header />
-      <main className="layout-main">{children}</main>
+      <main id="main-content" className="layout-main" tabIndex={-1}>
+        {children}
+      </main>
       <Footer />
     </div>
   );

@@ -160,6 +160,16 @@ const ComponentDetail = () => {
   const demoControls = useMemo(() => demoDefinition?.controls ?? [], [demoDefinition]);
   const hasGeneratedTab = demoControls.length > 0;
   const hasCssCode = Boolean(item?.code?.css);
+  const tabOrder = useMemo(() => {
+    const tabs = ["jsx"];
+    if (hasCssCode) {
+      tabs.push("css");
+    }
+    if (hasGeneratedTab) {
+      tabs.push("generated");
+    }
+    return tabs;
+  }, [hasCssCode, hasGeneratedTab]);
 
   useEffect(() => {
     if (!hasGeneratedTab) {
@@ -217,6 +227,26 @@ const ComponentDetail = () => {
   }, [demoControls, demoValues, hasGeneratedTab, item]);
 
   const previewModeLabel = hasGeneratedTab ? "Interactive Demo" : "Code Preview";
+  const activeTabId = `component-tab-${activeTab}`;
+  const activePanelId = `component-panel-${activeTab}`;
+
+  const handleTabKeyDown = (event, currentTab) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
+      return;
+    }
+
+    event.preventDefault();
+    const currentIndex = tabOrder.indexOf(currentTab);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    const nextIndex =
+      event.key === "ArrowRight"
+        ? (currentIndex + 1) % tabOrder.length
+        : (currentIndex - 1 + tabOrder.length) % tabOrder.length;
+    setActiveTab(tabOrder[nextIndex]);
+  };
 
   const handleCopyShareLink = async () => {
     if (typeof window === "undefined") {
@@ -338,12 +368,18 @@ const ComponentDetail = () => {
           </div>
 
           <div className="code-pane">
-            <div className="code-tabs">
+            <div className="code-tabs" role="tablist" aria-label="Component source code tabs">
               <button
                 type="button"
                 className={activeTab === "jsx" ? "tab-btn active" : "tab-btn"}
                 onClick={() => setActiveTab("jsx")}
                 aria-label="Show JSX code tab"
+                role="tab"
+                id="component-tab-jsx"
+                aria-selected={activeTab === "jsx"}
+                aria-controls="component-panel-jsx"
+                tabIndex={activeTab === "jsx" ? 0 : -1}
+                onKeyDown={(event) => handleTabKeyDown(event, "jsx")}
               >
                 JSX
               </button>
@@ -353,6 +389,12 @@ const ComponentDetail = () => {
                   className={activeTab === "css" ? "tab-btn active" : "tab-btn"}
                   onClick={() => setActiveTab("css")}
                   aria-label="Show CSS code tab"
+                  role="tab"
+                  id="component-tab-css"
+                  aria-selected={activeTab === "css"}
+                  aria-controls="component-panel-css"
+                  tabIndex={activeTab === "css" ? 0 : -1}
+                  onKeyDown={(event) => handleTabKeyDown(event, "css")}
                 >
                   CSS
                 </button>
@@ -363,22 +405,30 @@ const ComponentDetail = () => {
                   className={activeTab === "generated" ? "tab-btn active" : "tab-btn"}
                   onClick={() => setActiveTab("generated")}
                   aria-label="Show generated code tab"
+                  role="tab"
+                  id="component-tab-generated"
+                  aria-selected={activeTab === "generated"}
+                  aria-controls="component-panel-generated"
+                  tabIndex={activeTab === "generated" ? 0 : -1}
+                  onKeyDown={(event) => handleTabKeyDown(event, "generated")}
                 >
                   Generated
                 </button>
               ) : null}
             </div>
 
-            {activeTab === "jsx" ? (
-              <>
-                {/* Declarative tab rendering: active state decides which code block is shown. */}
-                <CodeBlock code={item.code.jsx} language="jsx" />
-              </>
-            ) : activeTab === "css" ? (
-              <CodeBlock code={item.code.css || ""} language="css" />
-            ) : (
-              <CodeBlock code={generatedDemoCode} language="jsx" />
-            )}
+            <div role="tabpanel" id={activePanelId} aria-labelledby={activeTabId}>
+              {activeTab === "jsx" ? (
+                <>
+                  {/* Declarative tab rendering: active state decides which code block is shown. */}
+                  <CodeBlock code={item.code.jsx} language="jsx" />
+                </>
+              ) : activeTab === "css" ? (
+                <CodeBlock code={item.code.css || ""} language="css" />
+              ) : (
+                <CodeBlock code={generatedDemoCode} language="jsx" />
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ function SearchBar({ value = "", onChange }) {
       <label htmlFor="component-search" className="sr-only">
         Search components
       </label>
-      <Search className="search-bar-icon" />
+      <Search className="search-bar-icon" aria-hidden="true" />
       <input
         id="component-search"
         type="text"

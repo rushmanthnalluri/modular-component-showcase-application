@@ -73,7 +73,7 @@
     --card-foreground: 210 40% 95%;
     --text-secondary: 214 25% 78%;
     --muted: 222 25% 22%;
-    --muted-foreground: 215 18% 65%;
+    --muted-foreground: 215 18% 72%;
     --border: 218 22% 32%;
     --input: 218 22% 32%;
     --ring: 24 95% 61%;
@@ -100,9 +100,11 @@
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
-    font-size: 10pt;
+    font-size: 11pt;
     color: hsl(var(--foreground));
     background: hsl(var(--background));
+    line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
   h1,
@@ -110,13 +112,16 @@
   h3,
   .display-font {
     font-family: inherit;
-    letter-spacing: normal;
+    letter-spacing: 0.01em;
+    margin-top: 0;
+    margin-bottom: 0.5em;
   }
 
   code,
   pre,
   .font-mono {
-    font-family: "Courier New", monospace;
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    font-size: 0.97em;
   }
 }
 
@@ -165,7 +170,8 @@
   align-items: center;
   justify-content: center;
   color: #64748b;
-  font-size: 16px;
+  font-size: 1.1rem;
+  padding: 2rem 1rem;
 }
 
 html[data-theme="dark"] body {
@@ -288,8 +294,8 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 20px;
+  gap: 16px;
+  padding: 32px 12px;
 }
 
 .error-boundary-icon {
@@ -299,11 +305,11 @@ a:focus-visible {
 
 .toast-content {
   display: grid;
-  gap: 4px;
+  gap: 8px;
 }
 
 .toast-timer {
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .toast-timer-track {
