@@ -120,11 +120,13 @@ const ComponentPlayground = ({
 
                 if (control.type === "checkbox") {
                   return (
-                    <input
-                      type="checkbox"
-                      checked={Boolean(controlValue)}
-                      onChange={(event) => handleControlChange(control, event.target)}
-                    />
+                    <div className="playground-checkbox-field">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(controlValue)}
+                        onChange={(event) => handleControlChange(control, event.target)}
+                      />
+                    </div>
                   );
                 }
 
