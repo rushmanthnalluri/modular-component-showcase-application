@@ -11,8 +11,6 @@ class ErrorBoundary extends Component {
     return { hasError: true, errorMessage: error.message || "Unknown error" };
   }
 
-  componentDidCatch() {}
-
   handleReset = () => {
     this.setState({ hasError: false, errorMessage: "" });
   };

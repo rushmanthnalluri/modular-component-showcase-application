@@ -13,6 +13,7 @@ const Contact = () => {
     category: "",
     description: "",
     email: "",
+    website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,6 +36,7 @@ const Contact = () => {
       category: form.category.trim(),
       description: form.description.trim(),
       toemail: form.email.trim().toLowerCase(),
+      website: form.website.trim(),
     };
 
     if (!payload.title || !payload.category || !payload.description || !payload.toemail) {
@@ -57,6 +59,7 @@ const Contact = () => {
         category: "",
         description: "",
         email: "",
+        website: "",
       });
     } catch (error) {
       const errorMessage = String(error?.message || "");
@@ -193,6 +196,21 @@ const Contact = () => {
                 placeholder="name@example.com"
                 className="support-input"
                 autoComplete="email"
+              />
+              <label
+                htmlFor="ticket-website"
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}
+              >
+                Website
+              </label>
+              <input
+                id="ticket-website"
+                type="text"
+                value={form.website}
+                onChange={(event) => updateField("website", event.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
               />
               <button type="submit" className="support-submit" disabled={isSubmitting}>
                 {isSubmitting ? "Sending..." : "Create Ticket"}
