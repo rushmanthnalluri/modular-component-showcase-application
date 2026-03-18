@@ -5,6 +5,23 @@
   flex-direction: column;
 }
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100%;
+  z-index: 200;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 8px 12px;
+  text-decoration: none;
+}
+
+.skip-link:focus-visible {
+  top: 8px;
+}
+
 .layout-main {
   flex: 1;
   padding-top: 80px;

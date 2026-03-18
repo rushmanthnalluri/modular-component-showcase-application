@@ -8,7 +8,7 @@
   border: 1px solid #d7dee7;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 18px #e9eef5;
+  box-shadow: none;
   padding: 24px;
 }
 
@@ -103,10 +103,9 @@
   font-family: inherit;
 }
 
-.support-input:focus {
-  outline: none;
+/* Remove outline: none to allow visible focus for accessibility */
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: none;
 }
 
 .support-textarea {
