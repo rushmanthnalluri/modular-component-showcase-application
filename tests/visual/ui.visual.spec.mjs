@@ -46,6 +46,8 @@ test.describe("Full visual regression suite", () => {
           const mobileContext = await browser.newContext({
             ...devices["iPhone 12"],
             colorScheme: theme,
+            viewport: { width: 414, height: 896 },
+            deviceScaleFactor: 3,
           });
           const mobilePage = await mobileContext.newPage();
           await mobilePage.addInitScript((value) => {
