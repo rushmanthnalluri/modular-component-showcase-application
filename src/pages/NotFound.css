@@ -12,7 +12,7 @@
   border: 1px solid #d7dee7;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 18px #e9eef5;
+  box-shadow: none;
   text-align: center;
   padding: 24px;
 }
