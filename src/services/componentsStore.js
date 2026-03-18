@@ -1,6 +1,10 @@
 import { components } from "@/data/components.data";
 import { apiRequest } from "@/services/apiClient";
 
+let lastCloudSyncError = null;
+const VERIFIER_NAME_PREFIX = "Verifier Component";
+const VERIFIER_DESCRIPTION_MARKER = "Created by verify-connection script";
+
 function mapCloudComponent(rawItem) {
   return {
     id: String(rawItem.id || ""),
@@ -18,6 +22,12 @@ function mapCloudComponent(rawItem) {
   };
 }
 
+function isVerifierArtifact(item) {
+  const name = String(item?.name || "");
+  const description = String(item?.description || "");
+  return name.startsWith(VERIFIER_NAME_PREFIX) || description.includes(VERIFIER_DESCRIPTION_MARKER);
+}
+
 async function getCloudComponents() {
   const payload = await apiRequest("/components", {
     method: "GET",
@@ -25,14 +35,33 @@ async function getCloudComponents() {
 
   return payload
     .map((item) => mapCloudComponent(item))
-    .filter((item) => item.id);
+    .filter((item) => item.id && !isVerifierArtifact(item));
+}
+
+export function getCloudComponentsStatus() {
+  if (!lastCloudSyncError) {
+    return {
+      degraded: false,
+      message: "",
+    };
+  }
+
+  return {
+    degraded: true,
+    message: lastCloudSyncError.message || "Cloud components are currently unavailable.",
+  };
 }
 
 export async function getAllComponents() {
   try {
     const customComponents = await getCloudComponents();
+    lastCloudSyncError = null;
     return [...components, ...customComponents];
-  } catch {
+  } catch (error) {
+    lastCloudSyncError =
+      error instanceof Error
+        ? error
+        : new Error("Cloud components are currently unavailable.");
     return [...components];
   }
 }
