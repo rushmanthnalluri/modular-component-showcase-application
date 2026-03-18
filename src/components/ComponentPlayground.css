@@ -79,17 +79,26 @@
 }
 
 .playground-control--checkbox {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  min-height: 40px;
-  padding-top: 0;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: auto;
 }
 
 .playground-control--checkbox span {
   font-weight: 600;
   line-height: 1.2;
+}
+
+.playground-checkbox-field {
+  min-height: 40px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--bg-main));
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .playground-control--checkbox input[type="checkbox"] {
