@@ -43,7 +43,12 @@ const mongoConnectOptions = {
     minPoolSize: 1,
 };
 
-const defaultLocalOrigins = ["http://localhost:5173", "http://localhost:8080", "http://localhost:8081"];
+const defaultLocalOrigins = [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:4173"
+];
 const defaultProductionOrigins = ["https://rushmanthnalluri.github.io"];
 const allowedOrigins = Array.from(new Set([
     ...(isProduction ? defaultProductionOrigins : defaultLocalOrigins),
