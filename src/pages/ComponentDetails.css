@@ -156,6 +156,29 @@
   padding: 20px;
 }
 
+.preview-body--playground {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.preview-body--playground .playground-shell {
+  gap: 0;
+}
+
+.preview-body--playground .playground-preview {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid hsl(var(--border-light));
+}
+
+.preview-body--playground .playground-controls {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 12px;
+}
+
 .preview-body p {
   margin: 0;
   color: hsl(var(--muted-foreground));
