@@ -97,6 +97,24 @@ export async function addCustomComponent({
   return mapCloudComponent(payload);
 }
 
+export async function fetchComponentById(id) {
+  const local = components.find((c) => c.id === id);
+  if (local) return local;
+
+  try {
+    const payload = await apiRequest(`/components/${id}`, {
+      method: "GET",
+    });
+    return mapCloudComponent(payload);
+  } catch {
+    return null;
+  }
+}
+
+export function getShowcaseDemo(_id) {
+  return null;
+}
+
 export async function deleteComponent(id) {
   await apiRequest(`/components/${id}`, {
     method: "DELETE",
