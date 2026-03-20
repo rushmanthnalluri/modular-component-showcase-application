@@ -10,7 +10,7 @@ const About = () => {
           <div className="about-page-card">
             <h1>About Me</h1>
             <p>
-              Hi, I&apos;m Rushmanth Nalluri, a Computer Science and Engineering
+              Hi, I am Rushmanth Nalluri, a Computer Science and Engineering
               (CSE) student at KL University.
             </p>
             <p>
@@ -20,8 +20,8 @@ const About = () => {
             </p>
             <p>
               I am eager to grow in the field of Computer Science and contribute
-              to meaningful and impactful solutions. Let&apos;s connect and talk
-              about technology!
+              to meaningful and impactful solutions. Lets conntect and talk
+              about technology, projects, or anything else you find interesting!
             </p>
             <a
               className="about-page-link"
@@ -29,7 +29,7 @@ const About = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Let&apos;s Connect
+              Let us Connect..!!
             </a>
           </div>
         </div>

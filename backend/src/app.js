@@ -159,7 +159,7 @@ app.use(
 );
 
 app.get("/", (_req, res) => {
-    res.json("Started.....");
+    res.json({ message: "Modular Component Showcase API is running." });
 });
 
 app.get("/health", (_req, res) => {

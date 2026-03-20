@@ -4,8 +4,8 @@ import CategoryFilter from "@/components/CategoryFilter";
 import ComponentCard from "@/components/ComponentCard";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
-import { fetchComponents } from "@/services/mockApi";
-import { deleteComponent, getCloudComponentsStatus } from "@/services/componentsStore";
+
+import { deleteComponent, getAllComponents, getCloudComponentsStatus } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { categories } from "@/data/components.data";
 import "./Index.css";
@@ -59,7 +59,7 @@ const Index = () => {
     const loadComponents = async () => {
       setIsLoading(true);
       try {
-        const items = await fetchComponents();
+        const items = await getAllComponents();
         if (!isActive) {
           return;
         }

@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import ComponentPlayground from "@/components/ComponentPlayground";
-import { getShowcaseDemo } from "@/demos/showcaseRegistry";
+
 import Layout from "@/components/Layout";
-import { fetchComponentById } from "@/services/mockApi";
+
 import { deleteComponent } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import "./ComponentDetails.css";
