@@ -1,29 +1,19 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import Layout from "@/components/Layout";
+import { components } from "@/data/components.data";
 
 import "./ComponentDetails.css";
 
 const ComponentCode = () => {
   const { id } = useParams();
-  const [item, setItem] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-
-  // Data loading removed: fetchComponentById was deleted
+  const item = useMemo(() => {
+    return components.find((c) => c.id === id) || null;
+  }, [id]);
 
   if (!item) {
-    if (isLoading) {
-      return (
-        <Layout>
-          <div className="layout-container details-state">
-            <h2>Loading component...</h2>
-          </div>
-        </Layout>
-      );
-    }
-
     return (
       <Layout>
         <div className="layout-container details-state">
