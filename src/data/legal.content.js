@@ -76,11 +76,11 @@ export const helpContent = {
     {
       label: "Can’t add components",
       text:
-        "only authorized roles can access Add Component. Contact support if your access is incorrect.",
+        "only authorized roles can access Add Component.",
     },
     {
       label: "Need direct support",
-      text: "use the Contact page or email rushmanth21@gmail.com.",
+      text: "email rushmanth21@gmail.com.",
     },
   ],
 };

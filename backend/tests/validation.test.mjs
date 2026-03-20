@@ -63,7 +63,7 @@ test("validateComponentPayload enforces category allowlist", () => {
 
 test("validateSupportTicketPayload rejects honeypot field and accepts valid payload", () => {
     const honeypot = validateSupportTicketPayload({
-        toemail: "user@example.com",
+        name: "Test User",
         title: "Issue",
         category: "Bug Report",
         description: "Details",
@@ -72,7 +72,7 @@ test("validateSupportTicketPayload rejects honeypot field and accepts valid payl
     assert.equal(honeypot.ok, false);
 
     const valid = validateSupportTicketPayload({
-        toemail: "user@example.com",
+        name: "Test User",
         title: "Issue",
         category: "Bug Report",
         description: "Details",
