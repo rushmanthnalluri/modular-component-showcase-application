@@ -8,27 +8,26 @@ import {
   Palette,
 } from "lucide-react";
 import animatedNavbarThumb from "@/assets/showcase/animated-navbar.svg";
-import animatedNavbarScreenshot from "@/assets/showcase/animated-navbar-screenshot.svg";
-import glassCardThumb from "@/assets/showcase/glass-card.svg";
-import glassCardScreenshot from "@/assets/showcase/glass-card-preview-v2.svg";
+
+
 import gradientButtonThumb from "@/assets/showcase/gradient-button.svg";
-import gradientButtonScreenshot from "@/assets/showcase/gradient-button-screenshot.svg";
+
 import neonInputThumb from "@/assets/showcase/neon-input.svg";
-import neonInputScreenshot from "@/assets/showcase/neon-input-screenshot.svg";
+
 import profileCardThumb from "@/assets/showcase/profile-card.svg";
-import profileCardScreenshot from "@/assets/showcase/profile-card-screenshot.svg";
+
 import toastNotificationThumb from "@/assets/showcase/toast-notification.svg";
-import toastNotificationScreenshot from "@/assets/showcase/toast-notification-screenshot.svg";
+
 import modalThumb from "@/assets/showcase/modal.svg";
-import modalScreenshot from "@/assets/showcase/modal-screenshot.svg";
+
 import accordionThumb from "@/assets/showcase/accordion.svg";
-import accordionScreenshot from "@/assets/showcase/accordion-screenshot.svg";
+
 import tabsThumb from "@/assets/showcase/tabs.svg";
-import tabsScreenshot from "@/assets/showcase/tabs-screenshot.svg";
+
 import dataTableThumb from "@/assets/showcase/data-table.svg";
-import dataTableScreenshot from "@/assets/showcase/data-table-screenshot.svg";
+
 import lineChartThumb from "@/assets/showcase/line-chart.svg";
-import lineChartScreenshot from "@/assets/showcase/line-chart-screenshot.svg";
+
 
 export const categories = [
   { id: "all", name: "All Components", icon: Palette },
@@ -48,7 +47,7 @@ export const components = [
     category: "buttons",
     tags: ["button", "gradient", "animated"],
     thumbnail: gradientButtonThumb,
-    screenshot: gradientButtonScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
 import "./GradientButton.css";
@@ -78,63 +77,8 @@ export default GradientButton;`,
 .gradient-button:hover {
   transform: scale(1.05);
   filter: brightness(0.95);
-  box-shadow: none;
-}`,
-    },
-  },
-  {
-    id: "glass-card",
-    name: "Glass Card",
-    description: "Glassmorphism card with blur, border glow, and clean typography.",
-    category: "cards",
-    tags: ["card", "glassmorphism", "ui"],
-    thumbnail: glassCardThumb,
-    screenshot: glassCardScreenshot,
-    code: {
-      jsx: `import React, { Component } from "react";
-import "./GlassCard.css";
-
-class GlassCard extends Component {
-  render() {
-    const { title, description } = this.props;
-
-    return (
-      <div className="glass-card">
-        <h3 className="glass-card-title">{title}</h3>
-        <p className="glass-card-description">{description}</p>
-      </div>
-    );
-  }
 }
-
-export default GlassCard;`,
-      css: `.glass-card {
-  width: 100%;
-  max-width: 360px;
-  padding: 24px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(12px);
-  border: 1px solid #fed7aa;
-  box-shadow: none;
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.glass-card-title {
-  margin: 0 0 8px 0;
-  color: #1e293b;
-  font-size: 16pt;
-}
-
-.glass-card-description {
-  margin: 0;
-  color: #475569;
-  line-height: 1.5;
-}`,
+    `,
     },
   },
   {
@@ -144,7 +88,7 @@ export default GlassCard;`,
     category: "forms",
     tags: ["input", "form", "neon"],
     thumbnail: neonInputThumb,
-    screenshot: neonInputScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
 import "./NeonInput.css";
@@ -189,7 +133,7 @@ export default NeonInput;`,
     category: "navigation",
     tags: ["navbar", "navigation", "animated"],
     thumbnail: animatedNavbarThumb,
-    screenshot: animatedNavbarScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
 import "./AnimatedNavbar.css";
@@ -257,7 +201,7 @@ export default AnimatedNavbar;`,
     category: "feedback",
     tags: ["toast", "notification", "feedback"],
     thumbnail: toastNotificationThumb,
-    screenshot: toastNotificationScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
 import "./ToastNotification.css";
@@ -319,7 +263,7 @@ export default ToastNotification;`,
     category: "cards",
     tags: ["profile", "card", "team"],
     thumbnail: profileCardThumb,
-    screenshot: profileCardScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
 import "./ProfileCard.css";
@@ -413,7 +357,7 @@ export default ProfileCard;`,
     category: "feedback",
     tags: ["modal", "dialog", "accessibility"],
     thumbnail: modalThumb,
-    screenshot: modalScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { useEffect, useState } from "react";
 import "./Modal.css";
@@ -488,7 +432,7 @@ export default Modal;`,
     category: "navigation",
     tags: ["accordion", "collapse", "state"],
     thumbnail: accordionThumb,
-    screenshot: accordionScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { useState } from "react";
 import "./Accordion.css";
@@ -544,7 +488,7 @@ export default Accordion;`,
     category: "navigation",
     tags: ["tabs", "panel", "derived-state"],
     thumbnail: tabsThumb,
-    screenshot: tabsScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { useMemo, useState } from "react";
 import "./Tabs.css";
@@ -607,7 +551,7 @@ export default Tabs;`,
     category: "data",
     tags: ["table", "sorting", "data"],
     thumbnail: dataTableThumb,
-    screenshot: dataTableScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { useMemo, useState } from "react";
 import "./DataTable.css";
@@ -680,7 +624,7 @@ export default DataTable;`,
     category: "data",
     tags: ["chart", "line", "async"],
     thumbnail: lineChartThumb,
-    screenshot: lineChartScreenshot,
+    screenshot: undefined,
     code: {
       jsx: `import React, { useEffect, useMemo, useState } from "react";
 import "./LiveLineChart.css";

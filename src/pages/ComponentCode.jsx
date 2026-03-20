@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import Layout from "@/components/Layout";
-import { fetchComponentById } from "@/services/mockApi";
+
 import "./ComponentDetails.css";
 
 const ComponentCode = () => {
@@ -10,25 +10,8 @@ const ComponentCode = () => {
   const [item, setItem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
 
-    const loadItem = async () => {
-      setIsLoading(true);
-      const component = await fetchComponentById(id);
-
-      if (isMounted) {
-        setItem(component);
-        setIsLoading(false);
-      }
-    };
-
-    loadItem();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  // Data loading removed: fetchComponentById was deleted
 
   if (!item) {
     if (isLoading) {
