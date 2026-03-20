@@ -45,9 +45,11 @@ export async function sendEmail(toEmail, ticket = null) {
   const ticketTitle = String(ticket?.title || "General Support");
   const ticketCategory = String(ticket?.category || "General");
   const ticketDescription = String(ticket?.description || "No description provided.");
+  const ticketName = String(ticket?.name || "Anonymous");
   const safeTitle = escapeHtml(ticketTitle);
   const safeCategory = escapeHtml(ticketCategory);
   const safeDescription = escapeHtml(ticketDescription).replace(/\n/g, "<br/>");
+  const safeName = escapeHtml(ticketName);
   const fromAddress = String(process.env.SMTP_FROM || smtpUser).trim() || "no-reply@modularshowcase.local";
 
   const mailOptions = {
@@ -55,14 +57,14 @@ export async function sendEmail(toEmail, ticket = null) {
     to: toEmail,
     subject: `Ticket created - ${ticketTitle} - Ticket ID: ${ticketId}`,
     html: `<h3>Support Ticket Created</h3>
-               <p>Your ticket has been successfully created.</p>
+               <p>A new support ticket has been raised.</p>
                <p>Ticket ID: <b>${ticketId}</b></p>
+               <p>From: <b>${safeName}</b></p>
                <p>Title: <b>${safeTitle}</b></p>
                <p>Category: <b>${safeCategory}</b></p>
                <p>Description:</p>
                <p>${safeDescription}</p>
                <p>Status: <b>Open</b></p>
-               <p>Our support team will contact you shortly.</p>
                <br/>
                <p>Regards,<br/>Support Team</p>`,
   };
