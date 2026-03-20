@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getShowcaseDemo } from "@/demos/showcaseRegistry";
+
 import "./ComponentPlayground.css";
 
 function buildDefaultValues(controls) {
@@ -27,9 +27,9 @@ const ComponentPlayground = ({
   values: controlledValues,
   onValuesChange,
 }) => {
-  const definition = useMemo(() => getShowcaseDemo(componentId), [componentId]);
-  const controls = useMemo(() => definition?.controls ?? [], [definition]);
-  const initialValues = useMemo(() => buildDefaultValues(controls), [controls]);
+  // Showcase demo loading removed: getShowcaseDemo was deleted
+  const controls = [];
+  const initialValues = {};
   const [internalValues, setInternalValues] = useState(initialValues);
   const values = controlledValues ?? internalValues;
 
