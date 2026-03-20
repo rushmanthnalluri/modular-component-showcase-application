@@ -5,7 +5,7 @@ import ComponentPlayground from "@/components/ComponentPlayground";
 
 import Layout from "@/components/Layout";
 
-import { deleteComponent } from "@/services/componentsStore";
+import { deleteComponent, fetchComponentById, getShowcaseDemo } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import "./ComponentDetails.css";
 
@@ -357,7 +357,8 @@ const ComponentDetail = () => {
             </div>
             <div className={hasGeneratedTab ? "preview-body preview-body--playground" : "preview-body"}>
               <ComponentPlayground
-                componentId={item.id}
+                definition={demoDefinition}
+                controls={demoControls}
                 componentName={item.name}
                 fallbackSrc={previewSrc}
                 onFallbackError={handlePreviewError}
