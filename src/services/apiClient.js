@@ -4,6 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || RENDER_API_BASE_URL;
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
 let csrfBootstrapPromise = null;
+let memoryCsrfToken = null;
 
 function isSafeReadonlyMethod(method) {
   return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
@@ -25,7 +26,7 @@ function getCookieValue(name) {
 }
 
 async function callApi(method, url, body, options = {}) {
-  const csrfToken = getCookieValue("csrf_token");
+  const csrfToken = memoryCsrfToken || getCookieValue("csrf_token");
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -67,7 +68,8 @@ async function ensureCsrfCookie(baseUrl) {
   }
 
   try {
-    await csrfBootstrapPromise;
+    const payload = await csrfBootstrapPromise;
+    memoryCsrfToken = payload?.csrfToken || null;
   } finally {
     csrfBootstrapPromise = null;
   }
