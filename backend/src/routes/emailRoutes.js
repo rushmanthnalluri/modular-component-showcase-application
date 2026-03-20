@@ -13,8 +13,10 @@ export function createEmailRouter({ sendEmail, supportLimiter, requireCsrf }) {
             });
         }
 
-        const { toEmail, title, category, description } = validation.data;
-        const response = await sendEmail(toEmail, { title, category, description });
+        const { name, title, category, description } = validation.data;
+        // Send ticket to the support team's own configured email address
+        const supportEmail = String(process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
+        const response = await sendEmail(supportEmail, { name, title, category, description });
         return res.json(response);
     });
 

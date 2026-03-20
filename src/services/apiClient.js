@@ -1,7 +1,6 @@
-import { APIURL, callApi, getCookieValue } from "@/lib";
 
 const RENDER_API_BASE_URL = "https://modular-component-showcase-application.onrender.com/api";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${APIURL}/api`;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || RENDER_API_BASE_URL;
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
 let csrfBootstrapPromise = null;
@@ -16,6 +15,42 @@ function canFallbackToRender(path, method) {
   }
 
   return path === "/components" || path.startsWith("/components?");
+}
+
+function getCookieValue(name) {
+  const match = document.cookie.match(
+    new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)")
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+async function callApi(method, url, body, options = {}) {
+  const csrfToken = getCookieValue("csrf_token");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+    ...(csrfToken && !isSafeReadonlyMethod(method) ? { "x-csrf-token": csrfToken } : {}),
+  };
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    credentials: "include",
+    body: body ?? undefined,
+  });
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`;
+    try {
+      const data = await response.json();
+      message = data?.message || data?.msg || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
 }
 
 async function ensureCsrfCookie(baseUrl) {
