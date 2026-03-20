@@ -181,21 +181,21 @@ export function validateSupportTicketPayload(payload = {}) {
         return { ok: false, message: "Unable to create support ticket." };
     }
 
-    const toEmail = text(payload.toemail || payload.toEmail).toLowerCase();
+    const name = text(payload.name);
     const title = text(payload.title);
     const category = text(payload.category);
     const description = text(payload.description);
     const normalizedCategory = category.toLowerCase();
 
-    if (!toEmail || !title || !category || !description) {
+    if (!name || !title || !category || !description) {
         return {
             ok: false,
-            message: "title, category, description and toemail are required",
+            message: "title, category, description and name are required",
         };
     }
 
-    if (!hasMaxLength(toEmail, LIMITS.email) || !isValidEmail(toEmail)) {
-        return { ok: false, message: "A valid email address is required." };
+    if (!hasMaxLength(name, LIMITS.fullName)) {
+        return { ok: false, message: "Name is too long." };
     }
 
     if (!hasMaxLength(title, LIMITS.ticketTitle)) {
@@ -217,7 +217,7 @@ export function validateSupportTicketPayload(payload = {}) {
     return {
         ok: true,
         data: {
-            toEmail,
+            name,
             title,
             category,
             description,

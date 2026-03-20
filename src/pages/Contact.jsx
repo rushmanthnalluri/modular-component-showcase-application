@@ -12,7 +12,7 @@ const Contact = () => {
     title: "",
     category: "",
     description: "",
-    email: "",
+    name: "",
     website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,14 +35,14 @@ const Contact = () => {
       title: form.title.trim(),
       category: form.category.trim(),
       description: form.description.trim(),
-      toemail: form.email.trim().toLowerCase(),
+      name: form.name.trim(),
       website: form.website.trim(),
     };
 
-    if (!payload.title || !payload.category || !payload.description || !payload.toemail) {
+    if (!payload.title || !payload.category || !payload.description || !payload.name) {
       toast({
         title: "All fields required",
-        description: "Please fill title, category, description, and email.",
+        description: "Please fill title, category, description, and your name.",
       });
       return;
     }
@@ -52,13 +52,13 @@ const Contact = () => {
       await sendSupportTicketEmail(payload);
       toast({
         title: "Ticket created",
-        description: `Ticket mail sent to ${payload.toemail}.`,
+        description: `Thank you, ${payload.name}! Your support ticket has been submitted.`,
       });
       setForm({
         title: "",
         category: "",
         description: "",
-        email: "",
+        name: "",
         website: "",
       });
     } catch (error) {
@@ -70,7 +70,7 @@ const Contact = () => {
         const body = encodeURIComponent(
           [
             `Category: ${payload.category}`,
-            `From: ${payload.toemail}`,
+            `From: ${payload.name}`,
             "",
             payload.description,
           ].join("\n")
@@ -188,17 +188,18 @@ const Contact = () => {
                 required
               />
 
-              <label htmlFor="ticket-email" className="support-label">
-                Your Email
+              <label htmlFor="ticket-name" className="support-label">
+                Your Name
               </label>
               <input
-                id="ticket-email"
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField("email", event.target.value)}
-                placeholder="name@example.com"
+                id="ticket-name"
+                type="text"
+                value={form.name}
+                onChange={(event) => updateField("name", event.target.value)}
+                placeholder="Enter your full name"
                 className="support-input"
-                autoComplete="email"
+                autoComplete="name"
+                maxLength={120}
                 required
               />
               <label
