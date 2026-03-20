@@ -1,13 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import "./ComponentPlayground.css";
 
-function buildDefaultValues(controls) {
-  return controls.reduce((accumulator, control) => {
-    accumulator[control.id] = control.defaultValue;
-    return accumulator;
-  }, {});
-}
+
 
 function parseControlValue(control, eventTarget) {
   if (control.type === "checkbox") {
@@ -20,25 +15,23 @@ function parseControlValue(control, eventTarget) {
 }
 
 const ComponentPlayground = ({
-  componentId,
+  definition,
+  controls = [],
   componentName,
   fallbackSrc,
   onFallbackError,
   values: controlledValues,
   onValuesChange,
 }) => {
-  // Showcase demo loading removed: getShowcaseDemo was deleted
-  const controls = [];
-  const initialValues = {};
-  const [internalValues, setInternalValues] = useState(initialValues);
+  const [internalValues, setInternalValues] = useState({});
   const values = controlledValues ?? internalValues;
 
   useEffect(() => {
     if (controlledValues) {
       return;
     }
-    setInternalValues(initialValues);
-  }, [initialValues, controlledValues]);
+    setInternalValues({});
+  }, [controlledValues]);
 
   if (!definition) {
     if (fallbackSrc) {
