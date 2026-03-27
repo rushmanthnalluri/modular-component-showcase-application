@@ -22,7 +22,7 @@ export function createAuthRouter({
         return res.json({ csrfToken: readCsrfToken(req) });
     });
 
-    router.post("/register", async (req, res) => {
+    router.post("/register", requireCsrf, async (req, res) => {
         try {
             const validation = validateRegistrationPayload(req.body || {});
             if (!validation.ok) {
@@ -53,7 +53,7 @@ export function createAuthRouter({
         }
     });
 
-    router.post("/login", async (req, res) => {
+    router.post("/login", requireCsrf, async (req, res) => {
         try {
             const validation = validateLoginPayload(req.body || {});
             if (!validation.ok) {
@@ -96,7 +96,7 @@ export function createAuthRouter({
         return res.json({ message: "Logged out." });
     });
 
-    router.post("/forgot-password", async (req, res) => {
+    router.post("/forgot-password", requireCsrf, async (req, res) => {
         try {
             const validation = validateForgotPasswordPayload(req.body || {});
             if (!validation.ok) {
