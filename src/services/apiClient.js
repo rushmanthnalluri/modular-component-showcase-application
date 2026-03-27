@@ -6,6 +6,7 @@ const API_BASE_URL =
     : (import.meta.env.VITE_API_BASE_URL || "/api");
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
+const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
 let csrfBootstrapPromise = null;
 let memoryCsrfToken = null;
 
@@ -29,19 +30,35 @@ function getCookieValue(name) {
 }
 
 async function callApi(method, url, body, options = {}) {
-  const csrfToken = memoryCsrfToken || getCookieValue("csrf_token");
+  const csrfToken =
+    options.withCredentials === false ? null : (memoryCsrfToken || getCookieValue("csrf_token"));
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
     ...(csrfToken && !isSafeReadonlyMethod(method) ? { "x-csrf-token": csrfToken } : {}),
   };
 
-  const response = await fetch(url, {
-    method,
-    headers,
-    credentials: "include",
-    body: body ?? undefined,
-  });
+  const controller = new AbortController();
+  const timeoutMs = Number(options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers,
+      credentials: options.withCredentials === false ? "omit" : "include",
+      body: body ?? undefined,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && error.name === "AbortError") {
+      throw new Error("Request timed out. Please check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`;
@@ -85,7 +102,9 @@ export async function apiRequest(path, options = {}) {
     ...(options.headers || {}),
   };
 
-  if (!isSafeReadonlyMethod(method)) {
+  const isSupportTicketEndpoint = path === "/email/send";
+
+  if (!isSafeReadonlyMethod(method) && !isSupportTicketEndpoint) {
     await ensureCsrfCookie(API_BASE_URL);
   }
 
@@ -94,7 +113,11 @@ export async function apiRequest(path, options = {}) {
       method,
       `${API_BASE_URL}${path}`,
       options.body,
-      { headers }
+      {
+        headers,
+        // Support ticket endpoint is public and does not rely on cookies/CSRF.
+        withCredentials: !isSupportTicketEndpoint,
+      }
     );
   } catch (primaryError) {
     if (API_BASE_URL === RENDER_API_BASE_URL || !canFallbackToRender(path, method)) {
