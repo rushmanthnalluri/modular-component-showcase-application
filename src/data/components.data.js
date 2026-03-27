@@ -27,6 +27,7 @@ import tabsThumb from "@/assets/showcase/tabs.svg";
 import dataTableThumb from "@/assets/showcase/data-table.svg";
 
 import lineChartThumb from "@/assets/showcase/line-chart.svg";
+import glassCardThumb from "@/assets/showcase/glass-card.svg";
 
 
 export const categories = [
@@ -40,6 +41,64 @@ export const categories = [
 ];
 
 export const components = [
+  {
+    id: "glass-card",
+    name: "Glass Card",
+    description: "Glassmorphism card with configurable title, description, and elevation shadow.",
+    category: "cards",
+    tags: ["card", "glass", "glassmorphism"],
+    thumbnail: glassCardThumb,
+    screenshot: undefined,
+    code: {
+      jsx: `import React, { Component } from "react";
+import "./GlassCard.css";
+
+class GlassCard extends Component {
+  render() {
+    const { title = "Component Spotlight", description = "Reusable card shell with clean typography and soft depth.", elevated = false } = this.props;
+
+    return (
+      <article className={elevated ? "glass-card glass-card--elevated" : "glass-card"}>
+        <h3 className="glass-card-title">{title}</h3>
+        <p className="glass-card-description">{description}</p>
+      </article>
+    );
+  }
+}
+
+export default GlassCard;`,
+      css: `.glass-card {
+  width: 280px;
+  border-radius: 16px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #e2e8f0;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.glass-card--elevated {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  transform: translateY(-4px);
+}
+
+.glass-card-title {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.glass-card-description {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}`,
+    },
+  },
   {
     id: "gradient-button",
     name: "Gradient Button",

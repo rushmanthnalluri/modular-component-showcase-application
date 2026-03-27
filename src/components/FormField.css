@@ -1,0 +1,44 @@
+/*
+ * FormField — layout and typography for labelled form controls.
+ *
+ * The component is purely presentational: all state lives in the parent.
+ * Class naming follows BEM so selectors stay flat and predictable.
+ */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Visible label */
+.form-field__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--text-secondary, 199 20% 31%));
+  line-height: 1.4;
+}
+
+/* Wrapper that holds the <input> / <select> / <textarea> */
+.form-field__control-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Error variant — used when the parent passes a non-empty error prop */
+.form-field__control-wrap--error {
+  /* Propagate aria-invalid to the inner control via the wrapper outline */
+  outline: 2px solid hsl(var(--destructive, 0 71% 52%) / 0.4);
+  border-radius: 6px;
+}
+
+/* Inline error message shown below the control */
+.form-field__error {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: hsl(var(--destructive, 0 71% 52%));
+  line-height: 1.4;
+  margin-top: 2px;
+  display: block;
+}
