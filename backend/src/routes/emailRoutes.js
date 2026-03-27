@@ -4,7 +4,8 @@ import { validateSupportTicketPayload } from "../utils/validation.js";
 export function createEmailRouter({ sendEmail, supportLimiter, requireCsrf }) {
     const router = express.Router();
 
-    router.post("/send", supportLimiter, requireCsrf, async (req, res) => {
+    // Support tickets are public, rate-limited, and do not need CSRF protection.
+    router.post("/send", supportLimiter, async (req, res) => {
         const validation = validateSupportTicketPayload(req.body || {});
         if (!validation.ok) {
             return res.status(400).json({
