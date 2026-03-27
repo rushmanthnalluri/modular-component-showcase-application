@@ -32,6 +32,20 @@ const Contact = () => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const openSupportEmailDraft = (payload) => {
+    const subject = encodeURIComponent(`Support Ticket: ${payload.title}`);
+    const body = encodeURIComponent(
+      [
+        `Category: ${payload.category}`,
+        `From: ${payload.name}`,
+        "",
+        payload.description,
+      ].join("\n")
+    );
+
+    window.location.href = `mailto:${APP_INFO.supportEmail}?subject=${subject}&body=${body}`;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = {
@@ -53,17 +67,7 @@ const Contact = () => {
     try {
       setIsSubmitting(true);
       if (isGithubPages) {
-        const subject = encodeURIComponent(`Support Ticket: ${payload.title}`);
-        const body = encodeURIComponent(
-          [
-            `Category: ${payload.category}`,
-            `From: ${payload.name}`,
-            "",
-            payload.description,
-          ].join("\n")
-        );
-
-        window.location.href = `mailto:${APP_INFO.supportEmail}?subject=${subject}&body=${body}`;
+        openSupportEmailDraft(payload);
         toast({
           title: "Ticket created",
           description: `Opened your email app with ticket details prefilled.`,
@@ -95,17 +99,7 @@ const Contact = () => {
       const isNotFound = errorMessage.includes("404");
 
       if (isNotFound) {
-        const subject = encodeURIComponent(`Support Ticket: ${payload.title}`);
-        const body = encodeURIComponent(
-          [
-            `Category: ${payload.category}`,
-            `From: ${payload.name}`,
-            "",
-            payload.description,
-          ].join("\n")
-        );
-
-        window.location.href = `mailto:${APP_INFO.supportEmail}?subject=${subject}&body=${body}`;
+        openSupportEmailDraft(payload);
         toast({
           title: "Backend ticket API unavailable",
           description: "Opened your email app with ticket details prefilled.",
