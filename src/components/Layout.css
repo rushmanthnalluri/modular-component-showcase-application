@@ -1,52 +1,42 @@
 .layout-page {
   min-height: 100vh;
-  background-color: hsl(var(--background));
-  background-image:
-    radial-gradient(at 0% 0%, hsla(var(--primary) / 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(var(--accent) / 0.05) 0px, transparent 50%);
+  background: linear-gradient(to bottom, #f3f6fb, #ffffff);
   display: flex;
   flex-direction: column;
 }
 
 .skip-link {
   position: absolute;
-  left: 20px;
+  left: 12px;
   top: -100%;
-  z-index: 999;
-  border-radius: 99px;
-  background: hsl(var(--primary));
-  color: white;
-  padding: 10px 20px;
+  z-index: 200;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 8px 12px;
   text-decoration: none;
-  font-weight: 600;
-  transition: top 0.3s ease;
 }
 
 .skip-link:focus-visible {
-  top: 20px;
+  top: 8px;
 }
 
 .layout-main {
   flex: 1;
-  padding-top: var(--header-height);
+  padding-top: 80px;
 }
 
 .layout-container {
   width: 100%;
-  max-width: 1440px;
+  max-width: 1380px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 12px;
   box-sizing: border-box;
-}
-
-@media (max-width: 1024px) {
-  .layout-container {
-    padding: 0 24px;
-  }
 }
 
 @media (max-width: 640px) {
   .layout-container {
-    padding: 0 16px;
+    padding: 0 10px;
   }
 }
