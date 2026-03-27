@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/CategoryFilter";
 import ComponentCard from "@/components/ComponentCard";
 import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
-
-import { deleteComponent, getAllComponents, getCloudComponentsStatus } from "@/services/componentsStore";
+import { useComponents } from "@/hooks/useComponents";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { categories } from "@/data/components.data";
 import "./Index.css";
@@ -14,29 +13,36 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { categoryId } = useParams();
-  const [componentItems, setComponentItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [authUser, setAuthUser] = useState(null);
-  const [cloudWarning, setCloudWarning] = useState("");
+
+  // Custom hooks — single responsibility: data fetching lives in useComponents,
+  // auth subscription lives in useAuth via subscribeToAuthUser.
+  const { items: componentItems, isLoading, cloudWarning, removeComponent } = useComponents();
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
 
+  // Derived: list of valid category id strings (stable across renders via useMemo).
   const validCategoryIds = useMemo(
     () => categories.map((category) => category.id),
     []
   );
+
+  // Derived: resolved active category from the URL param.
   const activeCategory = useMemo(() => {
     if (!categoryId) {
       return "all";
     }
     return validCategoryIds.includes(categoryId) ? categoryId : "all";
   }, [categoryId, validCategoryIds]);
+
+  // Derived: human-readable label for the active category.
   const activeCategoryName = useMemo(
     () => categories.find((category) => category.id === activeCategory)?.name || "All Components",
     [activeCategory]
   );
 
+  // Redirect invalid or "all" category routes back to the root path.
   useEffect(() => {
     if (!categoryId) {
       return;
@@ -53,39 +59,7 @@ const Index = () => {
     }
   }, [categoryId, validCategoryIds, navigate, location.search]);
 
-  useEffect(() => {
-    let isActive = true;
-
-    const loadComponents = async () => {
-      setIsLoading(true);
-      try {
-        const items = await getAllComponents();
-        if (!isActive) {
-          return;
-        }
-
-        setComponentItems(items);
-        const syncStatus = getCloudComponentsStatus();
-        setCloudWarning(syncStatus.degraded ? syncStatus.message : "");
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadComponents();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  const handleDelete = async (id) => {
-    await deleteComponent(id);
-    setComponentItems((prev) => prev.filter((component) => component.id !== id));
-  };
-
+  // Sync search query from URL search param to local state.
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const queryFromUrl = searchParams.get("q") || "";
@@ -109,6 +83,7 @@ const Index = () => {
     );
   };
 
+  // Keep the URL `?q=` param in sync with local search state.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const normalizedQuery = searchQuery.trim();
@@ -131,6 +106,12 @@ const Index = () => {
     }
   }, [searchQuery, location.pathname, location.search, navigate]);
 
+  // Delegate deletion to the hook which does optimistic update + rollback on error.
+  const handleDelete = async (id) => {
+    await removeComponent(id);
+  };
+
+  // Derived: filtered view of the component list — never stored in state.
   const filteredComponents = useMemo(() => {
     const searchText = searchQuery.trim().toLowerCase();
 
