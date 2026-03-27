@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 function generateText(length) {
-  const text = "ABCHEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let ticketid = "";
   for (let i = 0; i < length; i += 1) {
     ticketid += text.charAt(Math.floor(Math.random() * text.length));
@@ -43,6 +43,10 @@ export async function sendEmail(toEmail, ticket = null) {
       user: smtpUser,
       pass: smtpPass,
     },
+    // Prevent long hangs in hosted environments when SMTP is blocked/slow.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
 
   const ticketId = generateText(6);
@@ -74,9 +78,17 @@ export async function sendEmail(toEmail, ticket = null) {
   };
 
   try {
+    // Fast-fail if the SMTP server cannot be reached.
+    await transporter.verify();
     await transporter.sendMail(mailOptions);
-    return { code: 200, msg: "Support ticket created" };
+    return { code: 200, msg: "Support ticket created", ticketId };
   } catch (err) {
-    return { code: 401, msg: err.message };
+    console.error("Support ticket email failed:", err?.message || err);
+    // Ticket creation should not be blocked by email delivery failures.
+    return {
+      code: 200,
+      msg: "Support ticket created. Email notification could not be delivered.",
+      ticketId,
+    };
   }
 }
