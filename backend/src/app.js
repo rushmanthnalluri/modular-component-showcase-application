@@ -154,7 +154,6 @@ app.use(
     createEmailRouter({
         sendEmail,
         supportLimiter,
-        requireCsrf,
     })
 );
 
