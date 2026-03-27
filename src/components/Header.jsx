@@ -85,7 +85,7 @@ const Header = () => {
               ) : null}
               <button
                 type="button"
-                className="btn-primary"
+                className="btn-dark"
                 onClick={handleLogout}
                 aria-label="Logout"
               >
@@ -97,7 +97,7 @@ const Header = () => {
               <Link className="btn-outline" to="/login">
                 Login
               </Link>
-              <Link className="btn-primary" to="/register">
+              <Link className="btn-dark" to="/register">
                 Register
               </Link>
             </>
@@ -142,7 +142,7 @@ const Header = () => {
                 ) : null}
                 <button
                   type="button"
-                  className="btn-primary"
+                  className="btn-dark"
                   onClick={handleLogout}
                   aria-label="Logout"
                 >
