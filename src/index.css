@@ -1,84 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @layer base {
   :root {
-    /* Core palette */
-    --primary: 186 46% 32%;
-    --primary-dark: 186 47% 24%;
-    --primary-light: 187 40% 85%;
+    /* Core palette: Modern Teal & Electric Blue */
+    --primary: 199 89% 48%;
+    --primary-dark: 199 89% 38%;
+    --primary-light: 199 89% 88%;
     --primary-foreground: 0 0% 100%;
 
-    --accent: 20 88% 57%;
+    --accent: 262 83% 58%;
     --accent-foreground: 0 0% 100%;
-    --secondary: 43 92% 55%;
-    --secondary-foreground: 202 32% 18%;
+    --secondary: 168 76% 42%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Surfaces (light-first theme) */
-    --background: 39 44% 96%;
-    --bg-main: 38 41% 94%;
-    --bg-secondary: 38 35% 90%;
+    /* Surfaces: Clean & High Contrast */
+    --background: 210 40% 98%;
+    --bg-main: 210 40% 98%;
+    --bg-secondary: 210 30% 95%;
     --bg-card: 0 0% 100%;
-    --bg-hover: 38 30% 86%;
-    --bg-active: 38 28% 82%;
-    --foreground: 202 32% 18%;
+    --bg-hover: 210 30% 92%;
+    --bg-active: 210 30% 88%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 202 32% 18%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 202 32% 18%;
+    --popover-foreground: 222 47% 11%;
 
     /* Text hierarchy */
-    --text-primary: 202 32% 18%;
-    --text-secondary: 199 20% 31%;
-    --text-muted: 199 13% 45%;
-    --muted: 38 24% 90%;
-    --muted-foreground: 199 13% 45%;
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 16% 47%;
+    --text-muted: 215 16% 57%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
     /* States */
-    --destructive: 0 71% 52%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 153 51% 39%;
-    --warning: 37 96% 52%;
-    --info: 199 73% 45%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
 
     /* Borders and focus */
-    --border: 34 25% 79%;
-    --border-light: 34 24% 86%;
-    --input: 34 24% 82%;
-    --ring: 20 88% 57%;
+    --border: 214 32% 91%;
+    --border-light: 214 32% 95%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
 
     /* Layout */
-    --radius: 0.9rem;
+    --radius: 1rem;
     --header-height: 80px;
-
-    /* Sidebar (keeping for shadcn) */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 202 32% 18%;
-    --sidebar-primary: 186 46% 32%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 38 35% 90%;
-    --sidebar-accent-foreground: 202 32% 18%;
-    --sidebar-border: 34 25% 79%;
-    --sidebar-ring: 20 88% 57%;
   }
 
   html[data-theme="dark"] {
-    --primary: 187 62% 64%;
-    --primary-foreground: 210 40% 98%;
-    --accent: 24 95% 61%;
-    --background: 222 47% 11%;
-    --bg-main: 222 42% 14%;
-    --bg-secondary: 222 36% 18%;
-    --bg-card: 222 36% 16%;
-    --foreground: 210 40% 95%;
-    --card: 222 36% 16%;
-    --card-foreground: 210 40% 95%;
-    --text-secondary: 214 25% 78%;
-    --muted: 222 25% 22%;
-    --muted-foreground: 215 18% 72%;
-    --border: 218 22% 32%;
-    --input: 218 22% 32%;
-    --ring: 24 95% 61%;
+    --primary: 199 89% 58%;
+    --primary-foreground: 222 47% 11%;
+    --accent: 262 83% 68%;
+    --background: 222 47% 4%;
+    --bg-main: 222 47% 4%;
+    --bg-secondary: 222 47% 6%;
+    --bg-card: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --text-secondary: 215 20% 75%;
+    --muted: 222 47% 12%;
+    --muted-foreground: 215 20% 65%;
+    --border: 222 47% 15%;
+    --input: 222 47% 15%;
+    --ring: 199 89% 58%;
   }
-
 }
 
 * {
@@ -94,17 +85,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   min-height: 100vh;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  font-size: 11pt;
+  font-family: 'Outfit', sans-serif;
+  background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  background: hsl(var(--background));
   line-height: 1.6;
-  letter-spacing: 0.01em;
 }
 
 h1,
@@ -339,4 +323,5 @@ a:focus-visible {
   border-radius: 999px;
   background: hsl(var(--foreground) / 0.6);
   transition: width 100ms linear;
-}
+}. h o v e r - l i f t   {   t r a n s i t i o n :   t r a n s f o r m   0 . 3 s   c u b i c - b e z i e r ( 0 . 3 4 ,   1 . 5 6 ,   0 . 6 4 ,   1 ) ,   b o x - s h a d o w   0 . 3 s   e a s e ;   }   . h o v e r - l i f t : h o v e r   {   t r a n s f o r m :   t r a n s l a t e Y ( - 8 p x ) ;   b o x - s h a d o w :   0   1 2 p x   2 4 p x   - 1 0 p x   h s l a ( v a r ( - - f o r e g r o u n d )   /   0 . 1 5 ) ;   }  
+ 
