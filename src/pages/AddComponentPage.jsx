@@ -9,6 +9,7 @@ import "./AddComponentPage.css";
 const INITIAL_FORM = {
   name: "",
   description: "",
+  tags: "",
   jsxCode: "",
   cssCode: "",
   category: "",
@@ -116,6 +117,7 @@ const AddComponentPage = () => {
     const nextErrors = {
       name: formValues.name.trim() === "",
       description: formValues.description.trim() === "",
+      tags: false,
       jsxCode: formValues.jsxCode.trim() === "",
       cssCode: false,
       category: formValues.category.trim() === "",
@@ -217,6 +219,17 @@ const AddComponentPage = () => {
                 Category is required.
               </span>
             ) : null}
+
+            <label htmlFor="component-tags">Tags (comma-separated)</label>
+            <input
+              id="component-tags"
+              name="tags"
+              value={formValues.tags}
+              onChange={handleChange}
+              className={errors.tags ? "error" : ""}
+              aria-invalid={errors.tags ? "true" : "false"}
+              placeholder="e.g. responsive, dark-mode, form"
+            />
 
             <label htmlFor="component-display-image">Display Image File</label>
             <input
