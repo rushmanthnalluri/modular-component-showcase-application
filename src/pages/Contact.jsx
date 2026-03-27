@@ -16,6 +16,9 @@ const Contact = () => {
     website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isGithubPages =
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith("github.io");
 
   const categories = [
     "Bug Report",
@@ -49,18 +52,44 @@ const Contact = () => {
 
     try {
       setIsSubmitting(true);
-      await sendSupportTicketEmail(payload);
-      toast({
-        title: "Ticket created",
-        description: `Thank you, ${payload.name}! Your support ticket has been submitted.`,
-      });
-      setForm({
-        title: "",
-        category: "",
-        description: "",
-        name: "",
-        website: "",
-      });
+      if (isGithubPages) {
+        const subject = encodeURIComponent(`Support Ticket: ${payload.title}`);
+        const body = encodeURIComponent(
+          [
+            `Category: ${payload.category}`,
+            `From: ${payload.name}`,
+            "",
+            payload.description,
+          ].join("\n")
+        );
+
+        window.location.href = `mailto:${APP_INFO.supportEmail}?subject=${subject}&body=${body}`;
+        toast({
+          title: "Ticket created",
+          description: `Opened your email app with ticket details prefilled.`,
+        });
+        setForm({
+          title: "",
+          category: "",
+          description: "",
+          name: "",
+          website: "",
+        });
+        return;
+      } else {
+        await sendSupportTicketEmail(payload);
+        toast({
+          title: "Ticket created",
+          description: `Thank you, ${payload.name}! Your support ticket has been submitted.`,
+        });
+        setForm({
+          title: "",
+          category: "",
+          description: "",
+          name: "",
+          website: "",
+        });
+      }
     } catch (error) {
       const errorMessage = String(error?.message || "");
       const isNotFound = errorMessage.includes("404");
