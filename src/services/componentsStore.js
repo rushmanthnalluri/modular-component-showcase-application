@@ -111,9 +111,7 @@ export async function fetchComponentById(id) {
   }
 }
 
-export function getShowcaseDemo(_id) {
-  return null;
-}
+export { getShowcaseDemo } from "@/demos/showcaseRegistry";
 
 export async function deleteComponent(id) {
   await apiRequest(`/components/${id}`, {
