@@ -1,7 +1,7 @@
 import express from "express";
 import { validateSupportTicketPayload } from "../utils/validation.js";
 
-export function createEmailRouter({ sendEmail, supportLimiter, requireCsrf }) {
+export function createEmailRouter({ sendEmail, supportLimiter }) {
     const router = express.Router();
 
     // Support tickets are public, rate-limited, and do not need CSRF protection.
