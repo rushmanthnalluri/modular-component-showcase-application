@@ -28,5 +28,12 @@ export default defineConfig(({ mode }) => {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
+    test: {
+      // Vitest configuration — runs component/unit tests in the frontend.
+      environment: "jsdom",
+      globals: true,
+      setupFiles: [],
+      include: ["src/**/*.test.{js,jsx}"],
+    },
   };
 });
