@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const repoName = process.env.GITHUB_REPOSITORY?.split("/")[1];
 
   return {
-    base: mode === "production" && repoName ? `/${repoName}/` : "/",
+    base: "/modular-component-showcase-application/",
     server: {
       host: "::",
       port: 8080,

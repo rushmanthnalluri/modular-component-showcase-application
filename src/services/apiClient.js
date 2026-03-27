@@ -1,6 +1,9 @@
 
 const RENDER_API_BASE_URL = "https://modular-component-showcase-application.onrender.com/api";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || RENDER_API_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.PROD
+    ? RENDER_API_BASE_URL
+    : (import.meta.env.VITE_API_BASE_URL || "/api");
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
 let csrfBootstrapPromise = null;
