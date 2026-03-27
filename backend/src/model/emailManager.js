@@ -31,10 +31,14 @@ export async function sendEmail(toEmail, ticket = null) {
     };
   }
 
+  const smtpHost = String(process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const isSecure = smtpPort === 465;
+
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    host: smtpHost,
+    port: smtpPort,
+    secure: isSecure,
     auth: {
       user: smtpUser,
       pass: smtpPass,
