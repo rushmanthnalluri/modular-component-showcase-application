@@ -16,6 +16,7 @@ import { createCsrfMiddleware } from "./middleware/csrf.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
+import { createUserRouter } from "./routes/userRoutes.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -154,6 +155,15 @@ app.use(
     createEmailRouter({
         sendEmail,
         supportLimiter,
+    })
+);
+
+app.use(
+    "/api/users",
+    createUserRouter({
+        User,
+        requireAuth,
+        requireCsrf,
     })
 );
 

@@ -26,13 +26,20 @@ export function createComponentsRouter({
                 return res.status(400).json({ message: validation.message });
             }
 
-            const { name, description, category, jsxCode, cssCode, thumbnail, screenshot } = validation.data;
+            const { name, description, category, tags, jsxCode, cssCode, thumbnail, screenshot } = validation.data;
             const item = await Component.create({
                 id: createComponentId(name),
                 name,
                 description,
                 category,
-                tags: [category, "user-added", ...name.toLowerCase().split(/\s+/)].slice(0, 5),
+                tags: Array.from(
+                    new Set([
+                        category,
+                        "user-added",
+                        ...String(name).toLowerCase().split(/\s+/).filter(Boolean),
+                        ...(Array.isArray(tags) ? tags : []),
+                    ])
+                ).slice(0, 12),
                 thumbnail,
                 screenshot,
                 code: {

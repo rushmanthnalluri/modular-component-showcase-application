@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import SearchBar from "@/components/SearchBar";
 import { useComponents } from "@/hooks/useComponents";
 import { subscribeToAuthUser } from "@/services/authAccess";
+import { getFavoriteIds, toggleFavorite } from "@/services/favoritesService";
 import { categories } from "@/data/components.data";
 import "./Index.css";
 
@@ -15,12 +16,23 @@ const Index = () => {
   const { categoryId } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [authUser, setAuthUser] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
   const { items: componentItems, isLoading, cloudWarning, removeComponent } = useComponents();
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
+  useEffect(() => {
+    let active = true;
+    getFavoriteIds().then((ids) => {
+      if (active) setFavoriteIds(ids);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Derived: list of valid category id strings (stable across renders via useMemo).
   const validCategoryIds = useMemo(
@@ -83,6 +95,11 @@ const Index = () => {
     );
   };
 
+  const handleToggleFavorite = async (componentId) => {
+    const next = await toggleFavorite(componentId);
+    setFavoriteIds(next);
+  };
+
   // Keep the URL `?q=` param in sync with local search state.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -116,16 +133,18 @@ const Index = () => {
     const searchText = searchQuery.trim().toLowerCase();
 
     return componentItems.filter((item) => {
+      const isFavorite = favoriteIds.includes(item.id);
       const matchesCategory = activeCategory === "all" || item.category === activeCategory;
+      const matchesFavorites = !showFavoritesOnly || isFavorite;
       const matchesSearch =
         searchText === "" ||
         item.name.toLowerCase().includes(searchText) ||
         item.description.toLowerCase().includes(searchText) ||
         item.tags.some((tag) => tag.toLowerCase().includes(searchText));
 
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesFavorites && matchesSearch;
     });
-  }, [activeCategory, componentItems, searchQuery]);
+  }, [activeCategory, componentItems, favoriteIds, searchQuery, showFavoritesOnly]);
 
   return (
     <Layout>
@@ -145,6 +164,15 @@ const Index = () => {
                 <p className="category-route-note">Viewing route category: {activeCategoryName}</p>
               ) : null}
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "center" }}>
+                <button
+                  type="button"
+                  className={`filter-btn ${showFavoritesOnly ? "active" : ""}`}
+                  onClick={() => setShowFavoritesOnly((prev) => !prev)}
+                >
+                  Favorites
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -177,6 +205,9 @@ const Index = () => {
                     name={component.name}
                     description={component.description}
                     thumbnail={component.thumbnail}
+                    tags={component.tags}
+                    isFavorite={favoriteIds.includes(component.id)}
+                    onToggleFavorite={handleToggleFavorite}
                     canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
                     onDelete={handleDelete}
                   />
