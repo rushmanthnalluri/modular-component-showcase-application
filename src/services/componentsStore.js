@@ -69,6 +69,7 @@ export async function getAllComponents() {
 export async function addCustomComponent({
   name,
   description,
+  tags = "",
   jsxCode,
   cssCode,
   category,
@@ -80,6 +81,7 @@ export async function addCustomComponent({
   const trimmedThumbnail = thumbnail.trim();
   const trimmedScreenshot = screenshot.trim();
   const trimmedCategory = category.trim();
+  const trimmedTags = String(tags || "").trim();
 
   const payload = await apiRequest("/components", {
     method: "POST",
@@ -87,6 +89,7 @@ export async function addCustomComponent({
       name: trimmedName,
       description: trimmedDescription,
       category: trimmedCategory,
+      tags: trimmedTags,
       jsxCode: jsxCode.trim(),
       cssCode: cssCode.trim(),
       thumbnail: trimmedThumbnail,

@@ -30,6 +30,8 @@ const LIMITS = {
     ticketTitle: 120,
     ticketCategory: 60,
     ticketDescription: 2000,
+    tag: 24,
+    tagsTotal: 200,
     imageDataUrl: 2_500_000,
 };
 
@@ -229,6 +231,7 @@ export function validateComponentPayload(payload = {}) {
     const name = text(payload.name);
     const description = text(payload.description);
     const category = text(payload.category).toLowerCase();
+    const tagsRaw = payload.tags;
     const jsxCode = text(payload.jsxCode);
     const cssCode = text(payload.cssCode);
     const thumbnail = text(payload.thumbnail);
@@ -272,12 +275,32 @@ export function validateComponentPayload(payload = {}) {
         return { ok: false, message: "Screenshot must be a valid base64 image payload." };
     }
 
+    let tags = [];
+    if (Array.isArray(tagsRaw)) {
+        tags = tagsRaw.map((t) => text(t)).filter(Boolean);
+    } else if (typeof tagsRaw === "string") {
+        tags = tagsRaw
+            .split(",")
+            .map((t) => text(t))
+            .filter(Boolean);
+    }
+
+    tags = Array.from(new Set(tags.map((t) => t.toLowerCase()))).slice(0, 12);
+    if (tags.some((t) => t.length > LIMITS.tag)) {
+        return { ok: false, message: "Each tag must be 24 characters or fewer." };
+    }
+    const tagsJoined = tags.join(",");
+    if (tagsJoined.length > LIMITS.tagsTotal) {
+        return { ok: false, message: "Tags are too long." };
+    }
+
     return {
         ok: true,
         data: {
             name,
             description,
             category,
+            tags,
             jsxCode,
             cssCode,
             thumbnail,
