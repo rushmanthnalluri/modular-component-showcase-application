@@ -1,18 +1,10 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createCookieOptions } from "../utils/cookiePolicy.js";
 
 const CSRF_COOKIE_NAME = "csrf_token";
 const CSRF_HEADER_NAME = "x-csrf-token";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-
-function csrfCookieOptions(isProduction) {
-    return {
-        httpOnly: false,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-        path: "/",
-        maxAge: 24 * 60 * 60 * 1000,
-    };
-}
+const CSRF_COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 function tokensMatch(left, right) {
     const a = Buffer.from(String(left || ""));
@@ -36,7 +28,11 @@ export function createCsrfMiddleware({ isProduction }) {
         }
 
         const token = generateCsrfToken();
-        const options = csrfCookieOptions(isProduction);
+        const options = createCookieOptions(req, {
+            isProduction,
+            httpOnly: false,
+            maxAge: CSRF_COOKIE_MAX_AGE_MS,
+        });
         res.cookie(CSRF_COOKIE_NAME, token, options);
         req.cookies = {
             ...(req.cookies || {}),

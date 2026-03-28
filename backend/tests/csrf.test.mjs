@@ -6,9 +6,11 @@ function createMockResponse() {
     return {
         statusCode: 200,
         cookies: {},
+        cookieOptions: {},
         body: null,
-        cookie(name, value) {
+        cookie(name, value, options) {
             this.cookies[name] = value;
+            this.cookieOptions[name] = options;
         },
         status(code) {
             this.statusCode = code;
@@ -69,4 +71,26 @@ test("csrf middleware blocks mismatched token", () => {
     assert.equal(nextCalled, false);
     assert.equal(res.statusCode, 403);
     assert.equal(res.body.message, "Invalid CSRF token.");
+});
+
+test("csrf middleware uses cross-site cookie settings for secure cross-origin requests", () => {
+    const { ensureCsrfCookie } = createCsrfMiddleware({ isProduction: false });
+    const req = {
+        method: "GET",
+        headers: {
+            origin: "https://rushmanthnalluri.github.io",
+            host: "modular-component-showcase-application.onrender.com",
+            "x-forwarded-proto": "https",
+        },
+        cookies: {},
+        get(name) {
+            return this.headers[name.toLowerCase()];
+        },
+    };
+    const res = createMockResponse();
+
+    ensureCsrfCookie(req, res, () => {});
+
+    assert.equal(res.cookieOptions.csrf_token.sameSite, "none");
+    assert.equal(res.cookieOptions.csrf_token.secure, true);
 });
