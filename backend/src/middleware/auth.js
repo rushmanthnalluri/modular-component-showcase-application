@@ -1,17 +1,8 @@
 import jwt from "jsonwebtoken";
+import { createCookieOptions } from "../utils/cookiePolicy.js";
 
 const AUTH_COOKIE_NAME = "auth_token";
 const AUTH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-
-function authCookieOptions(isProduction) {
-    return {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-        path: "/",
-        maxAge: AUTH_TOKEN_MAX_AGE_MS,
-    };
-}
 
 export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
     function readToken(req) {
@@ -56,12 +47,24 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
         return next();
     }
 
-    function issueAuthCookie(res, token) {
-        res.cookie(AUTH_COOKIE_NAME, token, authCookieOptions(isProduction));
+    function issueAuthCookie(req, res, token) {
+        res.cookie(
+            AUTH_COOKIE_NAME,
+            token,
+            createCookieOptions(req, {
+                isProduction,
+                httpOnly: true,
+                maxAge: AUTH_TOKEN_MAX_AGE_MS,
+            })
+        );
     }
 
-    function clearAuthCookie(res) {
-        const options = authCookieOptions(isProduction);
+    function clearAuthCookie(req, res) {
+        const options = createCookieOptions(req, {
+            isProduction,
+            httpOnly: true,
+            maxAge: AUTH_TOKEN_MAX_AGE_MS,
+        });
         res.clearCookie(AUTH_COOKIE_NAME, {
             httpOnly: options.httpOnly,
             secure: options.secure,
