@@ -17,6 +17,7 @@ import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
+import { connectMongoWithSrvFallback } from "./utils/mongoSrvFallback.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -25,6 +26,7 @@ let httpServer = null;
 let reconnectTimer = null;
 let reconnectAttempt = 0;
 let isShuttingDown = false;
+let resolvedMongoUri = null;
 
 const isProduction = process.env.NODE_ENV === "production";
 const allowMemoryFallback =
@@ -230,7 +232,7 @@ function scheduleAtlasReconnect() {
 
         try {
             console.warn(`MongoDB reconnect attempt ${reconnectAttempt}...`);
-            await mongoose.connect(mongoUri, mongoConnectOptions);
+            await connectToAtlas();
             reconnectAttempt = 0;
             mongoMode = "atlas";
             console.log("MongoDB Atlas reconnected");
@@ -265,6 +267,34 @@ mongoose.connection.on("error", (error) => {
     console.error("MongoDB connection error:", error.message);
 });
 
+async function connectToAtlas() {
+    if (!mongoUri) {
+        throw new Error("MONGODB_URI is not configured.");
+    }
+
+    if (resolvedMongoUri && resolvedMongoUri !== mongoUri) {
+        try {
+            await mongoose.connect(resolvedMongoUri, mongoConnectOptions);
+            return;
+        } catch {
+            resolvedMongoUri = null;
+            console.warn("Cached MongoDB direct-host URI failed. Re-resolving Atlas SRV record.");
+        }
+    }
+
+    const connectionResult = await connectMongoWithSrvFallback({
+        mongoUri,
+        connect: (uri, options) => mongoose.connect(uri, options),
+        connectOptions: mongoConnectOptions,
+    });
+
+    resolvedMongoUri = connectionResult.connectionUri;
+
+    if (connectionResult.usedSrvFallback) {
+        console.warn("MongoDB SRV lookup failed. Connected using direct Atlas hosts resolved via DNS-over-HTTPS.");
+    }
+}
+
 export async function connectWithFallback() {
     if (!mongoUri) {
         if (!allowMemoryFallback) {
@@ -276,7 +306,7 @@ export async function connectWithFallback() {
 
     try {
         if (mongoUri) {
-            await mongoose.connect(mongoUri, mongoConnectOptions);
+            await connectToAtlas();
             mongoMode = "atlas";
             console.log("MongoDB Atlas connected");
             return;
