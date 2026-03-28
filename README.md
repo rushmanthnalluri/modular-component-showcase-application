@@ -1,176 +1,212 @@
+
 # Modular Component Showcase Application
 
-## Description
+A full-stack React + Js application for browsing, previewing, and contributing reusable UI components.
 
-A SPA designed to demonstrate reusable UI components, their interactions, and behavior under different configurations. Focus is on component modularity, controlled state variations, prop-driven rendering, routing, and performance optimization. This is a meta-engineering project, ideal for practicing engineering concepts.
+The project combines a built-in component gallery with cloud-saved custom components, so users can explore ready-made UI patterns while developers can add new components through authenticated workflows.
 
-## Key Architecture Goals
-
-- Modular component library with reusable and configurable UI elements.
-- Controlled state and props to manage dynamic behavior.
-- Route-based organization of component categories or demos.
-- Asynchronous simulation of interactions or dynamic data updates.
-- Performance optimization for multiple interactive components.
-- Conditional rendering to demonstrate different component states.
-- Accessibility-ready components with keyboard and focus handling.
-
-## Major Features
-
-- Library of reusable UI components (buttons, cards, data displays).
-- Interactive demos showcasing controlled state and prop variations.
-- Route-based navigation across component categories.
-- Async simulation of data feeding and interactions.
-- Conditional rendering for different component states and variants.
-- Performance-optimized rendering for interactive demos.
-- Accessible demos with focus management and keyboard support.
-
-This implementation is delivered as a full-stack React + Express application for discovering reusable UI components, previewing source code, and contributing custom components through authenticated workflows.
-
-## Live URLs
+## Live Links
 
 - Frontend: https://rushmanthnalluri.github.io/modular-component-showcase-application/
 - Backend API: https://modular-component-showcase-application.onrender.com/api
-- Health check: https://modular-component-showcase-application.onrender.com/health
+- Health Check: https://modular-component-showcase-application.onrender.com/health
 
-## Implementation Highlights
+## Features
 
-- Component gallery with search and category filters.
-- Component detail pages with protected code-view route.
-- Auth system: register, login, forgot-password reset.
-- Session auth via secure `httpOnly` cookie with CSRF protection for cookie-authenticated writes.
-- Role-based component submission (developer/admin).
-- Owner/admin component deletion.
-- Contact page support ticket flow via backend email API (with mailto fallback).
-- Captcha endpoint support.
-- Theme + toast support and SEO assets.
+- Browse reusable UI components by category
+- Search and filter components from the homepage
+- Save favorite components
+- Open component detail pages with live previews
+- View JSX and CSS for bundled showcase components
+- Use interactive playground controls for supported demos
+- Register, login, logout, and reset passwords
+- Add custom components as a developer or admin
+- Delete components as the owner or an admin
+- Submit support tickets from the contact page
+- Switch between light and dark themes
+- Responsive layout with accessibility-focused navigation and feedback
 
-## Tech Stack
+## Built With
 
-- Frontend: React 18, Vite, React Router, Radix Toast, Lucide.
-- Backend: Express 5, Mongoose, JWT, bcryptjs, Nodemailer.
-- Security: CORS, Helmet, express-rate-limit.
-- Data: MongoDB Atlas with optional in-memory fallback for local development.
-- Deploy: GitHub Pages (frontend), Render (backend).
+### Frontend
+- React 18
+- Vite
+- React Router
+- Radix Toast
+- Lucide React
+- React Syntax Highlighter
+
+### Backend
+- Express 5
+- MongoDB / Mongoose
+- JWT
+- bcryptjs
+- Nodemailer
+
+### Security
+- Cookie-based authentication
+- CSRF protection
+- CORS
+- Helmet
+- Rate limiting
+
+### Deployment
+- GitHub Pages for frontend
+- Render for backend
+- GitHub Actions for CI and Pages deployment
 
 ## Project Structure
 
 ```text
 .
-|- src/
-|  |- components/
-|  |- context/
-|  |- data/
-|  |- pages/
-|  |- services/
-|  |- App.jsx
-|  `- main.jsx
-|- backend/
-|  |- src/
-|  |  |- app.js
-|  |  |- controller/
-|  |  |- middleware/
-|  |  |- model/
-|  |  |- routes/
-|  |  `- utils/
-|  `- tests/
-|- render.yaml
-`- package.json
+├─ src/
+│  ├─ assets/
+│  ├─ components/
+│  ├─ context/
+│  ├─ data/
+│  ├─ demos/
+│  ├─ hooks/
+│  ├─ pages/
+│  ├─ services/
+│  ├─ App.jsx
+│  └─ main.jsx
+├─ backend/
+│  ├─ src/
+│  │  ├─ controller/
+│  │  ├─ middleware/
+│  │  ├─ model/
+│  │  ├─ routes/
+│  │  └─ utils/
+│  └─ tests/
+├─ public/
+├─ .github/workflows/
+├─ package.json
+├─ vite.config.js
+└─ README.md
 ```
 
-## Getting Started
+## How It Works
 
-### 1. Prerequisites
+- The homepage shows a searchable and filterable gallery of reusable components.
+- Built-in showcase components are loaded from local data.
+- Custom components are fetched from the backend and merged into the gallery.
+- Detail pages display previews, interactive demo controls, and code snippets.
+- Authentication is required for protected actions like adding components.
+- Favorites are synced to the backend for logged-in users and stored locally as a fallback.
+- Support tickets are sent through the backend email API, with fallback behavior where needed.
 
-- Node.js 20+
-- npm 9+
+## Local Development
 
-### 2. Install dependencies
-
-Run from this folder:
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-Note: root `postinstall` runs `npm --prefix backend install`.
+Root install also installs backend dependencies through `postinstall`.
 
-### 3. Configure environment variables
+### 2. Frontend environment
 
-Create a frontend `.env` at project root:
+Create a root `.env` file:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-Create backend env file:
+### 3. Backend environment
+
+Create `backend/.env` with values like:
 
 ```bash
-cp backend/.env.example backend/.env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_jwt_secret
+FRONTEND_ORIGINS=http://localhost:8080,http://localhost:5173
+ALLOW_MEMORY_FALLBACK=true
+SMTP_USER=your_email_user
+SMTP_PASS=your_email_password
+SMTP_FROM=your_email_address
 ```
 
-Recommended `backend/.env` values:
+### 4. Run the app
 
-- `PORT=5000`
-- `MONGODB_URI=<your_atlas_connection_string>`
-- `JWT_SECRET=<long_random_secret>`
-- `FRONTEND_ORIGINS=http://localhost:8080,http://localhost:8081,http://localhost:5173,https://rushmanthnalluri.github.io`
-- `ALLOW_MEMORY_FALLBACK=true` (non-production only)
-
-### 4. Run the app (two terminals)
-
-Terminal 1 (backend):
+Backend:
 
 ```bash
 npm run start
 ```
 
-Terminal 2 (frontend):
+Frontend:
 
 ```bash
 npm run dev
 ```
 
-Defaults:
+### Local URLs
 
-- Frontend: `http://localhost:8080` (from `vite.config.js`)
-- Backend: `http://localhost:5000`
+- Frontend: http://localhost:8080
+- Backend: http://localhost:5000
 
-## Scripts
+## Available Scripts
 
-- `npm run dev` - Start Vite dev server.
-- `npm run build` - Build frontend.
-- `npm run preview` - Preview built frontend.
-- `npm run lint` - Run ESLint.
-- `npm run test` - Run all frontend and backend tests.
-- `npm run start` - Start backend application.
+- `npm run dev` - start the Vite frontend
+- `npm run start` - start the Express backend
+- `npm run build` - create a production frontend build
+- `npm run preview` - preview the built frontend
+- `npm run lint` - run ESLint
+- `npm run test` - run backend tests
+- `npm run test:ui` - run frontend tests
+- `npm run test:all` - run backend and frontend tests
 
 ## API Overview
 
-Health:
+### Health
 - `GET /health`
 
-Authentication:
+### Authentication
 - `GET /api/auth/csrf`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `POST /api/auth/forgot-password`
 
-Components:
+### Components
 - `GET /api/components`
-- `POST /api/components` (Auth required)
-- `DELETE /api/components/:id` (Auth required + Owner/Admin)
+- `GET /api/components/:id`
+- `POST /api/components`
+- `DELETE /api/components/:id`
 
-Support:
+### Users
+- `GET /api/users/me`
+- `GET /api/users/me/favorites`
+- `POST /api/users/me/favorites/:componentId`
+
+### Support
 - `POST /api/email/send`
 - `GET /api/captcha/getcaptcha/:length`
 
-## Troubleshooting
+## Deployment
 
-### CORS errors
-- Check backend `FRONTEND_ORIGINS`.
-- Confirm your current frontend origin is allowed.
+- Pushing to `main` triggers the GitHub Actions workflow that builds and deploys the frontend to GitHub Pages.
+- The backend is deployed separately on Render.
+- The frontend is configured to work under the GitHub Pages base path:
+  `/modular-component-showcase-application/`
 
-### Auth issues
-- Re-login to refresh token.
-- Verify `JWT_SECRET` is stable across backend restarts.
+## Highlights
+
+This project demonstrates:
+
+- component modularity
+- controlled state and prop-driven UI
+- route-based navigation
+- protected frontend routes
+- secure backend integration
+- role-based permissions
+- live interactive component demos
+- production-style deployment workflow
+
+## Author
+
+Rushmanth Nalluri
+```
+
