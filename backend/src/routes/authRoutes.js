@@ -72,7 +72,7 @@ export function createAuthRouter({
             }
 
             const token = createAuthToken(user.id);
-            issueAuthCookie(res, token);
+            issueAuthCookie(req, res, token);
 
             return res.json({
                 token,
@@ -91,8 +91,8 @@ export function createAuthRouter({
         }
     });
 
-    router.post("/logout", requireCsrf, (_req, res) => {
-        clearAuthCookie(res);
+    router.post("/logout", requireCsrf, (req, res) => {
+        clearAuthCookie(req, res);
         return res.json({ message: "Logged out." });
     });
 
