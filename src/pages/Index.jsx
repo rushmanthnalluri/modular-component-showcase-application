@@ -21,7 +21,7 @@ const Index = () => {
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
-  const { items: componentItems, isLoading, cloudWarning, removeComponent } = useComponents();
+  const { items: componentItems, isLoading, removeComponent } = useComponents();
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
   useEffect(() => {
@@ -47,12 +47,6 @@ const Index = () => {
     }
     return validCategoryIds.includes(categoryId) ? categoryId : "all";
   }, [categoryId, validCategoryIds]);
-
-  // Derived: human-readable label for the active category.
-  const activeCategoryName = useMemo(
-    () => categories.find((category) => category.id === activeCategory)?.name || "All Components",
-    [activeCategory]
-  );
 
   // Redirect invalid or "all" category routes back to the root path.
   useEffect(() => {
@@ -160,9 +154,6 @@ const Index = () => {
                 Explore reusable components and prop-driven interactions in a
                 clean single-page React application.
               </p>
-              {activeCategory !== "all" ? (
-                <p className="category-route-note">Viewing route category: {activeCategoryName}</p>
-              ) : null}
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
               <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "center" }}>
                 <button
@@ -185,12 +176,6 @@ const Index = () => {
                 onCategoryChange={handleCategoryChange}
               />
             </div>
-            {cloudWarning ? (
-              <div className="sync-warning" role="status" aria-live="polite">
-                {cloudWarning} Showing bundled showcase components only.
-              </div>
-            ) : null}
-
             {isLoading ? (
               <div className="loader-wrap" role="status" aria-live="polite">
                 <div className="loader" aria-hidden="true" />
