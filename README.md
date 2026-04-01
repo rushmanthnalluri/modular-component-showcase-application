@@ -208,5 +208,3 @@ This project demonstrates:
 ## Author
 
 Rushmanth Nalluri
-```
-
