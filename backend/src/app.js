@@ -162,12 +162,24 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.json({ limit: "1mb" }));
-app.use(cookieParser());
-app.use(ensureCsrfCookie);
-app.use("/api", requireCsrf);
+
+app.get("/", (_req, res) => {
+    res.json({ message: "Modular Component Showcase API is running." });
+});
+
+app.get("/health", (_req, res) => {
+    res.json({
+        status: "ok",
+        mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+        mode: mongoMode,
+    });
+});
 
 app.use("/captcha", captchaRouter);
 app.use("/api/captcha", captchaRouter);
+app.use(cookieParser());
+app.use(ensureCsrfCookie);
+app.use("/api", requireCsrf);
 app.use(
     "/api/auth",
     authLimiter,
@@ -220,18 +232,6 @@ app.use(
         requireCsrf,
     })
 );
-
-app.get("/", (_req, res) => {
-    res.json({ message: "Modular Component Showcase API is running." });
-});
-
-app.get("/health", (_req, res) => {
-    res.json({
-        status: "ok",
-        mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-        mode: mongoMode,
-    });
-});
 
 app.get("/api/admin/rate-limits", requireAuth, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
