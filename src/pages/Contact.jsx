@@ -16,9 +16,10 @@ const Contact = () => {
     website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const githubPagesHosts = new Set(["rushmanthnalluri.github.io"]);
   const isGithubPages =
     typeof window !== "undefined" &&
-    window.location.hostname.endsWith("github.io");
+    githubPagesHosts.has(window.location.hostname.toLowerCase());
 
   const categories = [
     "Bug Report",
