@@ -5,6 +5,10 @@ import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ComponentDetail from "./pages/ComponentDetails";
 import ComponentCode from "./pages/ComponentCode";
+import Dashboard from "./pages/Dashboard";
+import Templates from "./pages/Templates";
+import Tutorials from "./pages/Tutorials";
+import TutorialManager from "./pages/TutorialManager";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Help from "./pages/Help";
@@ -40,6 +44,31 @@ const App = () => {
               )}
             />
           </Route>
+          <Route
+            path="/dashboard"
+            element={(
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/templates"
+            element={(
+              <ProtectedRoute>
+                <Templates />
+              </ProtectedRoute>
+            )}
+          />
+          <Route path="/tutorials" element={<Tutorials />} />
+          <Route
+            path="/tutorials/manage"
+            element={(
+              <ProtectedRoute>
+                <TutorialManager />
+              </ProtectedRoute>
+            )}
+          />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />

@@ -29,6 +29,17 @@ const Login = () => {
   const forgotEmailRef = useRef(null);
   const forgotPasswordButtonRef = useRef(null);
 
+  const getCaptchaImageSrc = (rawImage) => {
+    const value = String(rawImage || "").trim();
+    if (!value) {
+      return "";
+    }
+
+    return value.startsWith("data:image")
+      ? value
+      : `data:image/svg+xml;base64,${value}`;
+  };
+
   const loadCaptcha = async () => {
     const payload = await fetchRegisterCaptcha(6);
     setCaptcha({
@@ -36,6 +47,19 @@ const Login = () => {
       image: String(payload?.image || ""),
     });
     setCaptchaInput("");
+
+    if (payload?.source === "local") {
+      toast({
+        title: "Backend unavailable",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Using local captcha fallback. Login will require backend connection.
+          </span>
+        ),
+        duration: 3500,
+      });
+    }
   };
 
   useEffect(() => {
@@ -352,7 +376,7 @@ const Login = () => {
               {captcha.image ? (
                 <img
                   className="captcha-image"
-                  src={`data:image/png;base64,${captcha.image}`}
+                  src={getCaptchaImageSrc(captcha.image)}
                   alt="Captcha"
                 />
               ) : (

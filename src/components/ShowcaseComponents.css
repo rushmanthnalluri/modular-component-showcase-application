@@ -231,19 +231,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  border: 1px solid #1f2937;
-  background: #1f2937;
-  color: #ffffff;
-  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  color: hsl(var(--primary-foreground));
+  padding: 9px 14px;
   font-size: 13px;
+  font-weight: 600;
   line-height: 1;
   min-height: 36px;
   margin-top: auto;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 
 .component-link:hover {
-  background: #111827;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+}
+
+.component-link:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 10px rgba(15, 23, 42, 0.14);
 }
 
 .component-card-actions {
@@ -258,23 +268,56 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #dc2626;
   background: transparent;
   color: #dc2626;
-  padding: 8px 12px;
+  padding: 9px 14px;
   font-size: 13px;
+  font-weight: 600;
   line-height: 1;
   min-height: 36px;
   cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
 .component-delete-btn:hover:not(:disabled) {
   background: #dc2626;
   color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .component-delete-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+html[data-theme="dark"] .component-link {
+  border-color: hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .component-delete-btn {
+  border-color: #ef4444;
+  color: #fecaca;
+}
+
+html[data-theme="dark"] .component-delete-btn:hover:not(:disabled) {
+  background: #ef4444;
+  color: #111827;
+}
+
+@media (max-width: 640px) {
+  .component-card-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .component-link,
+  .component-delete-btn {
+    width: 100%;
+  }
 }
