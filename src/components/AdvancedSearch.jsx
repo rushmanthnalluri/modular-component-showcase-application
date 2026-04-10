@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { searchComponents, getMostViewedComponents, getTopRatedComponents } from "@/services/analyticsService";
 import "./AdvancedSearch.css";
 
@@ -35,11 +35,7 @@ export default function AdvancedSearch({ onComponentsFound, onLoadingChange }) {
     "user-added",
   ];
 
-  useEffect(() => {
-    performSearch();
-  }, [selectedCategory, sortBy, minRating, page]);
-
-  async function performSearch() {
+  const performSearch = useCallback(async () => {
     setLoading(true);
     if (onLoadingChange) onLoadingChange(true);
 
@@ -62,7 +58,11 @@ export default function AdvancedSearch({ onComponentsFound, onLoadingChange }) {
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);
     }
-  }
+  }, [searchQuery, selectedCategory, selectedTags, sortBy, minRating, page, onComponentsFound, onLoadingChange]);
+
+  useEffect(() => {
+    performSearch();
+  }, [performSearch]);
 
   async function handleSearchSubmit(e) {
     e.preventDefault();

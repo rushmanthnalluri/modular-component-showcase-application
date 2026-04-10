@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/Header";
@@ -40,7 +40,7 @@ const Login = () => {
       : `data:image/svg+xml;base64,${value}`;
   };
 
-  const loadCaptcha = async () => {
+  const loadCaptcha = useCallback(async () => {
     const payload = await fetchRegisterCaptcha(6);
     setCaptcha({
       text: String(payload?.text || ""),
@@ -60,7 +60,7 @@ const Login = () => {
         duration: 3500,
       });
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadCaptcha().catch(() => {
@@ -75,7 +75,7 @@ const Login = () => {
         duration: 4000,
       });
     });
-  }, [toast]);
+  }, [loadCaptcha, toast]);
 
   useEffect(() => {
     if (!showForgotPasswordForm) {
