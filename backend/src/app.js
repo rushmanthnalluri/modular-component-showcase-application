@@ -200,6 +200,7 @@ app.use(
 );
 app.use(
     "/api/email",
+    requireCsrf,
     createEmailRouter({
         sendEmail,
         supportLimiter,

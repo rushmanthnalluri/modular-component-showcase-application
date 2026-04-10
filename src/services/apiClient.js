@@ -102,9 +102,7 @@ export async function apiRequest(path, options = {}) {
     ...(options.headers || {}),
   };
 
-  const isSupportTicketEndpoint = path === "/email/send";
-
-  if (!isSafeReadonlyMethod(method) && !isSupportTicketEndpoint) {
+  if (!isSafeReadonlyMethod(method)) {
     await ensureCsrfCookie(API_BASE_URL);
   }
 
@@ -115,8 +113,6 @@ export async function apiRequest(path, options = {}) {
       options.body,
       {
         headers,
-        // Support ticket endpoint is public and does not rely on cookies/CSRF.
-        withCredentials: !isSupportTicketEndpoint,
       }
     );
   } catch (primaryError) {
