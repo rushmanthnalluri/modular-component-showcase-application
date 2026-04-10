@@ -4,7 +4,6 @@ export function createUserRouter({
   User,
   Component,
   SubmissionHistory,
-  Rating,
   Review,
   requireAuth,
   requireCsrf,
