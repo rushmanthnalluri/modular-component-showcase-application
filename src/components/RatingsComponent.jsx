@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { submitRating, getRatings } from "@/services/ratingsService";
 import "./RatingsComponent.css";
 
@@ -10,11 +10,7 @@ export default function RatingsComponent({ componentId, onRatingSubmitted }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchRatings();
-  }, [componentId]);
-
-  async function fetchRatings() {
+  const fetchRatings = useCallback(async () => {
     try {
       const data = await getRatings(componentId);
       setRatings(data);
@@ -23,7 +19,11 @@ export default function RatingsComponent({ componentId, onRatingSubmitted }) {
       console.error("Error fetching ratings:", err);
       setError("Failed to load ratings");
     }
-  }
+  }, [componentId]);
+
+  useEffect(() => {
+    fetchRatings();
+  }, [fetchRatings]);
 
   async function handleRateClick(rating) {
     if (loading) return;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getReviews, submitReview, markReviewHelpful } from "@/services/ratingsService";
 import "./ReviewsComponent.css";
 
@@ -13,11 +13,7 @@ export default function ReviewsComponent({ componentId, userIsAuthenticated }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchReviews(1);
-  }, [componentId, sortBy]);
-
-  async function fetchReviews(page = 1) {
+  const fetchReviews = useCallback(async (page = 1) => {
     setLoading(true);
     setError(null);
 
@@ -31,7 +27,11 @@ export default function ReviewsComponent({ componentId, userIsAuthenticated }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [componentId, sortBy]);
+
+  useEffect(() => {
+    fetchReviews(1);
+  }, [fetchReviews]);
 
   async function handleSubmitReview(e) {
     e.preventDefault();
