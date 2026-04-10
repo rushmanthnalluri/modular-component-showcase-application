@@ -164,6 +164,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(ensureCsrfCookie);
+app.use("/api", requireCsrf);
 
 app.use("/captcha", captchaRouter);
 app.use("/api/captcha", captchaRouter);
