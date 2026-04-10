@@ -20,6 +20,35 @@ export function createComponentsRouter({
     const router = express.Router();
     const announcementQueue = new Map();
     let flushTimer = null;
+    const ALLOWED_LIST_CATEGORIES = new Set([
+        "buttons",
+        "cards",
+        "forms",
+        "navigation",
+        "feedback",
+        "data",
+    ]);
+    const COMPONENT_PUBLIC_ID_REGEX = /^[a-z0-9-]{3,160}$/;
+
+    function escapeRegex(value) {
+        return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function toSafeInteger(value, { defaultValue, min, max }) {
+        const parsed = Number.parseInt(String(value ?? ""), 10);
+        if (!Number.isFinite(parsed)) {
+            return defaultValue;
+        }
+        return Math.min(max, Math.max(min, parsed));
+    }
+
+    function normalizePublicComponentId(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (!COMPONENT_PUBLIC_ID_REGEX.test(normalized)) {
+            return "";
+        }
+        return normalized;
+    }
 
     // Helper to track view
     async function trackView(componentId, userId = null, req = null) {
@@ -100,32 +129,46 @@ export function createComponentsRouter({
     router.get("/", async (req, res) => {
         try {
             const { search, category, tags, sortBy, minRating, page = 1, limit = 20 } = req.query;
+            const safeSearch = String(search || "").trim().slice(0, 80);
+            const safeCategory = String(category || "").trim().toLowerCase();
+            const safePage = toSafeInteger(page, { defaultValue: 1, min: 1, max: 100000 });
+            const safeLimit = toSafeInteger(limit, { defaultValue: 20, min: 1, max: 50 });
+            const parsedMinRating = Number.parseFloat(String(minRating ?? ""));
+            const safeMinRating = Number.isFinite(parsedMinRating)
+                ? Math.min(5, Math.max(0, parsedMinRating))
+                : null;
             
             let query = { isPublished: true };
 
             // Search by name or description
-            if (search) {
+            if (safeSearch) {
+                const safeSearchRegex = new RegExp(escapeRegex(safeSearch), "i");
                 query.$or = [
-                    { name: { $regex: search, $options: "i" } },
-                    { description: { $regex: search, $options: "i" } },
-                    { tags: { $in: [new RegExp(search, "i")] } },
+                    { name: safeSearchRegex },
+                    { description: safeSearchRegex },
+                    { tags: { $in: [safeSearchRegex] } },
                 ];
             }
 
             // Filter by category
-            if (category && category !== "all") {
-                query.category = category;
+            if (safeCategory && safeCategory !== "all" && ALLOWED_LIST_CATEGORIES.has(safeCategory)) {
+                query.category = safeCategory;
             }
 
             // Filter by tags
             if (tags) {
-                const tagArray = Array.isArray(tags) ? tags : [tags];
+                const tagArray = (Array.isArray(tags) ? tags : [tags])
+                    .map((tag) => String(tag || "").trim().toLowerCase())
+                    .filter((tag) => /^[a-z0-9-]{1,24}$/.test(tag))
+                    .slice(0, 12);
+                if (tagArray.length > 0) {
                 query.tags = { $in: tagArray };
+                }
             }
 
             // Filter by minimum rating
-            if (minRating) {
-                query.averageRating = { $gte: parseFloat(minRating) };
+            if (safeMinRating !== null) {
+                query.averageRating = { $gte: safeMinRating };
             }
 
             // Sort logic
@@ -141,11 +184,11 @@ export function createComponentsRouter({
                 sortOption = { viewCount: -1, averageRating: -1 };
             }
 
-            const skip = (page - 1) * limit;
+            const skip = (safePage - 1) * safeLimit;
             const items = await Component.find(query)
                 .sort(sortOption)
                 .skip(skip)
-                .limit(parseInt(limit))
+                .limit(safeLimit)
                 .lean();
 
             const total = await Component.countDocuments(query);
@@ -154,9 +197,9 @@ export function createComponentsRouter({
                 items,
                 pagination: {
                     total,
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    pages: Math.ceil(total / limit),
+                    page: safePage,
+                    limit: safeLimit,
+                    pages: Math.ceil(total / safeLimit),
                 },
             });
         } catch (error) {
@@ -355,7 +398,6 @@ export function createComponentsRouter({
                 cssCode,
                 thumbnail,
                 screenshot,
-                version,
                 changelog,
                 props,
                 usageExamples,
@@ -628,12 +670,18 @@ export function createComponentsRouter({
     // Add component dependencies
     router.post("/:id/dependencies", writeLimiter, requireAuth, requireCsrf, async (req, res) => {
         try {
-            const { dependencyId, type } = req.body;
+            const dependencyId = normalizePublicComponentId(req.body?.dependencyId);
+            const type = String(req.body?.type || "").trim();
             if (!dependencyId || !["requires", "suggested", "alternative"].includes(type)) {
                 return res.status(400).json({ message: "Invalid dependency data." });
             }
 
-            const component = await Component.findOne({ id: req.params.id });
+            const sourceComponentId = normalizePublicComponentId(req.params.id);
+            if (!sourceComponentId) {
+                return res.status(400).json({ message: "Invalid component id." });
+            }
+
+            const component = await Component.findOne({ id: sourceComponentId });
             if (!component) {
                 return res.status(404).json({ message: "Component not found." });
             }
