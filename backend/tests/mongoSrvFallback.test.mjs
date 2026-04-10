@@ -12,7 +12,7 @@ test("parseTxtRecordData joins quoted DNS TXT segments", () => {
 });
 
 test("buildDirectMongoUri expands SRV answers into a standard MongoDB URI", () => {
-    const mongoUri = "mongodb+srv://cluster0.example.mongodb.net/modularcomponent?retryWrites=truemongodb+srv://demo%40user:p%40ss@cluster0.example.mongodb.net/modularcomponent?retryWrites=true&w=majority&appName=Cluster0w=majoritymongodb+srv://demo%40user:p%40ss@cluster0.example.mongodb.net/modularcomponent?retryWrites=true&w=majority&appName=Cluster0appName=Cluster0";
+    const mongoUri = "mongodb+srv://cluster0.example.mongodb.net/modularcomponent?retryWrites=true&w=majority&appName=Cluster0";
     const directUri = buildDirectMongoUri(
         mongoUri,
         [
@@ -24,13 +24,13 @@ test("buildDirectMongoUri expands SRV answers into a standard MongoDB URI", () =
 
     assert.equal(
         directUri,
-        "mongodb://shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=truemongodb://demo%40user:p%40ss@shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=truew=majoritymongodb://demo%40user:p%40ss@shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=trueappName=Cluster0mongodb://demo%40user:p%40ss@shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=trueauthSource=adminmongodb://demo%40user:p%40ss@shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=truereplicaSet=atlas-abc-shard-0mongodb://demo%40user:p%40ss@shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=truetls=true"
+        "mongodb://shard-00-00.example.mongodb.net:27017,shard-00-01.example.mongodb.net:27017/modularcomponent?retryWrites=true&w=majority&appName=Cluster0&authSource=admin&replicaSet=atlas-abc-shard-0&tls=true"
     );
 });
 
 test("connectMongoWithSrvFallback retries with a direct-host URI after SRV resolution fails", async () => {
     const attemptedUris = [];
-    const mongoUri = "mongodb+srv://cluster0.example.mongodb.net/modularcomponent?retryWrites=truemongodb+srv://demo:secret@cluster0.example.mongodb.net/modularcomponent?retryWrites=true&w=majorityw=majority";
+    const mongoUri = "mongodb+srv://cluster0.example.mongodb.net/modularcomponent?retryWrites=true&w=majority";
 
     async function mockConnect(uri) {
         attemptedUris.push(uri);
@@ -78,6 +78,6 @@ test("connectMongoWithSrvFallback retries with a direct-host URI after SRV resol
     assert.equal(result.usedSrvFallback, true);
     assert.equal(attemptedUris.length, 2);
     assert.equal(attemptedUris[0], mongoUri);
-    assert.match(attemptedUris[1], /^mongodb:\/\/demo:secret@shard-00-00\.example\.mongodb\.net:27017,shard-00-01\.example\.mongodb\.net:27017\/modularcomponent\?/);
+    assert.match(attemptedUris[1], /^mongodb:\/\/shard-00-00\.example\.mongodb\.net:27017,shard-00-01\.example\.mongodb\.net:27017\/modularcomponent\?/);
     assert.equal(result.connectionUri, attemptedUris[1]);
 });
