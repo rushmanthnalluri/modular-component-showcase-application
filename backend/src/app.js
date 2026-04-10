@@ -9,15 +9,15 @@ import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controller/captchaController.js";
-import { sendEmail } from "./model/emailManager.js";
-import { User, Component } from "./model/appModels.js";
+import { sendEmail, sendAnnouncementEmail } from "./model/emailManager.js";
+import { User, Component, Rating, Review, Discussion, ComponentView, ComponentDependency, SubmissionHistory, BlogPost } from "./model/appModels.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createCsrfMiddleware } from "./middleware/csrf.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
-import { connectMongoWithSrvFallback } from "./utils/mongoSrvFallback.js";
+import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
 
 const app = express();
 let mongoMode = "disconnected";
@@ -92,6 +92,21 @@ const componentWriteLimiter = rateLimit({
     message: { message: "Too many component write requests. Please try again later." },
 });
 
+const rateLimitTracker = {
+    totals: {
+        all: 0,
+        auth: 0,
+        componentsWrite: 0,
+        support: 0,
+    },
+    blocked: {
+        all: 0,
+        auth: 0,
+        componentsWrite: 0,
+        support: 0,
+    },
+};
+
 function createAuthToken(userId) {
     return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
 }
@@ -123,6 +138,29 @@ app.use(
     })
 );
 app.use(globalLimiter);
+app.use((req, res, next) => {
+    const path = String(req.path || "").toLowerCase();
+    const isAuth = path.startsWith("/api/auth");
+    const isComponentWrite = path.startsWith("/api/components") && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
+    const isSupport = path.startsWith("/api/email");
+
+    rateLimitTracker.totals.all += 1;
+    if (isAuth) rateLimitTracker.totals.auth += 1;
+    if (isComponentWrite) rateLimitTracker.totals.componentsWrite += 1;
+    if (isSupport) rateLimitTracker.totals.support += 1;
+
+    res.on("finish", () => {
+        if (res.statusCode !== 429) {
+            return;
+        }
+        rateLimitTracker.blocked.all += 1;
+        if (isAuth) rateLimitTracker.blocked.auth += 1;
+        if (isComponentWrite) rateLimitTracker.blocked.componentsWrite += 1;
+        if (isSupport) rateLimitTracker.blocked.support += 1;
+    });
+
+    next();
+});
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(ensureCsrfCookie);
@@ -146,6 +184,14 @@ app.use(
     "/api/components",
     createComponentsRouter({
         Component,
+        Rating,
+        Review,
+        Discussion,
+        ComponentView,
+        ComponentDependency,
+        SubmissionHistory,
+        User,
+        sendAnnouncementEmail,
         writeLimiter: componentWriteLimiter,
         requireAuth,
         requireDeveloper,
@@ -164,6 +210,10 @@ app.use(
     "/api/users",
     createUserRouter({
         User,
+        Component,
+        SubmissionHistory,
+        Rating,
+        Review,
         requireAuth,
         requireCsrf,
     })
@@ -179,6 +229,133 @@ app.get("/health", (_req, res) => {
         mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
         mode: mongoMode,
     });
+});
+
+app.get("/api/admin/rate-limits", requireAuth, async (req, res) => {
+    if (String(req.user?.role || "").toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Admin access required." });
+    }
+
+    return res.json({
+        trackedAt: new Date().toISOString(),
+        requests: rateLimitTracker.totals,
+        blocked: rateLimitTracker.blocked,
+    });
+});
+
+app.get("/api/content/tutorials", async (_req, res) => {
+    try {
+        const posts = await BlogPost.find({ isPublished: true })
+            .sort({ createdAt: -1 })
+            .select("slug title summary tags createdAt updatedAt")
+            .lean();
+        return res.json({ posts });
+    } catch {
+        return res.json({ posts: [] });
+    }
+});
+
+app.get("/api/content/tutorials/:slug", async (req, res) => {
+    try {
+        const post = await BlogPost.findOne({ slug: req.params.slug, isPublished: true }).lean();
+        if (!post) {
+            return res.status(404).json({ message: "Post not found." });
+        }
+        return res.json({ post });
+    } catch {
+        return res.status(500).json({ message: "Unable to fetch tutorial." });
+    }
+});
+
+function toSlug(value) {
+    return String(value || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+app.post("/api/content/tutorials", requireAuth, requireCsrf, async (req, res) => {
+    if (String(req.user?.role || "").toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Admin access required." });
+    }
+
+    const title = String(req.body?.title || "").trim();
+    const markdown = String(req.body?.markdown || "").trim();
+    const summary = String(req.body?.summary || "").trim();
+    const slug = toSlug(req.body?.slug || title);
+    const tags = Array.isArray(req.body?.tags) ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean) : [];
+
+    if (!title || !markdown || !slug) {
+        return res.status(400).json({ message: "title, markdown and slug are required." });
+    }
+
+    try {
+        const post = await BlogPost.create({
+            slug,
+            title,
+            summary,
+            markdown,
+            tags,
+            authorId: req.user._id,
+            isPublished: req.body?.isPublished !== false,
+        });
+        return res.status(201).json({ post });
+    } catch (error) {
+        if (String(error?.message || "").toLowerCase().includes("duplicate")) {
+            return res.status(409).json({ message: "A tutorial with this slug already exists." });
+        }
+        return res.status(500).json({ message: "Unable to create tutorial." });
+    }
+});
+
+app.put("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
+    if (String(req.user?.role || "").toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Admin access required." });
+    }
+
+    const updates = {
+        title: req.body?.title,
+        summary: req.body?.summary,
+        markdown: req.body?.markdown,
+        tags: Array.isArray(req.body?.tags) ? req.body.tags : undefined,
+        isPublished: typeof req.body?.isPublished === "boolean" ? req.body.isPublished : undefined,
+    };
+
+    Object.keys(updates).forEach((key) => {
+        if (updates[key] === undefined) {
+            delete updates[key];
+        }
+    });
+
+    try {
+        const post = await BlogPost.findOneAndUpdate(
+            { slug: req.params.slug },
+            { $set: updates },
+            { new: true }
+        );
+        if (!post) {
+            return res.status(404).json({ message: "Tutorial not found." });
+        }
+        return res.json({ post });
+    } catch {
+        return res.status(500).json({ message: "Unable to update tutorial." });
+    }
+});
+
+app.delete("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
+    if (String(req.user?.role || "").toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Admin access required." });
+    }
+
+    const deleted = await BlogPost.findOneAndDelete({ slug: req.params.slug });
+    if (!deleted) {
+        return res.status(404).json({ message: "Tutorial not found." });
+    }
+
+    return res.json({ message: "Tutorial deleted." });
 });
 
 app.use((err, _req, res, _next) => {
@@ -279,6 +456,22 @@ async function connectToAtlas() {
         } catch {
             resolvedMongoUri = null;
             console.warn("Cached MongoDB direct-host URI failed. Re-resolving Atlas SRV record.");
+        }
+    }
+
+    if (isMongoSrvUri(mongoUri)) {
+        try {
+            const directUri = await expandMongoSrvUri(mongoUri);
+            const connectionResult = await connectMongoWithSrvFallback({
+                mongoUri: directUri,
+                connect: (uri, options) => mongoose.connect(uri, options),
+                connectOptions: mongoConnectOptions,
+            });
+
+            resolvedMongoUri = connectionResult.connectionUri;
+            return;
+        } catch (error) {
+            console.warn(`Direct Atlas resolution failed, falling back to standard SRV connection: ${error.message}`);
         }
     }
 
