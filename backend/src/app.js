@@ -20,6 +20,7 @@ import { createUserRouter } from "./routes/userRoutes.js";
 import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
 
 const app = express();
+const apiRouter = express.Router();
 let mongoMode = "disconnected";
 let memoryServer = null;
 let httpServer = null;
@@ -176,12 +177,12 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/captcha", captchaRouter);
-app.use("/api/captcha", captchaRouter);
-app.use(cookieParser());
-app.use(ensureCsrfCookie);
-app.use("/api", requireCsrf);
-app.use(
-    "/api/auth",
+apiRouter.use(cookieParser());
+apiRouter.use(ensureCsrfCookie);
+apiRouter.use(requireCsrf);
+apiRouter.use("/captcha", captchaRouter);
+apiRouter.use(
+    "/auth",
     authLimiter,
     createAuthRouter({
         User,
@@ -193,8 +194,8 @@ app.use(
         sendEmail,
     })
 );
-app.use(
-    "/api/components",
+apiRouter.use(
+    "/components",
     createComponentsRouter({
         Component,
         Rating,
@@ -211,8 +212,8 @@ app.use(
         requireCsrf,
     })
 );
-app.use(
-    "/api/email",
+apiRouter.use(
+    "/email",
     requireCsrf,
     createEmailRouter({
         sendEmail,
@@ -220,8 +221,8 @@ app.use(
     })
 );
 
-app.use(
-    "/api/users",
+apiRouter.use(
+    "/users",
     createUserRouter({
         User,
         Component,
@@ -233,7 +234,7 @@ app.use(
     })
 );
 
-app.get("/api/admin/rate-limits", requireAuth, async (req, res) => {
+apiRouter.get("/admin/rate-limits", requireAuth, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
         return res.status(403).json({ message: "Admin access required." });
     }
@@ -245,7 +246,7 @@ app.get("/api/admin/rate-limits", requireAuth, async (req, res) => {
     });
 });
 
-app.get("/api/content/tutorials", async (_req, res) => {
+apiRouter.get("/content/tutorials", async (_req, res) => {
     try {
         const posts = await BlogPost.find({ isPublished: true })
             .sort({ createdAt: -1 })
@@ -257,7 +258,7 @@ app.get("/api/content/tutorials", async (_req, res) => {
     }
 });
 
-app.get("/api/content/tutorials/:slug", async (req, res) => {
+apiRouter.get("/content/tutorials/:slug", async (req, res) => {
     try {
         const post = await BlogPost.findOne({ slug: req.params.slug, isPublished: true }).lean();
         if (!post) {
@@ -279,7 +280,7 @@ function toSlug(value) {
         .replace(/^-|-$/g, "");
 }
 
-app.post("/api/content/tutorials", requireAuth, requireCsrf, async (req, res) => {
+apiRouter.post("/content/tutorials", requireAuth, requireCsrf, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
         return res.status(403).json({ message: "Admin access required." });
     }
@@ -313,7 +314,7 @@ app.post("/api/content/tutorials", requireAuth, requireCsrf, async (req, res) =>
     }
 });
 
-app.put("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
+apiRouter.put("/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
         return res.status(403).json({ message: "Admin access required." });
     }
@@ -347,7 +348,7 @@ app.put("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req, re
     }
 });
 
-app.delete("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
+apiRouter.delete("/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
         return res.status(403).json({ message: "Admin access required." });
     }
@@ -359,6 +360,8 @@ app.delete("/api/content/tutorials/:slug", requireAuth, requireCsrf, async (req,
 
     return res.json({ message: "Tutorial deleted." });
 });
+
+app.use("/api", apiRouter);
 
 app.use((err, _req, res, _next) => {
     if (String(err?.message || "").includes("CORS")) {
