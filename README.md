@@ -1,32 +1,29 @@
 
 # Modular Component Showcase Application
 
-A full-stack React + Js application for browsing, previewing, and contributing reusable UI components.
+A full-stack React and Node.js platform for exploring, previewing, and publishing reusable UI components.
 
-The project combines a built-in component gallery with cloud-saved custom components, so users can explore ready-made UI patterns while developers can add new components through authenticated workflows.
+It includes a local curated showcase and cloud-backed custom components, with authentication, role-based actions, favorites, ratings/reviews, and discussion support.
 
-## Live Links
+## Live URLs
 
 - Frontend: https://rushmanthnalluri.github.io/modular-component-showcase-application/
-- Backend API: https://modular-component-showcase-application.onrender.com/api
-- Health Check: https://modular-component-showcase-application.onrender.com/health
+- Backend API base: https://modular-component-showcase-application.onrender.com/api
+- Health endpoint: https://modular-component-showcase-application.onrender.com/health
 
-## Features
+## Core Features
 
-- Browse reusable UI components by category
-- Search and filter components from the homepage
-- Save favorite components
-- Open component detail pages with live previews
-- View JSX and CSS for bundled showcase components
-- Use interactive playground controls for supported demos
-- Register, login, logout, and reset passwords
-- Add custom components as a developer or admin
-- Delete components as the owner or an admin
-- Submit support tickets from the contact page
-- Switch between light and dark themes
-- Responsive layout with accessibility-focused navigation and feedback
+- Component gallery with category filtering and search
+- Detail page with preview, code blocks, and playground controls
+- Custom component submission for developer/admin roles
+- Favorites sync for authenticated users
+- Ratings and review workflows
+- Component discussions
+- Tutorial/content endpoints and admin content management
+- Contact/support ticket flow with captcha support
+- Light/dark theme support and responsive layout
 
-## Built With
+## Tech Stack
 
 ### Frontend
 - React 18
@@ -38,22 +35,22 @@ The project combines a built-in component gallery with cloud-saved custom compon
 
 ### Backend
 - Express 5
-- MongoDB / Mongoose
-- JWT
+- MongoDB + Mongoose
+- JWT + cookie-based sessions
 - bcryptjs
 - Nodemailer
 
 ### Security
-- Cookie-based authentication
-- CSRF protection
-- CORS
-- Helmet
-- Rate limiting
+- CSRF token enforcement for `/api` write operations
+- CORS allowlist
+- Helmet hardening
+- Route-specific rate limiting
+- Input validation/sanitization for auth, components, and support payloads
 
 ### Deployment
-- GitHub Pages for frontend
-- Render for backend
-- GitHub Actions for CI and Pages deployment
+- GitHub Pages (frontend)
+- Render (backend)
+- GitHub Actions (CI, CodeQL, Pages deploy)
 
 ## Project Structure
 
@@ -85,37 +82,27 @@ The project combines a built-in component gallery with cloud-saved custom compon
 └─ README.md
 ```
 
-## How It Works
+## Local Setup
 
-- The homepage shows a searchable and filterable gallery of reusable components.
-- Built-in showcase components are loaded from local data.
-- Custom components are fetched from the backend and merged into the gallery.
-- Detail pages display previews, interactive demo controls, and code snippets.
-- Authentication is required for protected actions like adding components.
-- Favorites are synced to the backend for logged-in users and stored locally as a fallback.
-- Support tickets are sent through the backend email API, with fallback behavior where needed.
-
-## Local Development
-
-### 1. Install dependencies
+### 1) Install dependencies
 
 ```bash
 npm install
 ```
 
-Root install also installs backend dependencies through `postinstall`.
+Root install triggers backend install via `postinstall`.
 
-### 2. Frontend environment
+### 2) Configure frontend env
 
-Create a root `.env` file:
+Create `.env` in repo root:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-### 3. Backend environment
+### 3) Configure backend env
 
-Create `backend/.env` with values like:
+Create `backend/.env`:
 
 ```bash
 PORT=5000
@@ -125,10 +112,12 @@ FRONTEND_ORIGINS=http://localhost:8080,http://localhost:5173
 ALLOW_MEMORY_FALLBACK=true
 SMTP_USER=your_email_user
 SMTP_PASS=your_email_password
-SMTP_FROM=your_email_address
+SMTP_FROM=no-reply@yourdomain.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
 ```
 
-### 4. Run the app
+### 4) Run locally
 
 Backend:
 
@@ -142,28 +131,28 @@ Frontend:
 npm run dev
 ```
 
-### Local URLs
+Local URLs:
 
 - Frontend: http://localhost:8080
 - Backend: http://localhost:5000
 
-## Available Scripts
+## Scripts
 
-- `npm run dev` - start the Vite frontend
-- `npm run start` - start the Express backend
-- `npm run build` - create a production frontend build
-- `npm run preview` - preview the built frontend
-- `npm run lint` - run ESLint
-- `npm run test` - run backend tests
-- `npm run test:ui` - run frontend tests
-- `npm run test:all` - run backend and frontend tests
+- `npm run dev`: start frontend dev server
+- `npm run start`: start backend server (root script proxies to backend)
+- `npm run build`: production frontend build
+- `npm run preview`: preview built frontend
+- `npm run lint`: ESLint
+- `npm run test`: backend tests
+- `npm run test:ui`: frontend tests
+- `npm run test:all`: backend + frontend tests
 
 ## API Overview
 
-### Health
+### System
 - `GET /health`
 
-### Authentication
+### Auth
 - `GET /api/auth/csrf`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
@@ -174,36 +163,41 @@ npm run dev
 - `GET /api/components`
 - `GET /api/components/:id`
 - `POST /api/components`
+- `PUT /api/components/:id`
 - `DELETE /api/components/:id`
+- `GET /api/components/stats/most-viewed`
+- `GET /api/components/stats/top-rated`
+- `POST /api/components/:id/ratings`
+- `GET /api/components/:id/reviews`
+- `POST /api/components/:id/reviews`
+- `GET /api/components/:id/discussions`
+- `POST /api/components/:id/discussions`
 
 ### Users
 - `GET /api/users/me`
+- `PUT /api/users/me`
+- `GET /api/users/me/dashboard`
 - `GET /api/users/me/favorites`
 - `POST /api/users/me/favorites/:componentId`
 
-### Support
+### Content and Support
+- `GET /api/content/tutorials`
+- `GET /api/content/tutorials/:slug`
 - `POST /api/email/send`
 - `GET /api/captcha/getcaptcha/:length`
 
-## Deployment
+## Security Notes
 
-- Pushing to `main` triggers the GitHub Actions workflow that builds and deploys the frontend to GitHub Pages.
-- The backend is deployed separately on Render.
-- The frontend is configured to work under the GitHub Pages base path:
+- `/api` requests are routed through cookie parsing, CSRF cookie issuance, and CSRF validation before state-changing handlers run.
+- Auth, component write, user update, and support endpoints all require token-backed requests from the frontend.
+- The repository has had a CodeQL `missing-token-validation` false positive on the middleware chain before; the current `/api` router structure is the intended protection pattern.
+
+## Deployment Notes
+
+- Pushing to `main` triggers CI and frontend deployment workflows.
+- Frontend base path is configured for GitHub Pages:
   `/modular-component-showcase-application/`
-
-## Highlights
-
-This project demonstrates:
-
-- component modularity
-- controlled state and prop-driven UI
-- route-based navigation
-- protected frontend routes
-- secure backend integration
-- role-based permissions
-- live interactive component demos
-- production-style deployment workflow
+- Backend runs independently on Render and is consumed by the frontend through API endpoints.
 
 ## Author
 
