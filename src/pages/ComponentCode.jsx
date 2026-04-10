@@ -14,7 +14,6 @@ const ComponentCode = () => {
   const { toast } = useToast();
   const [selectedFormat, setSelectedFormat] = useState("jsx");
   const [showImportOptions, setShowImportOptions] = useState(false);
-  const [selectedFramework, setSelectedFramework] = useState("react");
 
   const item = useMemo(() => {
     return components.find((c) => c.id === id) || null;
