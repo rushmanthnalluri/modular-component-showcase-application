@@ -181,6 +181,23 @@ apiRouter.use(cookieParser());
 apiRouter.use(ensureCsrfCookie);
 apiRouter.use(requireCsrf);
 apiRouter.use("/captcha", captchaRouter);
+
+apiRouter.get("/", (_req, res) => {
+    res.json({
+        message: "Modular Component Showcase API",
+        status: "running",
+        endpoints: {
+            health: "GET /health",
+            auth: "POST /api/auth/login, /api/auth/register, /api/auth/logout",
+            components: "GET/POST /api/components, GET /api/components/:id, PUT/DELETE /api/components/:id",
+            users: "GET /api/users/:id, PUT /api/users/:id",
+            email: "POST /api/email/contact, /api/email/support",
+            content: "GET /api/content/tutorials, POST /api/content/tutorials (admin)",
+            admin: "GET /api/admin/rate-limits (admin)",
+        },
+    });
+});
+
 apiRouter.use(
     "/auth",
     authLimiter,
