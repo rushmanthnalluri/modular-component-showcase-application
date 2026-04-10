@@ -11,7 +11,6 @@ export default function AdvancedSearch({ onComponentsFound, onLoadingChange }) {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [availableTags, setAvailableTags] = useState([]);
 
   const categories = [
     "all",
