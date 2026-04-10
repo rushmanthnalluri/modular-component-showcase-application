@@ -92,3 +92,49 @@ export async function sendEmail(toEmail, ticket = null) {
     };
   }
 }
+
+export async function sendAnnouncementEmail({ toEmail, subject, markdown, html }) {
+  const smtpUser = String(process.env.SMTP_USER || "").trim();
+  const smtpPass = String(process.env.SMTP_PASS || "").trim();
+
+  if (!smtpUser || !smtpPass || !toEmail) {
+    return { code: 200, msg: "Announcement skipped: SMTP/email unavailable." };
+  }
+
+  const smtpHost = String(process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const isSecure = smtpPort === 465;
+
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: isSecure,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
+  });
+
+  const fromAddress = String(process.env.SMTP_FROM || smtpUser).trim() || "no-reply@modularshowcase.local";
+
+  try {
+    await transporter.verify();
+    await transporter.sendMail({
+      from: fromAddress,
+      to: toEmail,
+      subject: String(subject || "Modular Showcase Update"),
+      text: String(markdown || "A new update is available."),
+      html:
+        html ||
+        `<p>${escapeHtml(String(markdown || "A new update is available."))}</p>`,
+    });
+
+    return { code: 200, msg: "Announcement sent." };
+  } catch (err) {
+    console.error("Announcement email failed:", err?.message || err);
+    return { code: 200, msg: "Announcement failed but request succeeded." };
+  }
+}
