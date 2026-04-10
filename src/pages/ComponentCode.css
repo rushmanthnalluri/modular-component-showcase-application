@@ -150,3 +150,29 @@
     margin-top: 8px;
   }
 }
+
+html[data-theme="dark"] .code-options-bar,
+html[data-theme="dark"] .import-menu,
+html[data-theme="dark"] .export-group select {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .export-group label,
+html[data-theme="dark"] .pane-header h3,
+html[data-theme="dark"] .import-menu button {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .btn-quick-copy {
+  background: transparent;
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+html[data-theme="dark"] .btn-quick-copy:hover,
+html[data-theme="dark"] .import-menu button:hover {
+  background: hsl(var(--bg-secondary));
+  color: hsl(var(--primary));
+}
