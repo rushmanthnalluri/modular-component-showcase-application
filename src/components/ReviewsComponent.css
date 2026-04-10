@@ -377,3 +377,50 @@
     flex-wrap: wrap;
   }
 }
+
+html[data-theme="dark"] .reviews-container,
+html[data-theme="dark"] .review-form,
+html[data-theme="dark"] .review-item,
+html[data-theme="dark"] .reviews-sort select,
+html[data-theme="dark"] .form-group input,
+html[data-theme="dark"] .form-group textarea,
+html[data-theme="dark"] .helpful-btn,
+html[data-theme="dark"] .pagination button,
+html[data-theme="dark"] .btn-secondary {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .reviews-header h3,
+html[data-theme="dark"] .review-form h4,
+html[data-theme="dark"] .form-group label,
+html[data-theme="dark"] .reviewer-info strong,
+html[data-theme="dark"] .review-title,
+html[data-theme="dark"] .btn-secondary {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .reviews-sort label,
+html[data-theme="dark"] .loading,
+html[data-theme="dark"] .no-reviews,
+html[data-theme="dark"] .review-comment,
+html[data-theme="dark"] .pagination span,
+html[data-theme="dark"] .form-group small,
+html[data-theme="dark"] .review-meta,
+html[data-theme="dark"] .helpful-btn {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .reviews-sort,
+html[data-theme="dark"] .pagination,
+html[data-theme="dark"] .review-meta {
+  border-color: hsl(var(--border));
+}
+
+html[data-theme="dark"] .helpful-btn:hover,
+html[data-theme="dark"] .pagination button:hover:not(:disabled),
+html[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: hsl(var(--bg-secondary));
+  color: hsl(var(--primary));
+}

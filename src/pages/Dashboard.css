@@ -502,3 +502,61 @@
     font-size: 11px;
   }
 }
+
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .component-card-mini,
+html[data-theme="dark"] .activity-item,
+html[data-theme="dark"] .history-item,
+html[data-theme="dark"] .components-table table,
+html[data-theme="dark"] .btn-add-component,
+html[data-theme="dark"] .action-link,
+html[data-theme="dark"] .empty-state {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .dashboard-tabs {
+  border-bottom-color: hsl(var(--border));
+}
+
+html[data-theme="dark"] .tab {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .overview-section h2,
+html[data-theme="dark"] .components-section h2,
+html[data-theme="dark"] .favorites-section h2,
+html[data-theme="dark"] .history-section h2,
+html[data-theme="dark"] .card-info h3,
+html[data-theme="dark"] .activity-details p,
+html[data-theme="dark"] .action-link,
+html[data-theme="dark"] .components-table th,
+html[data-theme="dark"] .dashboard-state h2 {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .stat-content h3,
+html[data-theme="dark"] .card-meta,
+html[data-theme="dark"] .empty-state p,
+html[data-theme="dark"] .activity-details small,
+html[data-theme="dark"] .history-item time,
+html[data-theme="dark"] .reason,
+html[data-theme="dark"] .dashboard-state p,
+html[data-theme="dark"] .loading-spinner {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .card-image,
+html[data-theme="dark"] .components-table th,
+html[data-theme="dark"] .components-table tbody tr:hover,
+html[data-theme="dark"] .action-link:hover {
+  background: hsl(var(--bg-secondary));
+}
+
+html[data-theme="dark"] .components-table td,
+html[data-theme="dark"] .components-table th,
+html[data-theme="dark"] .status,
+html[data-theme="dark"] .review-meta {
+  border-color: hsl(var(--border));
+}
