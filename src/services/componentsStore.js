@@ -10,11 +10,26 @@ function mapCloudComponent(rawItem) {
     id: String(rawItem.id || ""),
     name: String(rawItem.name || "Untitled Component"),
     description: String(rawItem.description || ""),
+    descriptionMarkdown: String(rawItem.descriptionMarkdown || ""),
     category: String(rawItem.category || "all"),
     tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
     thumbnail: String(rawItem.thumbnail || ""),
     screenshot: String(rawItem.screenshot || ""),
     createdBy: String(rawItem.createdBy || ""),
+    version: String(rawItem.version || "1.0.0"),
+    versions: Array.isArray(rawItem.versions) ? rawItem.versions : [],
+    averageRating: Number(rawItem.averageRating || 0),
+    totalReviews: Number(rawItem.totalReviews || 0),
+    viewCount: Number(rawItem.viewCount || 0),
+    props: Array.isArray(rawItem.props) ? rawItem.props : [],
+    usageExamples: Array.isArray(rawItem.usageExamples) ? rawItem.usageExamples : [],
+    bestPractices: Array.isArray(rawItem.bestPractices) ? rawItem.bestPractices : [],
+    commonPitfalls: Array.isArray(rawItem.commonPitfalls) ? rawItem.commonPitfalls : [],
+    dependencies: Array.isArray(rawItem.dependencies) ? rawItem.dependencies : [],
+    relatedComponents: Array.isArray(rawItem.relatedComponents) ? rawItem.relatedComponents : [],
+    performanceMetrics: rawItem.performanceMetrics || {},
+    accessibilityScore: Number(rawItem.accessibilityScore || 0),
+    accessibilityReport: String(rawItem.accessibilityReport || ""),
     code: {
       jsx: String(rawItem.code?.jsx || ""),
       css: String(rawItem.code?.css || ""),
@@ -33,7 +48,12 @@ async function getCloudComponents() {
     method: "GET",
   });
 
-  return payload
+  const collection = Array.isArray(payload) ? payload : payload?.items;
+  if (!Array.isArray(collection)) {
+    return [];
+  }
+
+  return collection
     .map((item) => mapCloudComponent(item))
     .filter((item) => item.id && !isVerifierArtifact(item));
 }

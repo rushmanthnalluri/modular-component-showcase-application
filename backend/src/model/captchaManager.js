@@ -1,5 +1,3 @@
-import { createCanvas } from "canvas";
-
 const CAPTCHA_CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 function generateText(length) {
@@ -17,44 +15,43 @@ function generateText(length) {
 function drawCaptchaImage(text) {
   const width = 180;
   const height = 60;
-  const canvas = createCanvas(width, height);
-  const context = canvas.getContext("2d");
 
-  context.fillStyle = "#f8fafc";
-  context.fillRect(0, 0, width, height);
+  const noiseLines = Array.from({ length: 8 }, () => {
+    const x1 = Math.round(Math.random() * width);
+    const y1 = Math.round(Math.random() * height);
+    const x2 = Math.round(Math.random() * width);
+    const y2 = Math.round(Math.random() * height);
+    const opacity = (Math.random() * 0.35 + 0.15).toFixed(2);
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(100,116,139,${opacity})" stroke-width="1" />`;
+  }).join("");
 
-  for (let i = 0; i < 8; i += 1) {
-    context.strokeStyle = `rgba(100,116,139,${Math.random() * 0.35 + 0.15})`;
-    context.beginPath();
-    context.moveTo(Math.random() * width, Math.random() * height);
-    context.lineTo(Math.random() * width, Math.random() * height);
-    context.stroke();
-  }
-
-  for (let i = 0; i < 120; i += 1) {
-    context.fillStyle = `rgba(148,163,184,${Math.random() * 0.5})`;
-    context.fillRect(Math.random() * width, Math.random() * height, 1.5, 1.5);
-  }
-
-  context.font = "bold 34px Arial";
-  context.textBaseline = "middle";
+  const noiseDots = Array.from({ length: 100 }, () => {
+    const x = Math.round(Math.random() * width);
+    const y = Math.round(Math.random() * height);
+    const opacity = (Math.random() * 0.45 + 0.1).toFixed(2);
+    return `<circle cx="${x}" cy="${y}" r="1" fill="rgba(148,163,184,${opacity})" />`;
+  }).join("");
 
   const gap = width / (text.length + 1);
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-    const x = gap * (i + 1);
-    const y = height / 2 + (Math.random() * 10 - 5);
-    const rotation = (Math.random() * 0.5 - 0.25);
+  const letters = text
+    .split("")
+    .map((char, index) => {
+      const x = Math.round(gap * (index + 1));
+      const y = Math.round(height / 2 + (Math.random() * 10 - 5));
+      const rotate = (Math.random() * 26 - 13).toFixed(2);
+      return `<text x="${x}" y="${y}" font-size="34" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rotate}, ${x}, ${y})">${char}</text>`;
+    })
+    .join("");
 
-    context.save();
-    context.translate(x, y);
-    context.rotate(rotation);
-    context.fillStyle = "#0f172a";
-    context.fillText(char, -10, 0);
-    context.restore();
-  }
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="100%" height="100%" fill="#f8fafc" />
+  ${noiseLines}
+  ${noiseDots}
+  ${letters}
+</svg>`;
 
-  return canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+  return Buffer.from(svg, "utf8").toString("base64");
 }
 
 export function getCaptcha(length) {

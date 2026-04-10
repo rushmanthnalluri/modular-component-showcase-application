@@ -62,6 +62,9 @@ const Header = () => {
         </Link>
 
         <div className="desktop-actions">
+          <Link className="btn-outline" to="/tutorials">
+            Tutorials
+          </Link>
           <button
             type="button"
             className="theme-toggle"
@@ -78,6 +81,12 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
+              <Link className="btn-outline" to="/dashboard">
+                Dashboard
+              </Link>
+              <Link className="btn-outline" to="/templates">
+                Templates
+              </Link>
               {canAddComponent ? (
                 <Link className="btn-outline" to="/add-component">
                   Add Component
@@ -119,6 +128,9 @@ const Header = () => {
       {isMenuOpen ? (
         <div className="mobile-nav-wrap" id="mobile-navigation">
           <nav className="layout-container mobile-nav" aria-label="Mobile navigation">
+            <Link to="/tutorials" onClick={() => setIsMenuOpen(false)}>
+              Tutorials
+            </Link>
             <button
               type="button"
               className="theme-toggle"
@@ -135,6 +147,12 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
+                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  Dashboard
+                </Link>
+                <Link to="/templates" onClick={() => setIsMenuOpen(false)}>
+                  Templates
+                </Link>
                 {canAddComponent ? (
                   <Link to="/add-component" onClick={() => setIsMenuOpen(false)}>
                     Add Component

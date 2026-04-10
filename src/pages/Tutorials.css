@@ -1,0 +1,79 @@
+.tutorials-page {
+  padding: 28px 0;
+}
+
+.tutorials-page h1,
+.tutorials-page h2,
+.tutorials-page h3 {
+  color: hsl(var(--foreground));
+}
+
+.tutorials-page header p {
+  color: hsl(var(--muted-foreground));
+}
+
+.tutorial-manage-link {
+  display: inline-flex;
+  margin-top: 8px;
+  text-decoration: none;
+  border: 1px solid hsl(var(--accent));
+  color: hsl(var(--accent));
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tutorial-manage-link:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.tutorials-readable-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.tutorial-readable-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  padding: 14px;
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.tutorial-readable-item p,
+.tutorial-readable-item li {
+  color: hsl(var(--muted-foreground));
+}
+
+.tutorial-readable-item h2 {
+  margin-top: 0;
+}
+
+.tutorial-summary {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 12px;
+}
+
+.tutorial-body h1,
+.tutorial-body h2,
+.tutorial-body h3 {
+  margin-top: 0;
+  color: hsl(var(--foreground));
+}
+
+.tutorial-body p {
+  line-height: 1.65;
+  color: hsl(var(--muted-foreground));
+}
+
+.tutorial-body ul {
+  padding-left: 22px;
+}
+
+.tutorial-body li {
+  color: hsl(var(--muted-foreground));
+}
+
