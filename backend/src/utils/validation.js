@@ -25,6 +25,7 @@ const LIMITS = {
     password: 128,
     name: 120,
     description: 1200,
+    descriptionMarkdown: 5000,
     jsxCode: 30000,
     cssCode: 30000,
     ticketTitle: 120,
@@ -33,6 +34,20 @@ const LIMITS = {
     tag: 24,
     tagsTotal: 200,
     imageDataUrl: 2_500_000,
+    listEntry: 240,
+    propType: 80,
+    propDefault: 160,
+    propDescription: 320,
+    usageExampleTitle: 120,
+    usageExampleDescription: 500,
+    usageExampleCode: 5000,
+    importStatement: 500,
+    propsCount: 20,
+    practicesCount: 8,
+    pitfallsCount: 8,
+    usageExamplesCount: 5,
+    dependencyCount: 12,
+    relatedCount: 12,
 };
 
 function text(value) {
@@ -53,6 +68,65 @@ function isValidImageDataUrl(value) {
     }
 
     return IMAGE_DATA_URL_REGEX.test(value);
+}
+
+function normalizeStringList(input, maxItems) {
+    if (!Array.isArray(input)) {
+        return [];
+    }
+
+    return input
+        .map((entry) => text(entry))
+        .filter(Boolean)
+        .slice(0, maxItems);
+}
+
+function normalizePropsList(input) {
+    if (!Array.isArray(input)) {
+        return [];
+    }
+
+    return input
+        .map((entry) => ({
+            name: text(entry?.name),
+            type: text(entry?.type),
+            default: text(entry?.default),
+            description: text(entry?.description),
+            required: entry?.required === true,
+        }))
+        .filter((entry) => entry.name)
+        .slice(0, LIMITS.propsCount);
+}
+
+function normalizeUsageExamples(input) {
+    if (!Array.isArray(input)) {
+        return [];
+    }
+
+    return input
+        .map((entry) => ({
+            title: text(entry?.title),
+            description: text(entry?.description),
+            code: text(entry?.code),
+        }))
+        .filter((entry) => entry.title || entry.description || entry.code)
+        .slice(0, LIMITS.usageExamplesCount);
+}
+
+function normalizeImportStatements(input) {
+    if (!input || typeof input !== "object") {
+        return {};
+    }
+
+    const standard = text(input.standard);
+    const typescript = text(input.typescript);
+    const npm = text(input.npm);
+
+    return {
+        ...(standard ? { standard } : {}),
+        ...(typescript ? { typescript } : {}),
+        ...(npm ? { npm } : {}),
+    };
 }
 
 export function normalizePhone(phone) {
@@ -230,12 +304,20 @@ export function validateSupportTicketPayload(payload = {}) {
 export function validateComponentPayload(payload = {}) {
     const name = text(payload.name);
     const description = text(payload.description);
+    const descriptionMarkdown = text(payload.descriptionMarkdown);
     const category = text(payload.category).toLowerCase();
     const tagsRaw = payload.tags;
     const jsxCode = text(payload.jsxCode);
     const cssCode = text(payload.cssCode);
     const thumbnail = text(payload.thumbnail);
     const screenshot = text(payload.screenshot);
+    const props = normalizePropsList(payload.props);
+    const usageExamples = normalizeUsageExamples(payload.usageExamples);
+    const bestPractices = normalizeStringList(payload.bestPractices, LIMITS.practicesCount);
+    const commonPitfalls = normalizeStringList(payload.commonPitfalls, LIMITS.pitfallsCount);
+    const dependencies = normalizeStringList(payload.dependencies, LIMITS.dependencyCount);
+    const relatedComponents = normalizeStringList(payload.relatedComponents, LIMITS.relatedCount);
+    const importStatements = normalizeImportStatements(payload.importStatements);
 
     if (!name || !description || !category || !jsxCode) {
         return {
@@ -257,6 +339,10 @@ export function validateComponentPayload(payload = {}) {
 
     if (!hasMaxLength(description, LIMITS.description)) {
         return { ok: false, message: "Component description is too long." };
+    }
+
+    if (descriptionMarkdown && !hasMaxLength(descriptionMarkdown, LIMITS.descriptionMarkdown)) {
+        return { ok: false, message: "Extended component notes are too long." };
     }
 
     if (!hasMaxLength(jsxCode, LIMITS.jsxCode)) {
@@ -294,17 +380,72 @@ export function validateComponentPayload(payload = {}) {
         return { ok: false, message: "Tags are too long." };
     }
 
+    if (
+        props.some(
+            (entry) =>
+                !hasMaxLength(entry.name, LIMITS.name) ||
+                !hasMaxLength(entry.type, LIMITS.propType) ||
+                !hasMaxLength(entry.default, LIMITS.propDefault) ||
+                !hasMaxLength(entry.description, LIMITS.propDescription)
+        )
+    ) {
+        return { ok: false, message: "Props reference entries are too long." };
+    }
+
+    if (bestPractices.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
+        return { ok: false, message: "Best practices entries are too long." };
+    }
+
+    if (commonPitfalls.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
+        return { ok: false, message: "Common pitfalls entries are too long." };
+    }
+
+    if (dependencies.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
+        return { ok: false, message: "Dependency entries are too long." };
+    }
+
+    if (relatedComponents.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
+        return { ok: false, message: "Related component entries are too long." };
+    }
+
+    if (
+        usageExamples.some(
+            (entry) =>
+                !hasMaxLength(entry.title, LIMITS.usageExampleTitle) ||
+                !hasMaxLength(entry.description, LIMITS.usageExampleDescription) ||
+                !hasMaxLength(entry.code, LIMITS.usageExampleCode)
+        )
+    ) {
+        return { ok: false, message: "Usage example entries are too long." };
+    }
+
+    if (
+        Object.values(importStatements).some(
+            (entry) => !hasMaxLength(String(entry || ""), LIMITS.importStatement)
+        )
+    ) {
+        return { ok: false, message: "Import guidance is too long." };
+    }
+
     return {
         ok: true,
         data: {
             name,
             description,
+            descriptionMarkdown,
             category,
             tags,
             jsxCode,
             cssCode,
             thumbnail,
             screenshot,
+            props,
+            usageExamples,
+            bestPractices,
+            commonPitfalls,
+            dependencies,
+            relatedComponents,
+            importStatements,
         },
     };
 }

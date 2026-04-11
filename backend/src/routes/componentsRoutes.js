@@ -315,6 +315,8 @@ export function createComponentsRouter({
                 usageExamples,
                 bestPractices,
                 commonPitfalls,
+                dependencies,
+                relatedComponents,
                 importStatements,
             } = validation.data;
 
@@ -353,6 +355,8 @@ export function createComponentsRouter({
                 usageExamples: usageExamples || [],
                 bestPractices: bestPractices || [],
                 commonPitfalls: commonPitfalls || [],
+                dependencies: dependencies || [],
+                relatedComponents: relatedComponents || [],
                 importStatements: importStatements || {},
                 createdBy: req.user._id,
             });
@@ -403,6 +407,8 @@ export function createComponentsRouter({
                 usageExamples,
                 bestPractices,
                 commonPitfalls,
+                dependencies,
+                relatedComponents,
                 importStatements,
             } = req.body;
 
@@ -445,6 +451,8 @@ export function createComponentsRouter({
                 usageExamples: usageExamples || component.usageExamples,
                 bestPractices: bestPractices || component.bestPractices,
                 commonPitfalls: commonPitfalls || component.commonPitfalls,
+                dependencies: dependencies || component.dependencies,
+                relatedComponents: relatedComponents || component.relatedComponents,
                 importStatements: importStatements || component.importStatements,
             });
 

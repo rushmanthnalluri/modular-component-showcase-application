@@ -187,20 +187,25 @@
 
 .auth-cancel {
   width: 100%;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
-  border-radius: 10px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
   line-height: 1;
+  min-height: var(--btn-height);
+  padding: 0 var(--btn-inline-padding);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: var(--btn-transition);
 }
 
 .auth-cancel:hover {
-  background: #f3f4f6;
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .auth-switch a {
@@ -211,21 +216,27 @@
 
 .auth-submit {
   width: 100%;
-  border: none;
-  height: 40px;
-  background: #1c1c1e;
-  color: #ffffff;
-  border-radius: 10px;
+  border: 1px solid hsl(var(--primary));
+  min-height: var(--btn-height);
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
   line-height: 1;
+  padding: 0 var(--btn-inline-padding);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--btn-shadow);
+  transition: var(--btn-transition);
 }
 
 .auth-submit:hover {
-  background: #363636;
+  filter: saturate(1.08) brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
 }
 
 .auth-switch {
@@ -260,22 +271,25 @@
 }
 
 .captcha-refresh {
-  border: 1px solid #d7dee7;
-  background: #ffffff;
-  color: #0f172a;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 12px;
-  min-height: 34px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-radius: var(--btn-radius);
+  padding: 0 var(--btn-inline-padding);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  min-height: var(--btn-height);
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: var(--btn-transition);
 }
 
 .captcha-refresh:hover {
-  background: #f8fafc;
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .toast-inline {
