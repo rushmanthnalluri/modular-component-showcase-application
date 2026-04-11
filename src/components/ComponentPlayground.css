@@ -5,9 +5,9 @@
 }
 
 .playground-preview {
-  border: 1px solid hsl(var(--border));
+  border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, hsl(var(--bg-main)), hsl(var(--card)));
+  background: linear-gradient(135deg, hsl(var(--bg-main)), hsl(var(--bg-secondary)));
   padding: 16px;
   min-height: 220px;
   display: flex;
@@ -16,9 +16,9 @@
 }
 
 .playground-controls {
-  border: 1px solid hsl(var(--border));
+  border: none;
   border-radius: 10px;
-  background: hsl(var(--card));
+  background: hsl(var(--bg-main));
   padding: 12px;
 }
 
@@ -61,10 +61,10 @@
   width: 100%;
   box-sizing: border-box;
   border-radius: 8px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--border-light));
   padding: 8px 10px;
   min-height: 40px;
-  background: hsl(var(--bg-main));
+  background: hsl(var(--card));
   color: hsl(var(--foreground));
 }
 
@@ -103,9 +103,9 @@
 
 .playground-checkbox-field {
   min-height: 40px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--border-light));
   border-radius: 8px;
-  background: hsl(var(--bg-main));
+  background: hsl(var(--card));
   display: flex;
   align-items: center;
   padding: 0 10px;

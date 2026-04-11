@@ -9,12 +9,24 @@ import "./AddComponentPage.css";
 const INITIAL_FORM = {
   name: "",
   description: "",
+  descriptionMarkdown: "",
   tags: "",
   jsxCode: "",
   cssCode: "",
   category: "",
   thumbnail: "",
   screenshot: "",
+  propsText: "",
+  bestPracticesText: "",
+  commonPitfallsText: "",
+  usageExampleTitle: "",
+  usageExampleDescription: "",
+  usageExampleCode: "",
+  reactImport: "",
+  typescriptImport: "",
+  npmInstall: "",
+  dependenciesText: "",
+  relatedComponentsText: "",
 };
 
 const readFileAsDataUrl = (file) =>
@@ -25,6 +37,85 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file);
   });
 
+function parseLineList(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function parsePropsText(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name = "", type = "", defaultValue = "", requiredValue = "", description = ""] = line
+        .split("|")
+        .map((part) => part.trim());
+
+      if (!name) {
+        return null;
+      }
+
+      return {
+        name,
+        type,
+        default: defaultValue,
+        required: /^(required|true|yes|y)$/i.test(requiredValue),
+        description,
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildUsageExamples(values) {
+  const title = values.usageExampleTitle.trim();
+  const description = values.usageExampleDescription.trim();
+  const code = values.usageExampleCode.trim();
+
+  if (!title && !description && !code) {
+    return [];
+  }
+
+  return [
+    {
+      title,
+      description,
+      code,
+    },
+  ];
+}
+
+function buildSubmissionPayload(values) {
+  const reactImport = values.reactImport.trim();
+  const typescriptImport = values.typescriptImport.trim();
+  const npmInstall = values.npmInstall.trim();
+
+  return {
+    name: values.name,
+    description: values.description,
+    descriptionMarkdown: values.descriptionMarkdown,
+    tags: values.tags,
+    jsxCode: values.jsxCode,
+    cssCode: values.cssCode,
+    category: values.category,
+    thumbnail: values.thumbnail,
+    screenshot: values.screenshot,
+    props: parsePropsText(values.propsText),
+    usageExamples: buildUsageExamples(values),
+    bestPractices: parseLineList(values.bestPracticesText),
+    commonPitfalls: parseLineList(values.commonPitfallsText),
+    dependencies: parseLineList(values.dependenciesText),
+    relatedComponents: parseLineList(values.relatedComponentsText),
+    importStatements: {
+      ...(reactImport ? { standard: reactImport } : {}),
+      ...(typescriptImport ? { typescript: typescriptImport } : {}),
+      ...(npmInstall ? { npm: npmInstall } : {}),
+    },
+  };
+}
+
 const AddComponentPage = () => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState(INITIAL_FORM);
@@ -33,52 +124,49 @@ const AddComponentPage = () => {
   const [canAddComponent, setCanAddComponent] = useState(null);
   const [submitError, setSubmitError] = useState("");
   const { name, description, jsxCode, category } = formValues;
-  const isValid = Boolean(
-    name.trim() &&
-      description.trim() &&
-      jsxCode.trim() &&
-      category.trim()
-  );
+
+  const isValid = Boolean(name.trim() && description.trim() && jsxCode.trim() && category.trim());
+
   useEffect(() => {
     const authUser = getAuthUser();
     setCanAddComponent(canAccessAddComponent(authUser));
   }, []);
 
   const availableCategories = useMemo(
-    () => categories.filter((category) => category.id !== "all"),
+    () => categories.filter((categoryItem) => categoryItem.id !== "all"),
     []
   );
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name: fieldName, value } = event.target;
 
     setFormValues((previous) => ({
       ...previous,
-      [name]: value,
+      [fieldName]: value,
     }));
 
     setErrors((previous) => ({
       ...previous,
-      [name]: false,
+      [fieldName]: false,
     }));
   };
 
   const handleFileChange = async (event) => {
-    const { name, files } = event.target;
+    const { name: fieldName, files } = event.target;
     const selectedFile = files?.[0];
 
     if (!selectedFile) {
       setFormValues((previous) => ({
         ...previous,
-        [name]: "",
+        [fieldName]: "",
       }));
       setFileNames((previous) => ({
         ...previous,
-        [name]: "",
+        [fieldName]: "",
       }));
       setErrors((previous) => ({
         ...previous,
-        [name]: false,
+        [fieldName]: false,
       }));
       return;
     }
@@ -86,7 +174,7 @@ const AddComponentPage = () => {
     if (!selectedFile.type.startsWith("image/")) {
       setErrors((previous) => ({
         ...previous,
-        [name]: true,
+        [fieldName]: true,
       }));
       return;
     }
@@ -95,20 +183,20 @@ const AddComponentPage = () => {
       const imageDataUrl = await readFileAsDataUrl(selectedFile);
       setFormValues((previous) => ({
         ...previous,
-        [name]: imageDataUrl,
+        [fieldName]: imageDataUrl,
       }));
       setFileNames((previous) => ({
         ...previous,
-        [name]: selectedFile.name,
+        [fieldName]: selectedFile.name,
       }));
       setErrors((previous) => ({
         ...previous,
-        [name]: false,
+        [fieldName]: false,
       }));
     } catch {
       setErrors((previous) => ({
         ...previous,
-        [name]: true,
+        [fieldName]: true,
       }));
     }
   };
@@ -123,6 +211,18 @@ const AddComponentPage = () => {
       category: formValues.category.trim() === "",
       thumbnail: false,
       screenshot: false,
+      descriptionMarkdown: false,
+      propsText: false,
+      bestPracticesText: false,
+      commonPitfallsText: false,
+      usageExampleTitle: false,
+      usageExampleDescription: false,
+      usageExampleCode: false,
+      reactImport: false,
+      typescriptImport: false,
+      npmInstall: false,
+      dependenciesText: false,
+      relatedComponentsText: false,
     };
 
     setErrors(nextErrors);
@@ -138,7 +238,7 @@ const AddComponentPage = () => {
     }
 
     try {
-      await addCustomComponent(formValues);
+      await addCustomComponent(buildSubmissionPayload(formValues));
       navigate("/", { replace: true });
     } catch (error) {
       setSubmitError(error.message || "Unable to save component right now.");
@@ -208,9 +308,9 @@ const AddComponentPage = () => {
               required
             >
               <option value="">Select a category</option>
-              {availableCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
+              {availableCategories.map((categoryItem) => (
+                <option key={categoryItem.id} value={categoryItem.id}>
+                  {categoryItem.name}
                 </option>
               ))}
             </select>
@@ -242,7 +342,7 @@ const AddComponentPage = () => {
               aria-invalid={errors.thumbnail ? "true" : "false"}
               aria-describedby={errors.thumbnail ? "component-thumbnail-error" : undefined}
             />
-            {fileNames.thumbnail ? <span>{fileNames.thumbnail}</span> : null}
+            {fileNames.thumbnail ? <span className="field-help">{fileNames.thumbnail}</span> : null}
             {errors.thumbnail ? (
               <span id="component-thumbnail-error" className="field-error">
                 Please select a valid image file.
@@ -260,7 +360,7 @@ const AddComponentPage = () => {
               aria-invalid={errors.screenshot ? "true" : "false"}
               aria-describedby={errors.screenshot ? "component-screenshot-error" : undefined}
             />
-            {fileNames.screenshot ? <span>{fileNames.screenshot}</span> : null}
+            {fileNames.screenshot ? <span className="field-help">{fileNames.screenshot}</span> : null}
             {errors.screenshot ? (
               <span id="component-screenshot-error" className="field-error">
                 Please select a valid image file.
@@ -302,11 +402,149 @@ const AddComponentPage = () => {
               </span>
             ) : null}
 
-            <button
-              type="submit"
-              className="add-component-submit"
-              disabled={!isValid}
-            >
+            <details className="optional-docs-panel">
+              <summary>Optional documentation & guidance</summary>
+              <p className="field-help optional-docs-intro">
+                These fields power the detail page with practical usage notes instead of placeholders.
+              </p>
+
+              <label htmlFor="component-description-markdown">Expanded Notes</label>
+              <textarea
+                id="component-description-markdown"
+                name="descriptionMarkdown"
+                value={formValues.descriptionMarkdown}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Add setup notes, design intent, or implementation details."
+              />
+
+              <label htmlFor="component-props-text">Props Reference</label>
+              <textarea
+                id="component-props-text"
+                name="propsText"
+                value={formValues.propsText}
+                onChange={handleChange}
+                rows={5}
+                placeholder={'label | string | "Deploy" | required | Primary call-to-action text'}
+              />
+              <span className="field-help">
+                One prop per line: <code>name | type | default | required/optional | description</code>
+              </span>
+
+              <label htmlFor="component-best-practices">Best Practices</label>
+              <textarea
+                id="component-best-practices"
+                name="bestPracticesText"
+                value={formValues.bestPracticesText}
+                onChange={handleChange}
+                rows={4}
+                placeholder={"Keep labels action-oriented\nPair loading states with disabled interactions"}
+              />
+              <span className="field-help">One tip per line.</span>
+
+              <label htmlFor="component-common-pitfalls">Common Pitfalls</label>
+              <textarea
+                id="component-common-pitfalls"
+                name="commonPitfallsText"
+                value={formValues.commonPitfallsText}
+                onChange={handleChange}
+                rows={4}
+                placeholder={"Avoid clickable div wrappers\nDo not rely on placeholder text as the only label"}
+              />
+              <span className="field-help">One caution per line.</span>
+
+              <div className="optional-docs-grid">
+                <div>
+                  <label htmlFor="component-usage-title">Usage Example Title</label>
+                  <input
+                    id="component-usage-title"
+                    name="usageExampleTitle"
+                    value={formValues.usageExampleTitle}
+                    onChange={handleChange}
+                    placeholder="Primary CTA in a dashboard toolbar"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="component-react-import">React Import Snippet</label>
+                  <textarea
+                    id="component-react-import"
+                    name="reactImport"
+                    value={formValues.reactImport}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder={'import GradientButton from "@/components/GradientButton";\n\n<GradientButton />'}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="component-typescript-import">TypeScript Import Snippet</label>
+                  <textarea
+                    id="component-typescript-import"
+                    name="typescriptImport"
+                    value={formValues.typescriptImport}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder={'import type { ComponentProps } from "react";\nimport GradientButton from "@/components/GradientButton";'}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="component-npm-install">Install Command</label>
+                  <input
+                    id="component-npm-install"
+                    name="npmInstall"
+                    value={formValues.npmInstall}
+                    onChange={handleChange}
+                    placeholder="npm install framer-motion"
+                  />
+                </div>
+              </div>
+
+              <label htmlFor="component-dependencies-text">External Dependencies</label>
+              <textarea
+                id="component-dependencies-text"
+                name="dependenciesText"
+                value={formValues.dependenciesText}
+                onChange={handleChange}
+                rows={3}
+                placeholder={"framer-motion\nreact-aria"}
+              />
+              <span className="field-help">One package per line.</span>
+
+              <label htmlFor="component-related-components">Related Components</label>
+              <textarea
+                id="component-related-components"
+                name="relatedComponentsText"
+                value={formValues.relatedComponentsText}
+                onChange={handleChange}
+                rows={3}
+                placeholder={"SearchBar\nCommandPalette\nTagFilter"}
+              />
+              <span className="field-help">One related component per line.</span>
+
+              <label htmlFor="component-usage-description">Usage Example Description</label>
+              <textarea
+                id="component-usage-description"
+                name="usageExampleDescription"
+                value={formValues.usageExampleDescription}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Explain where this component works best and why."
+              />
+
+              <label htmlFor="component-usage-code">Usage Example Code</label>
+              <textarea
+                id="component-usage-code"
+                name="usageExampleCode"
+                value={formValues.usageExampleCode}
+                onChange={handleChange}
+                rows={6}
+                placeholder={"<Toolbar>\n  <GradientButton>Deploy</GradientButton>\n</Toolbar>"}
+              />
+            </details>
+
+            <button type="submit" className="add-component-submit" disabled={!isValid}>
               Add Component
             </button>
             {submitError ? <span className="field-error">{submitError}</span> : null}

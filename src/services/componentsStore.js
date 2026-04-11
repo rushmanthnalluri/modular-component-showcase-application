@@ -6,6 +6,9 @@ const VERIFIER_NAME_PREFIX = "Verifier Component";
 const VERIFIER_DESCRIPTION_MARKER = "Created by verify-connection script";
 
 function mapCloudComponent(rawItem) {
+  const rawAuthor =
+    rawItem?.createdBy && typeof rawItem.createdBy === "object" ? rawItem.createdBy : null;
+
   return {
     id: String(rawItem.id || ""),
     name: String(rawItem.name || "Untitled Component"),
@@ -15,7 +18,15 @@ function mapCloudComponent(rawItem) {
     tags: Array.isArray(rawItem.tags) ? rawItem.tags : [],
     thumbnail: String(rawItem.thumbnail || ""),
     screenshot: String(rawItem.screenshot || ""),
-    createdBy: String(rawItem.createdBy || ""),
+    createdBy: String(rawAuthor?._id || rawItem.createdBy || ""),
+    author: rawAuthor
+      ? {
+          id: String(rawAuthor._id || ""),
+          fullName: String(rawAuthor.fullName || ""),
+          email: String(rawAuthor.email || ""),
+          avatarUrl: String(rawAuthor.avatarUrl || ""),
+        }
+      : null,
     version: String(rawItem.version || "1.0.0"),
     versions: Array.isArray(rawItem.versions) ? rawItem.versions : [],
     averageRating: Number(rawItem.averageRating || 0),
@@ -27,9 +38,15 @@ function mapCloudComponent(rawItem) {
     commonPitfalls: Array.isArray(rawItem.commonPitfalls) ? rawItem.commonPitfalls : [],
     dependencies: Array.isArray(rawItem.dependencies) ? rawItem.dependencies : [],
     relatedComponents: Array.isArray(rawItem.relatedComponents) ? rawItem.relatedComponents : [],
+    importStatements:
+      rawItem.importStatements && typeof rawItem.importStatements === "object"
+        ? rawItem.importStatements
+        : {},
     performanceMetrics: rawItem.performanceMetrics || {},
     accessibilityScore: Number(rawItem.accessibilityScore || 0),
     accessibilityReport: String(rawItem.accessibilityReport || ""),
+    createdAt: String(rawItem.createdAt || ""),
+    updatedAt: String(rawItem.updatedAt || ""),
     code: {
       jsx: String(rawItem.code?.jsx || ""),
       css: String(rawItem.code?.css || ""),
@@ -89,15 +106,24 @@ export async function getAllComponents() {
 export async function addCustomComponent({
   name,
   description,
+  descriptionMarkdown = "",
   tags = "",
   jsxCode,
   cssCode,
   category,
   thumbnail = "",
   screenshot = "",
+  props = [],
+  usageExamples = [],
+  bestPractices = [],
+  commonPitfalls = [],
+  dependencies = [],
+  relatedComponents = [],
+  importStatements = {},
 }) {
   const trimmedName = name.trim();
   const trimmedDescription = description.trim();
+  const trimmedDescriptionMarkdown = String(descriptionMarkdown || "").trim();
   const trimmedThumbnail = thumbnail.trim();
   const trimmedScreenshot = screenshot.trim();
   const trimmedCategory = category.trim();
@@ -108,12 +134,20 @@ export async function addCustomComponent({
     body: JSON.stringify({
       name: trimmedName,
       description: trimmedDescription,
+      descriptionMarkdown: trimmedDescriptionMarkdown,
       category: trimmedCategory,
       tags: trimmedTags,
       jsxCode: jsxCode.trim(),
       cssCode: cssCode.trim(),
       thumbnail: trimmedThumbnail,
       screenshot: trimmedScreenshot,
+      props,
+      usageExamples,
+      bestPractices,
+      commonPitfalls,
+      dependencies,
+      relatedComponents,
+      importStatements,
     }),
   });
 
