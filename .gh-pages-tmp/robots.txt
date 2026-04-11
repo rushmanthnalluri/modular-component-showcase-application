@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://rushmanthnalluri.github.io/modular-component-showcase-application/sitemap.xml
