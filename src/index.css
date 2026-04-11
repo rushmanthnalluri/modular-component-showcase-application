@@ -49,6 +49,16 @@
     --radius: 0.9rem;
     --header-height: 80px;
 
+    /* Button tokens */
+    --btn-height: 38px;
+    --btn-radius: 4px;
+    --btn-font-size: 13px;
+    --btn-font-weight: 600;
+    --btn-inline-padding: 14px;
+    --btn-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+    --btn-shadow-hover: 0 10px 22px rgba(15, 23, 42, 0.2);
+    --btn-transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+
     /* Sidebar (keeping for shadcn) */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 202 32% 18%;
@@ -77,6 +87,8 @@
     --border: 218 22% 32%;
     --input: 218 22% 32%;
     --ring: 24 95% 61%;
+    --btn-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
+    --btn-shadow-hover: 0 12px 26px rgba(0, 0, 0, 0.46);
   }
 
 }
@@ -255,7 +267,6 @@ html[data-theme="dark"] .code-block-head button {
 
 html[data-theme="dark"] .btn-dark,
 html[data-theme="dark"] .tab-btn.active,
-html[data-theme="dark"] .component-link,
 html[data-theme="dark"] .filter-btn.active {
   background: hsl(var(--primary));
   border-color: hsl(var(--primary));
