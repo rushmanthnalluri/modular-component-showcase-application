@@ -1,6 +1,6 @@
 .discussion-wrap {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 10px;
   padding: 18px;
 }
@@ -39,12 +39,23 @@
 
 .discussion-form button {
   align-self: flex-end;
-  border: 0;
-  background: #f97316;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--btn-radius);
+  padding: 0 var(--btn-inline-padding);
+  min-height: var(--btn-height);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
   cursor: pointer;
+  box-shadow: var(--btn-shadow);
+  transition: var(--btn-transition);
+}
+
+.discussion-form button:hover {
+  filter: saturate(1.08) brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
 }
 
 .discussion-list {
@@ -53,10 +64,10 @@
 }
 
 .discussion-item {
-  border: 1px solid #e5e7eb;
+  border: none;
   border-radius: 8px;
   padding: 10px;
-  background: #fafafa;
+  background: hsl(var(--bg-main));
 }
 
 .discussion-item header {
@@ -78,11 +89,20 @@
 }
 
 .discussion-actions button {
-  border: 1px solid #d1d5db;
-  background: #fff;
-  border-radius: 999px;
-  padding: 4px 9px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: var(--btn-radius);
+  padding: 0 10px;
+  min-height: 30px;
   font-size: 12px;
+  font-weight: var(--btn-font-weight);
+  color: hsl(var(--text-secondary));
+  transition: var(--btn-transition);
+}
+
+.discussion-actions button:hover {
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .discussion-actions button.danger {
@@ -97,18 +117,31 @@
 }
 
 .reply-box textarea {
-  border: 1px solid #d1d5db;
+  border: 1px solid hsl(var(--border-light));
   border-radius: 8px;
   padding: 8px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
 }
 
 .reply-box button {
   justify-self: end;
-  border: 0;
-  background: #f97316;
-  color: #fff;
-  border-radius: 6px;
-  padding: 6px 9px;
+  border: 1px solid hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--btn-radius);
+  padding: 0 var(--btn-inline-padding);
+  min-height: var(--btn-height);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  box-shadow: var(--btn-shadow);
+  transition: var(--btn-transition);
+}
+
+.reply-box button:hover {
+  filter: saturate(1.08) brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
 }
 
 .discussion-empty,

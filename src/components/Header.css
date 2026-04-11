@@ -41,30 +41,33 @@
 .theme-toggle,
 .btn-outline,
 .btn-dark {
-  border-radius: 6px;
+  border-radius: var(--btn-radius);
   text-decoration: none;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 0 var(--btn-inline-padding);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
   line-height: 1;
-  min-height: 34px;
+  min-height: var(--btn-height);
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: var(--btn-transition);
 }
 
 .theme-toggle {
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  background: #ffffff;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  background: hsl(var(--card));
   cursor: pointer;
-  width: 40px;
-  height: 34px;
+  width: var(--btn-height);
+  height: var(--btn-height);
   padding: 0;
 }
 
 .theme-toggle:hover {
-  background: #f8fafc;
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .theme-toggle-icon {
@@ -74,25 +77,44 @@
 }
 
 .btn-outline {
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  background: #ffffff;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  background: hsl(var(--card));
+}
+
+.btn-outline:hover {
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .btn-dark {
-  border: 1px solid #1f2937;
-  color: #ffffff;
-  background: #1f2937;
+  border: 1px solid hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  box-shadow: var(--btn-shadow);
+}
+
+.btn-dark:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.07) brightness(1.03);
+  box-shadow: var(--btn-shadow-hover);
 }
 
 .mobile-menu-btn {
   display: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #ffffff;
-  height: 34px;
-  padding: 0 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--btn-radius);
+  background: hsl(var(--card));
+  height: var(--btn-height);
+  padding: 0 12px;
   margin-left: auto;
+  color: hsl(var(--foreground));
+  transition: var(--btn-transition);
+}
+
+.mobile-menu-btn:hover {
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .mobile-nav-wrap {
