@@ -40,21 +40,23 @@
 }
 
 .search-button {
-  padding: 12px 24px;
-  background: #ff9500;
-  color: white;
-  border: none;
-  border-radius: 8px;
+  padding: 0 var(--btn-inline-padding);
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  font-weight: var(--btn-font-weight);
+  font-size: var(--btn-font-size);
+  min-height: var(--btn-height);
+  box-shadow: var(--btn-shadow);
+  transition: var(--btn-transition);
 }
 
 .search-button:hover:not(:disabled) {
-  background: #e68a00;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+  filter: saturate(1.08) brightness(1.03);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
 }
 
 .search-button:disabled {
@@ -70,23 +72,24 @@
 }
 
 .action-btn {
-  padding: 10px 14px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  border-radius: 6px;
+  padding: 0 var(--btn-inline-padding);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  min-height: var(--btn-height);
+  transition: var(--btn-transition);
   white-space: nowrap;
 }
 
 .action-btn:hover:not(:disabled),
 .action-btn.active {
-  border-color: #ff9500;
-  background: #fff5f0;
-  color: #ff9500;
-  box-shadow: 0 2px 8px rgba(255, 149, 0, 0.15);
+  border-color: hsl(var(--primary));
+  background: hsl(var(--bg-main));
+  color: hsl(var(--foreground));
+  transform: translateY(-1px);
 }
 
 .action-btn:disabled {
@@ -113,8 +116,8 @@
 }
 
 .advanced-filters {
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
+  background: hsl(var(--bg-main));
+  border: none;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -147,8 +150,8 @@
 
 .filter-tag {
   padding: 6px 12px;
-  border: 1px solid #ddd;
-  background: white;
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--card));
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
@@ -230,28 +233,31 @@
   gap: 10px;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #ddd;
+  border-top: none;
 }
 
 .btn-reset,
 .btn-close {
   flex: 1;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
+  padding: 0 var(--btn-inline-padding);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: var(--btn-radius);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  min-height: var(--btn-height);
+  transition: var(--btn-transition);
 }
 
 .btn-reset:hover {
-  background: #f0f0f0;
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .btn-close:hover {
-  background: #e0e0e0;
+  background: hsl(var(--bg-main));
+  transform: translateY(-1px);
 }
 
 .active-filters {
@@ -259,9 +265,9 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 15px;
-  background: white;
+  background: hsl(var(--bg-main));
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: none;
   margin-bottom: 20px;
 }
 
@@ -270,11 +276,11 @@
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #fff5f0;
-  border: 1px solid #ff9500;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border-light));
   border-radius: 20px;
   font-size: 12px;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .filter-chip button {

@@ -2,13 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CodeBlock from "@/components/CodeBlock";
 import ComponentPlayground from "@/components/ComponentPlayground";
-import DiscussionThread from "@/components/DiscussionThread";
 import ResponsivePreview from "@/components/ResponsivePreview";
 
 import Layout from "@/components/Layout";
 
-import RatingsComponent from "@/components/RatingsComponent";
-import ReviewsComponent from "@/components/ReviewsComponent";
 import { deleteComponent, fetchComponentById, getShowcaseDemo } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import "./ComponentDetails.css";
@@ -132,7 +129,6 @@ const ComponentDetail = () => {
   const [authUser, setAuthUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [demoValues, setDemoValues] = useState({});
-  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
 
@@ -252,45 +248,6 @@ const ComponentDetail = () => {
     setActiveTab(tabOrder[nextIndex]);
   };
 
-  const handleCopyShareLink = async () => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const shareUrl = window.location.href;
-    if (!navigator?.clipboard?.writeText) {
-      window.prompt("Copy this URL", shareUrl);
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShareCopied(true);
-      window.setTimeout(() => setShareCopied(false), 1500);
-    } catch {
-      window.prompt("Copy this URL", shareUrl);
-    }
-  };
-
-  const handleSocialShare = (platform) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const currentUrl = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`Check out ${item?.name} on Modular Showcase`);
-    const urls = {
-      twitter: `https://twitter.com/intent/tweet?url=${currentUrl}&text=${text}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${currentUrl}`,
-      reddit: `https://www.reddit.com/submit?url=${currentUrl}&title=${text}`,
-    };
-
-    const target = urls[platform];
-    if (target) {
-      window.open(target, "_blank", "noopener,noreferrer");
-    }
-  };
-
   const handlePreviewError = () => {
     if (item?.thumbnail && previewSrc !== item.thumbnail) {
       setPreviewSrc(item.thumbnail);
@@ -366,72 +323,10 @@ const ComponentDetail = () => {
         </div>
         <p className="details-desc">{item.description}</p>
 
-        <div className="component-insights-grid">
-          <section className="component-insights-card">
-            <h3>Documentation</h3>
-            {item.props?.length ? (
-              <ul>
-                {item.props.slice(0, 6).map((prop, index) => (
-                  <li key={`${prop.name || "prop"}-${index}`}>
-                    <strong>{prop.name || "prop"}</strong>: {prop.description || prop.type || "No description"}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No prop documentation available yet.</p>
-            )}
-          </section>
-
-          <section className="component-insights-card">
-            <h3>Performance Metrics</h3>
-            <p>Bundle size: {item.performanceMetrics?.bundleSize || "Not measured"}</p>
-            <p>Render time: {item.performanceMetrics?.renderTime || "Not measured"}</p>
-            <p>Dependency count: {item.performanceMetrics?.dependencies ?? "Not measured"}</p>
-          </section>
-
-          <section className="component-insights-card">
-            <h3>Accessibility Audit</h3>
-            <p>Score: {item.accessibilityScore || 0}/100</p>
-            <p>{item.accessibilityReport || "Accessibility report not available."}</p>
-          </section>
-
-          <section className="component-insights-card">
-            <h3>Dependencies & Versioning</h3>
-            <p>Current version: {item.version || "1.0.0"}</p>
-            <p>
-              Dependencies: {Array.isArray(item.dependencies) && item.dependencies.length > 0
-                ? item.dependencies.join(", ")
-                : "No dependencies listed"}
-            </p>
-            <p>
-              What's new: {Array.isArray(item.versions) && item.versions.length > 1
-                ? String(item.versions[item.versions.length - 1]?.changelog || "Latest update available")
-                : "Initial release"}
-            </p>
-          </section>
-
-          <section className="component-insights-card">
-            <h3>Social Sharing</h3>
-            <div className="social-actions">
-              <button type="button" onClick={() => handleSocialShare("twitter")}>Share on X</button>
-              <button type="button" onClick={() => handleSocialShare("linkedin")}>Share on LinkedIn</button>
-              <button type="button" onClick={() => handleSocialShare("reddit")}>Share on Reddit</button>
-            </div>
-          </section>
-        </div>
-
         <div className="details-grid">
           <div className="preview-box">
             <div className="preview-head">
               <span>Live Interactive Demo</span>
-              <button
-                type="button"
-                className="preview-share-btn"
-                onClick={handleCopyShareLink}
-                aria-label="Copy share link with current demo settings"
-              >
-                {shareCopied ? "Link Copied" : "Copy Share Link"}
-              </button>
             </div>
             <div className={hasGeneratedTab ? "preview-body preview-body--playground" : "preview-body"}>
               <ResponsivePreview>
@@ -514,12 +409,6 @@ const ComponentDetail = () => {
         </div>
       </div>
 
-      {/* Ratings and Reviews Section */}
-      <div className="ratings-reviews-section">
-        <RatingsComponent componentId={id} />
-        <ReviewsComponent componentId={id} userIsAuthenticated={!!authUser} />
-        <DiscussionThread componentId={id} isAuthenticated={!!authUser} currentUser={authUser} />
-      </div>
     </Layout>
   );
 };
