@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { categories } from "@/data/components.data";
 import { canAccessAddComponent, getAuthUser } from "@/services/authAccess";
 import { addCustomComponent } from "@/services/componentsStore";

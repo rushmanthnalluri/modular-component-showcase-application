@@ -36,6 +36,7 @@ It includes a local curated showcase and cloud-backed custom components, with au
 ### Backend
 - Express 5
 - MongoDB + Mongoose
+- PostgreSQL + raw `pg`
 - JWT + cookie-based sessions
 - bcryptjs
 - Nodemailer
@@ -59,22 +60,31 @@ It includes a local curated showcase and cloud-backed custom components, with au
 ├─ src/
 │  ├─ assets/
 │  ├─ components/
+│  │  ├─ common/
+│  │  ├─ feedback/
+│  │  ├─ layout/
+│  │  └─ search/
 │  ├─ context/
 │  ├─ data/
 │  ├─ demos/
 │  ├─ hooks/
 │  ├─ pages/
 │  ├─ services/
+│  ├─ tests/
 │  ├─ App.jsx
 │  └─ main.jsx
 ├─ backend/
 │  ├─ src/
-│  │  ├─ controller/
+│  │  ├─ controllers/
 │  │  ├─ middleware/
-│  │  ├─ model/
+│  │  ├─ models/
 │  │  ├─ routes/
+│  │  ├─ services/
+│  │  ├─ sql/
+│  │  ├─ tests/
 │  │  └─ utils/
-│  └─ tests/
+│  └─ Dockerfile
+├─ docs/
 ├─ public/
 ├─ .github/workflows/
 ├─ package.json
@@ -107,9 +117,16 @@ Create `backend/.env`:
 ```bash
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/modular_components
+SQL_AUTO_MIGRATE=true
 JWT_SECRET=your_secure_jwt_secret
 FRONTEND_ORIGINS=http://localhost:8080,http://localhost:5173
 ALLOW_MEMORY_FALLBACK=true
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=postgres
+PGDATABASE=modular_components
 SMTP_USER=your_email_user
 SMTP_PASS=your_email_password
 SMTP_FROM=no-reply@yourdomain.com
@@ -146,6 +163,10 @@ Local URLs:
 - `npm run test`: backend tests
 - `npm run test:ui`: frontend tests
 - `npm run test:all`: backend + frontend tests
+- `npm run predeploy`: production frontend build for GitHub Pages
+- `npm run deploy`: publish `dist` to GitHub Pages
+
+Backend tests run from `backend/src/tests`.
 
 ## API Overview
 
@@ -173,6 +194,25 @@ Local URLs:
 - `GET /api/components/:id/discussions`
 - `POST /api/components/:id/discussions`
 
+### SQL
+- `GET /api/sql/users`
+- `GET /api/sql/categories`
+- `GET /api/sql/components`
+- `POST /api/sql/components`
+- `PUT /api/sql/components/:id`
+- `DELETE /api/sql/components/:id`
+
+### Mongo
+- `GET /api/reviews`
+- `POST /api/reviews`
+- `GET /api/discussions`
+- `POST /api/discussions`
+- `GET /api/logs`
+- `POST /api/search`
+- `POST /api/embeddings`
+- `POST /api/mongo/search/semantic`
+- `GET /api/mongo/descriptions/:componentId`
+
 ### Users
 - `GET /api/users/me`
 - `PUT /api/users/me`
@@ -191,6 +231,7 @@ Local URLs:
 - `/api` requests are routed through cookie parsing, CSRF cookie issuance, and CSRF validation before state-changing handlers run.
 - Auth, component write, user update, and support endpoints all require token-backed requests from the frontend.
 - The repository has had a CodeQL `missing-token-validation` false positive on the middleware chain before; the current `/api` router structure is the intended protection pattern.
+- `/health` reports both MongoDB and PostgreSQL status in a compact JSON payload.
 
 ## Deployment Notes
 
@@ -198,6 +239,26 @@ Local URLs:
 - Frontend base path is configured for GitHub Pages:
   `/modular-component-showcase-application/`
 - Backend runs independently on Render and is consumed by the frontend through API endpoints.
+
+### Render Backend Environment Variables
+
+- `PORT`
+- `MONGODB_URI`
+- `DATABASE_URL`
+- `SQL_AUTO_MIGRATE`
+- `JWT_SECRET`
+- `FRONTEND_ORIGINS`
+- `ALLOW_MEMORY_FALLBACK=false`
+
+### MongoDB Atlas Notes
+
+- Use an Atlas SRV connection string in `MONGODB_URI`.
+- Allow Render egress access (or temporary `0.0.0.0/0`) in Atlas network access.
+- Ensure the Atlas user in the URI has read/write privileges for your application database.
+
+## Architecture Notes
+
+- Current backend/data architecture: [docs/database-layer-extension.md](docs/database-layer-extension.md)
 
 ## Author
 

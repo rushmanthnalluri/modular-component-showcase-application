@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { copyToClipboard, downloadFile } from "@/services/exportService";
 import { useToast } from "@/use-toast";
 import "./Templates.css";
