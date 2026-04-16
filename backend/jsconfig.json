@@ -4,8 +4,7 @@
   },
   "include": [
     "src/**/*.js",
-    "tests/**/*.mjs",
-    "src/**/*.mjs"
+    "src/tests/**/*.js"
   ],
   "exclude": [
     "node_modules"

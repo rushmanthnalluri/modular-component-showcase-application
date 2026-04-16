@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { APP_INFO } from "@/data/app.constants";
 import { Linkedin, Mail, Phone } from "lucide-react";
 import { useToast } from "@/use-toast";
