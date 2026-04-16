@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import CodeBlock from "@/components/CodeBlock";
-import Layout from "@/components/Layout";
+import CodeBlock from "@/components/common/CodeBlock";
+import Layout from "@/components/layout/Layout";
 import { components } from "@/data/components.data";
 import { copyToClipboard, exportComponentCode, downloadFile, generateImportStatement } from "@/services/exportService";
 import { useToast } from "@/use-toast";

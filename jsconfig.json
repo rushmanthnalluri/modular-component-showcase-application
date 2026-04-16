@@ -11,7 +11,6 @@
   },
   "include": [
     "src/**/*",
-    "scripts/**/*.mjs",
     "vite.config.js",
     "eslint.config.js"
   ],

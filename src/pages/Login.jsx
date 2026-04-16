@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
-import Header from "@/components/Header";
+import Header from "@/components/layout/Header";
 import { authenticateUser, fetchRegisterCaptcha, forgotPassword } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import mailIcon from "@/assets/showcase/mail.png";

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { createTutorialPost, deleteTutorialPost, updateTutorialPost } from "@/services/contentService";
 import "./TutorialManager.css";

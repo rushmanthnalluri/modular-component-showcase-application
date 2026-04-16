@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: modular-showcase-api
+    name: modular-component-showcase-application
     runtime: node
     rootDir: backend
     buildCommand: npm install
@@ -10,11 +10,19 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - key: NODE_ENV
+        value: production
       - key: PORT
         value: 5000
       - key: MONGODB_URI
         sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SQL_AUTO_MIGRATE
+        value: true
       - key: JWT_SECRET
         generateValue: true
+      - key: ALLOW_MEMORY_FALLBACK
+        value: false
       - key: FRONTEND_ORIGINS
         sync: false

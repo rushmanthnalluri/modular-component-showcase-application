@@ -8,15 +8,39 @@ import jwt from "jsonwebtoken";
 import { randomBytes } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import captchaRouter from "./controller/captchaController.js";
-import { sendEmail, sendAnnouncementEmail } from "./model/emailManager.js";
-import { User, Component, Rating, Review, Discussion, ComponentView, ComponentDependency, SubmissionHistory, BlogPost } from "./model/appModels.js";
+import captchaRouter from "./controllers/captchaController.js";
+import { sendEmail, sendAnnouncementEmail } from "./models/emailManager.js";
+import {
+    User,
+    Component,
+    Rating,
+    Review,
+    Discussion,
+    ComponentView,
+    ComponentDependency,
+    SubmissionHistory,
+    BlogPost,
+    ComponentDescription,
+    ComponentEmbedding,
+    UsageLog,
+} from "./models/appModels.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createCsrfMiddleware } from "./middleware/csrf.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
+import { createDiscussionsRouter } from "./routes/discussionsRoutes.js";
+import {
+    createMongoRouter,
+    getMongoLogs,
+    semanticSearch,
+    upsertMongoEmbedding,
+} from "./routes/mongoRoutes.js";
+import { createReviewsRouter } from "./routes/reviewsRoutes.js";
+import { createSqlRouter } from "./routes/sqlRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
+import { initializeSqlSchema } from "./sql/initSchema.js";
+import { hasSqlConnectionConfig, pingSql } from "./sql/db.js";
 import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
 
 const app = express();
@@ -168,10 +192,16 @@ app.get("/", (_req, res) => {
     res.json({ message: "Modular Component Showcase API is running." });
 });
 
-app.get("/health", (_req, res) => {
+app.get("/health", async (_req, res) => {
+    const [mongo, postgres] = await Promise.all([
+        Promise.resolve(mongoose.connection.readyState === 1),
+        pingSql(),
+    ]);
+
     res.json({
         status: "ok",
-        mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+        mongo,
+        postgres,
         mode: mongoMode,
     });
 });
@@ -192,6 +222,8 @@ apiRouter.get("/", (_req, res) => {
             components: "GET/POST /api/components, GET /api/components/:id, PUT/DELETE /api/components/:id",
             users: "GET /api/users/:id, PUT /api/users/:id",
             email: "POST /api/email/contact, /api/email/support",
+            sql: "GET/POST /api/sql/components",
+            search: "POST /api/search",
             content: "GET /api/content/tutorials, POST /api/content/tutorials (admin)",
             admin: "GET /api/admin/rate-limits (admin)",
         },
@@ -250,6 +282,43 @@ apiRouter.use(
         requireCsrf,
     })
 );
+
+apiRouter.use("/sql", createSqlRouter());
+apiRouter.use(
+    "/reviews",
+    createReviewsRouter({
+        Review,
+        Component,
+        requireAuth,
+        requireCsrf,
+    })
+);
+apiRouter.use(
+    "/discussions",
+    createDiscussionsRouter({
+        Discussion,
+        Component,
+        requireAuth,
+        requireCsrf,
+    })
+);
+
+const mongoDeps = {
+    ComponentDescription,
+    ComponentEmbedding,
+    Component,
+    UsageLog,
+};
+
+apiRouter.use(
+    "/mongo",
+    createMongoRouter(mongoDeps)
+);
+
+apiRouter.post("/search", (req, res) => semanticSearch(req, res, mongoDeps));
+apiRouter.post("/embeddings", (req, res) => upsertMongoEmbedding(req, res, mongoDeps));
+apiRouter.post("/embeddings/upsert", (req, res) => upsertMongoEmbedding(req, res, mongoDeps));
+apiRouter.get("/logs", (req, res) => getMongoLogs(req, res, mongoDeps));
 
 apiRouter.get("/admin/rate-limits", requireAuth, async (req, res) => {
     if (String(req.user?.role || "").toLowerCase() !== "admin") {
@@ -560,6 +629,18 @@ export async function startServer() {
     isShuttingDown = false;
     assertProductionConfig();
     await connectWithFallback();
+
+    if (process.env.SQL_AUTO_MIGRATE !== "false") {
+        if (hasSqlConnectionConfig()) {
+            try {
+                await initializeSqlSchema();
+            } catch (error) {
+                console.warn(`Skipping PostgreSQL schema initialization: ${error.message}`);
+            }
+        } else {
+            console.warn("Skipping PostgreSQL schema initialization: no SQL connection is configured.");
+        }
+    }
 
     await new Promise((resolve, reject) => {
         httpServer = app.listen(PORT, () => {

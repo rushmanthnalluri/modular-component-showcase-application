@@ -32,3 +32,12 @@ dist-ssr
 
 # node
 node_modules
+backend/node_modules
+dist
+backend/*.log
+*.pyc
+__pycache__/
+.pytest_cache/
+target/
+gateway/
+sql-service/

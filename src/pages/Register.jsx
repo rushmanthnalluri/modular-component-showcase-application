@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
-import Header from "@/components/Header";
+import Header from "@/components/layout/Header";
 import { registerUser } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import userdarkIcon from "@/assets/showcase/user dark.png";
