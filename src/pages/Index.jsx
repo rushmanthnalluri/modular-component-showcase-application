@@ -1,9 +1,9 @@
 import { useMemo, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import CategoryFilter from "@/components/CategoryFilter";
-import ComponentCard from "@/components/ComponentCard";
-import Layout from "@/components/Layout";
-import SearchBar from "@/components/SearchBar";
+import CategoryFilter from "@/components/common/CategoryFilter";
+import ComponentCard from "@/components/common/ComponentCard";
+import Layout from "@/components/layout/Layout";
+import SearchBar from "@/components/search/SearchBar";
 import { useComponents } from "@/hooks/useComponents";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { getFavoriteIds, toggleFavorite } from "@/services/favoritesService";

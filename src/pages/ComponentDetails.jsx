@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import CodeBlock from "@/components/CodeBlock";
-import ComponentPlayground from "@/components/ComponentPlayground";
-import ResponsivePreview from "@/components/ResponsivePreview";
+import CodeBlock from "@/components/common/CodeBlock";
+import ComponentPlayground from "@/components/search/ComponentPlayground";
+import ResponsivePreview from "@/components/search/ResponsivePreview";
 
-import Layout from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 
 import { deleteComponent, fetchComponentById, getShowcaseDemo } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
@@ -271,6 +271,10 @@ const ComponentDetail = () => {
     authUser && item && (authUser.id === item.createdBy || authUser.role === "admin")
   );
 
+  const useCaseText = item?.useCase || `Use this ${item?.name || "component"} in ${item?.category || "UI"} workflows where configurable behavior and reusable styling are required.`;
+  const accessibilityText = item?.accessibilityNotes || "Keyboard interaction, ARIA labels, and visible focus states should be validated for this component before production rollout.";
+  const responsiveText = item?.responsiveNotes || "This component supports responsive rendering and should be tested across small, medium, and large viewport breakpoints.";
+
   if (!item) {
     if (isLoading) {
       return (
@@ -407,6 +411,24 @@ const ComponentDetail = () => {
             </div>
           </div>
         </div>
+
+        <section className="details-notes" aria-label="Component documentation notes">
+          <h2>Documentation Notes</h2>
+          <div className="details-notes-grid">
+            <article>
+              <h3>Use Case</h3>
+              <p>{useCaseText}</p>
+            </article>
+            <article>
+              <h3>Accessibility Notes</h3>
+              <p>{accessibilityText}</p>
+            </article>
+            <article>
+              <h3>Responsive Behavior</h3>
+              <p>{responsiveText}</p>
+            </article>
+          </div>
+        </section>
       </div>
 
     </Layout>

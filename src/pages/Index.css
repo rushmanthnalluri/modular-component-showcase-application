@@ -117,6 +117,7 @@
   .component-grid {
     grid-template-columns: 1fr;
   }
+
 }
 
 html[data-theme="dark"] .hero-content h1 span:first-child {
@@ -138,3 +139,4 @@ html[data-theme="dark"] .category-route-note {
   border-color: rgba(249, 115, 22, 0.35);
   color: #fdba74;
 }
+

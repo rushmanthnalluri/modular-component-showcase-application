@@ -39,7 +39,7 @@ export default [
   },
   {
     ...js.configs.recommended,
-    files: ["backend/**/*.{js,mjs}", "scripts/**/*.mjs"],
+    files: ["backend/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",

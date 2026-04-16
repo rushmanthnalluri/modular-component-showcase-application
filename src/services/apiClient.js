@@ -1,9 +1,9 @@
 
 const RENDER_API_BASE_URL = "https://modular-component-showcase-application.onrender.com/api";
+const DEFAULT_DEV_API_BASE_URL = "/api";
 const API_BASE_URL =
-  import.meta.env.PROD
-    ? RENDER_API_BASE_URL
-    : (import.meta.env.VITE_API_BASE_URL || "/api");
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? RENDER_API_BASE_URL : DEFAULT_DEV_API_BASE_URL);
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
@@ -69,6 +69,10 @@ async function callApi(method, url, body, options = {}) {
       // ignore parse errors
     }
     throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return {};
   }
 
   return response.json();
