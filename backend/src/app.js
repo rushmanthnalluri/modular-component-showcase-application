@@ -282,8 +282,6 @@ apiRouter.use(
         User,
         Component,
         SubmissionHistory,
-        Rating,
-        Review,
         requireAuth,
         requireCsrf,
         syncSqlUserAccount,

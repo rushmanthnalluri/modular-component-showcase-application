@@ -8,6 +8,17 @@ import Layout from "@/components/layout/Layout";
 
 import { deleteComponent, fetchComponentById, getShowcaseDemo } from "@/services/componentsStore";
 import { subscribeToAuthUser } from "@/services/authAccess";
+import {
+  createComponentDiscussion,
+  createComponentReview,
+  getComponentRatings,
+  listComponentDiscussions,
+  listComponentReviews,
+  markReviewHelpful,
+  moderateComponentDiscussion,
+  submitComponentRating,
+} from "@/services/componentEngagementService";
+import { useToast } from "@/use-toast";
 import "./ComponentDetails.css";
 
 function parseDemoControlValue(control, rawValue) {
@@ -129,6 +140,18 @@ const ComponentDetail = () => {
   const [authUser, setAuthUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [demoValues, setDemoValues] = useState({});
+  const [ratingsSummary, setRatingsSummary] = useState({ average: 0, total: 0 });
+  const [reviews, setReviews] = useState([]);
+  const [discussions, setDiscussions] = useState([]);
+  const [engagementLoading, setEngagementLoading] = useState(true);
+  const [ratingInput, setRatingInput] = useState(5);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewComment, setReviewComment] = useState("");
+  const [discussionMessage, setDiscussionMessage] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [isSubmittingDiscussion, setIsSubmittingDiscussion] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => subscribeToAuthUser(setAuthUser), []);
 
@@ -155,6 +178,62 @@ const ComponentDetail = () => {
   useEffect(() => {
     setPreviewSrc(item?.screenshot || item?.thumbnail || "");
   }, [item]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadEngagement = async () => {
+      if (!item?.id) {
+        setRatingsSummary({ average: 0, total: 0 });
+        setReviews([]);
+        setDiscussions([]);
+        setEngagementLoading(false);
+        return;
+      }
+
+      setEngagementLoading(true);
+      try {
+        const [ratingData, reviewData, discussionData] = await Promise.all([
+          getComponentRatings(item.id),
+          listComponentReviews(item.id, { sort: "helpful", page: 1, limit: 8 }),
+          listComponentDiscussions(item.id),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        setRatingsSummary({ average: ratingData.average, total: ratingData.total });
+        setReviews(reviewData.reviews);
+        setDiscussions(discussionData);
+      } catch (error) {
+        if (active) {
+          const isMissingComponent = String(error?.message || "")
+            .toLowerCase()
+            .includes("component not found");
+          if (isMissingComponent) {
+            setRatingsSummary({ average: 0, total: 0 });
+            setReviews([]);
+            setDiscussions([]);
+            return;
+          }
+          toast({
+            title: "Engagement data unavailable",
+            description: "Some ratings, reviews, or discussions could not be loaded.",
+          });
+        }
+      } finally {
+        if (active) {
+          setEngagementLoading(false);
+        }
+      }
+    };
+
+    loadEngagement();
+    return () => {
+      active = false;
+    };
+  }, [item?.id, toast]);
 
   const demoDefinition = useMemo(() => getShowcaseDemo(item?.id || ""), [item?.id]);
   const demoControls = useMemo(() => demoDefinition?.controls ?? [], [demoDefinition]);
@@ -270,6 +349,108 @@ const ComponentDetail = () => {
   const canDelete = Boolean(
     authUser && item && (authUser.id === item.createdBy || authUser.role === "admin")
   );
+  const canModerateDiscussion = String(authUser?.role || "").toLowerCase() === "admin";
+
+  const refreshEngagement = async () => {
+    if (!item?.id) {
+      return;
+    }
+
+    const [ratingData, reviewData, discussionData] = await Promise.all([
+      getComponentRatings(item.id),
+      listComponentReviews(item.id, { sort: "helpful", page: 1, limit: 8 }),
+      listComponentDiscussions(item.id),
+    ]);
+    setRatingsSummary({ average: ratingData.average, total: ratingData.total });
+    setReviews(reviewData.reviews);
+    setDiscussions(discussionData);
+  };
+
+  const handleSubmitRating = async () => {
+    if (!authUser) {
+      toast({ title: "Login required", description: "Sign in to submit a rating." });
+      return;
+    }
+
+    setIsSubmittingRating(true);
+    try {
+      await submitComponentRating(item.id, ratingInput);
+      await refreshEngagement();
+      toast({ title: "Rating saved", description: "Your rating has been recorded." });
+    } catch {
+      toast({ title: "Rating failed", description: "Unable to save your rating." });
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
+  const handleSubmitReview = async (event) => {
+    event.preventDefault();
+    if (!authUser) {
+      toast({ title: "Login required", description: "Sign in to submit a review." });
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await createComponentReview(item.id, {
+        rating: ratingInput,
+        title: reviewTitle,
+        comment: reviewComment,
+      });
+      setReviewTitle("");
+      setReviewComment("");
+      await refreshEngagement();
+      toast({ title: "Review posted", description: "Your review is now visible." });
+    } catch {
+      toast({ title: "Review failed", description: "Unable to post your review." });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const handleSubmitDiscussion = async (event) => {
+    event.preventDefault();
+    if (!authUser) {
+      toast({ title: "Login required", description: "Sign in to join discussion." });
+      return;
+    }
+
+    setIsSubmittingDiscussion(true);
+    try {
+      await createComponentDiscussion(item.id, { message: discussionMessage });
+      setDiscussionMessage("");
+      await refreshEngagement();
+      toast({ title: "Discussion posted", description: "Message added to thread." });
+    } catch {
+      toast({ title: "Discussion failed", description: "Unable to post message." });
+    } finally {
+      setIsSubmittingDiscussion(false);
+    }
+  };
+
+  const handleHelpfulVote = async (reviewId, helpful) => {
+    if (!authUser) {
+      toast({ title: "Login required", description: "Sign in to vote on reviews." });
+      return;
+    }
+
+    try {
+      await markReviewHelpful(item.id, reviewId, helpful);
+      await refreshEngagement();
+    } catch {
+      toast({ title: "Vote failed", description: "Unable to register your vote." });
+    }
+  };
+
+  const handleDiscussionStatus = async (discussionId, status) => {
+    try {
+      await moderateComponentDiscussion(item.id, discussionId, status);
+      await refreshEngagement();
+    } catch {
+      toast({ title: "Update failed", description: "Unable to update discussion status." });
+    }
+  };
 
   const useCaseText = item?.useCase || `Use this ${item?.name || "component"} in ${item?.category || "UI"} workflows where configurable behavior and reusable styling are required.`;
   const accessibilityText = item?.accessibilityNotes || "Keyboard interaction, ARIA labels, and visible focus states should be validated for this component before production rollout.";
@@ -426,6 +607,132 @@ const ComponentDetail = () => {
             <article>
               <h3>Responsive Behavior</h3>
               <p>{responsiveText}</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="details-engagement" aria-label="Component engagement">
+          <h2>Ratings, Reviews, and Discussion</h2>
+
+          <div className="details-engagement-summary">
+            <span>Average Rating: {Number(ratingsSummary.average || 0).toFixed(2)} / 5</span>
+            <span>Total Ratings: {Number(ratingsSummary.total || 0)}</span>
+            <span>Total Reviews: {reviews.length}</span>
+            <span>Discussion Threads: {discussions.length}</span>
+          </div>
+
+          <div className="details-engagement-actions">
+            <label htmlFor="rating-input">Your rating</label>
+            <select
+              id="rating-input"
+              value={ratingInput}
+              onChange={(event) => setRatingInput(Number(event.target.value))}
+            >
+              {[1, 2, 3, 4, 5].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="filter-btn"
+              onClick={handleSubmitRating}
+              disabled={isSubmittingRating || engagementLoading}
+            >
+              {isSubmittingRating ? "Saving..." : "Submit Rating"}
+            </button>
+          </div>
+
+          <div className="details-engagement-grid">
+            <article className="details-engagement-card">
+              <h3>Post Review</h3>
+              <form onSubmit={handleSubmitReview} className="details-engagement-form">
+                <input
+                  type="text"
+                  value={reviewTitle}
+                  onChange={(event) => setReviewTitle(event.target.value)}
+                  placeholder="Review title"
+                  maxLength={80}
+                />
+                <textarea
+                  value={reviewComment}
+                  onChange={(event) => setReviewComment(event.target.value)}
+                  placeholder="Share your experience"
+                  rows={4}
+                  required
+                />
+                <button type="submit" className="filter-btn active" disabled={isSubmittingReview}>
+                  {isSubmittingReview ? "Posting..." : "Post Review"}
+                </button>
+              </form>
+
+              <div className="details-engagement-list">
+                {reviews.map((review) => (
+                  <div className="details-engagement-item" key={review._id || review.id}>
+                    <strong>{review.title || "Review"}</strong>
+                    <p>{review.comment}</p>
+                    <div className="details-engagement-item-meta">
+                      <span>Rating: {Number(review.rating || 0).toFixed(1)} / 5</span>
+                      <span>Helpful: {Number(review.helpful || 0)}</span>
+                      <span>Unhelpful: {Number(review.unhelpful || 0)}</span>
+                    </div>
+                    <div className="details-engagement-item-actions">
+                      <button type="button" onClick={() => handleHelpfulVote(review._id || review.id, true)}>
+                        Helpful
+                      </button>
+                      <button type="button" onClick={() => handleHelpfulVote(review._id || review.id, false)}>
+                        Unhelpful
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {!engagementLoading && reviews.length === 0 ? <p>No reviews yet.</p> : null}
+              </div>
+            </article>
+
+            <article className="details-engagement-card">
+              <h3>Discussion</h3>
+              <form onSubmit={handleSubmitDiscussion} className="details-engagement-form">
+                <textarea
+                  value={discussionMessage}
+                  onChange={(event) => setDiscussionMessage(event.target.value)}
+                  placeholder="Ask a question or add implementation notes"
+                  rows={4}
+                  required
+                />
+                <button type="submit" className="filter-btn active" disabled={isSubmittingDiscussion}>
+                  {isSubmittingDiscussion ? "Posting..." : "Post Message"}
+                </button>
+              </form>
+
+              <div className="details-engagement-list">
+                {discussions.map((discussion) => (
+                  <div className="details-engagement-item" key={discussion._id || discussion.id}>
+                    <p>{discussion.message}</p>
+                    <div className="details-engagement-item-meta">
+                      <span>Status: {discussion.status || "active"}</span>
+                    </div>
+                    {canModerateDiscussion ? (
+                      <div className="details-engagement-item-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleDiscussionStatus(discussion._id || discussion.id, "active")}
+                        >
+                          Set Active
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDiscussionStatus(discussion._id || discussion.id, "hidden")}
+                        >
+                          Hide
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+                {!engagementLoading && discussions.length === 0 ? <p>No discussion threads yet.</p> : null}
+              </div>
             </article>
           </div>
         </section>

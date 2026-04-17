@@ -1,4 +1,8 @@
 import { apiRequest } from "@/services/apiClient";
+import {
+  mapBackendIdsToLocal,
+  resolveBackendComponentId,
+} from "@/services/componentLookupService";
 
 const LOCAL_KEY = "favoriteComponentIds";
 
@@ -20,8 +24,9 @@ export async function getFavoriteIds() {
   try {
     const payload = await apiRequest("/users/me/favorites", { method: "GET" });
     if (payload && Array.isArray(payload.favorites)) {
-      writeLocal(payload.favorites);
-      return payload.favorites.map(String);
+      const localIds = mapBackendIdsToLocal(payload.favorites).map(String);
+      writeLocal(localIds);
+      return localIds;
     }
   } catch {
     // fall back to local
@@ -33,15 +38,17 @@ export async function getFavoriteIds() {
 export async function toggleFavorite(componentId) {
   const id = String(componentId || "").trim();
   if (!id) return readLocal();
+  const backendId = await resolveBackendComponentId(id, { allowRefresh: true });
 
   try {
-    const payload = await apiRequest(`/users/me/favorites/${encodeURIComponent(id)}`, {
+    const payload = await apiRequest(`/users/me/favorites/${encodeURIComponent(backendId || id)}`, {
       method: "POST",
       body: JSON.stringify({}),
     });
     if (payload && Array.isArray(payload.favorites)) {
-      writeLocal(payload.favorites);
-      return payload.favorites.map(String);
+      const localIds = mapBackendIdsToLocal(payload.favorites).map(String);
+      writeLocal(localIds);
+      return localIds;
     }
   } catch {
     // local-only toggle if backend not reachable / not logged in

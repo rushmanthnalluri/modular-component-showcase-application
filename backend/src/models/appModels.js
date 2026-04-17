@@ -44,6 +44,7 @@ userSchema.index({ createdAt: -1 });
 const componentSchema = new mongoose.Schema(
     {
         id: { type: String, required: true, unique: true },
+        slug: { type: String, default: "", trim: true },
         name: { type: String, required: true, trim: true },
         description: { type: String, required: true, trim: true },
         descriptionMarkdown: { type: String, default: "", trim: true }, // Markdown support
@@ -123,6 +124,14 @@ const componentSchema = new mongoose.Schema(
         // Accessibility
         accessibilityScore: { type: Number, default: 0, min: 0, max: 100 },
         accessibilityReport: { type: String, default: "" },
+
+        // Showcase metadata
+        difficulty: { type: String, default: "" },
+        useCase: { type: String, default: "" },
+        accessibilityNotes: { type: String, default: "" },
+        responsiveNotes: { type: String, default: "" },
+        demoAvailable: { type: Boolean, default: false },
+        previewMetadata: { type: mongoose.Schema.Types.Mixed, default: {} },
     },
     { timestamps: true }
 );
@@ -133,6 +142,7 @@ componentSchema.index({ tags: 1 });
 componentSchema.index({ createdAt: -1 });
 componentSchema.index({ averageRating: -1 });
 componentSchema.index({ viewCount: -1 });
+componentSchema.index({ slug: 1 });
 
 // Rating Schema
 const ratingSchema = new mongoose.Schema(

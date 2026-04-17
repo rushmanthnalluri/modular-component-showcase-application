@@ -15,12 +15,14 @@ const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUserRole, setAuthUserRole] = useState("");
   const [canAddComponent, setCanAddComponent] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthUser((authUser) => {
       setIsAuthenticated(Boolean(authUser));
+      setAuthUserRole(String(authUser?.role || "").toLowerCase());
       setCanAddComponent(canAccessAddComponent(authUser));
     });
 
@@ -30,6 +32,7 @@ const Header = () => {
   const handleLogout = async () => {
     await logoutUser();
     setIsAuthenticated(false);
+    setAuthUserRole("");
     setCanAddComponent(false);
     setIsMenuOpen(false);
     navigate("/login", { replace: true });
@@ -81,15 +84,14 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
-              <Link className="btn-outline" to="/dashboard">
-                Dashboard
-              </Link>
-              <Link className="btn-outline" to="/templates">
-                Templates
-              </Link>
               {canAddComponent ? (
                 <Link className="btn-outline" to="/add-component">
                   Add Component
+                </Link>
+              ) : null}
+              {authUserRole === "admin" ? (
+                <Link className="btn-outline" to="/admin/sql">
+                  SQL Admin
                 </Link>
               ) : null}
               <button
@@ -147,15 +149,14 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                  Dashboard
-                </Link>
-                <Link to="/templates" onClick={() => setIsMenuOpen(false)}>
-                  Templates
-                </Link>
                 {canAddComponent ? (
                   <Link to="/add-component" onClick={() => setIsMenuOpen(false)}>
                     Add Component
+                  </Link>
+                ) : null}
+                {authUserRole === "admin" ? (
+                  <Link to="/admin/sql" onClick={() => setIsMenuOpen(false)}>
+                    SQL Admin
                   </Link>
                 ) : null}
                 <button

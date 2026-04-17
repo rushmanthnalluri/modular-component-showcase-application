@@ -1,14 +1,13 @@
 import { Toaster } from "@/components/feedback/Toaster";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
+import AdminRoute from "@/components/common/AdminRoute";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 
 const Index = lazy(() => import("./pages/Index"));
 const ComponentDetail = lazy(() => import("./pages/ComponentDetails"));
 const ComponentCode = lazy(() => import("./pages/ComponentCode"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Templates = lazy(() => import("./pages/Templates"));
 const Tutorials = lazy(() => import("./pages/Tutorials"));
 const TutorialManager = lazy(() => import("./pages/TutorialManager"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -17,6 +16,10 @@ const Help = lazy(() => import("./pages/Help"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const AddComponentPage = lazy(() => import("./pages/AddComponentPage"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Reviews = lazy(() => import("./pages/Reviews"));
+const Discussions = lazy(() => import("./pages/Discussions"));
+const SqlAdmin = lazy(() => import("./pages/SqlAdmin"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -51,22 +54,6 @@ const App = () => {
                 )}
               />
             </Route>
-            <Route
-              path="/dashboard"
-              element={(
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              )}
-            />
-            <Route
-              path="/templates"
-              element={(
-                <ProtectedRoute>
-                  <Templates />
-                </ProtectedRoute>
-              )}
-            />
             <Route path="/tutorials" element={<Tutorials />} />
             <Route
               path="/tutorials/manage"
@@ -78,6 +65,26 @@ const App = () => {
             />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route
+              path="/favorites"
+              element={(
+                <ProtectedRoute>
+                  <Favorites />
+                </ProtectedRoute>
+              )}
+            />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/discussions" element={<Discussions />} />
+            <Route
+              path="/admin/sql"
+              element={(
+                <ProtectedRoute>
+                  <AdminRoute>
+                    <SqlAdmin />
+                  </AdminRoute>
+                </ProtectedRoute>
+              )}
+            />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/help" element={<Help />} />
