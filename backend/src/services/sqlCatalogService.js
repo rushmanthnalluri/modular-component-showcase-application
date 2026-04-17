@@ -3,8 +3,18 @@ import { sqlQuery } from "../sql/db.js";
 function mapUser(row) {
     return {
         userId: row.user_id,
+        mongoUserId: row.mongo_user_id || null,
         name: row.name,
+        fullName: row.full_name,
         email: row.email,
+        phone: row.phone,
+        role: row.role,
+        isVerifiedDeveloper: Boolean(row.is_verified_developer),
+        bio: row.bio,
+        avatarUrl: row.avatar_url,
+        socialLinks: row.social_links,
+        stats: row.stats,
+        emailPreferences: row.email_preferences,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     };

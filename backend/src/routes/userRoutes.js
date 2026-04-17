@@ -7,6 +7,8 @@ export function createUserRouter({
   Review,
   requireAuth,
   requireCsrf,
+  syncSqlUserAccount = async () => {},
+  syncSqlUserFavorites = async () => {},
 }) {
   const router = express.Router();
 
@@ -62,6 +64,7 @@ export function createUserRouter({
       }
 
       await user.save();
+      await syncSqlUserAccount(user);
 
       return res.json({
         user: {
@@ -202,7 +205,7 @@ export function createUserRouter({
       return res.status(400).json({ message: "componentId is required." });
     }
 
-    const user = await User.findById(req.user.id).select("favorites");
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -217,6 +220,8 @@ export function createUserRouter({
 
     user.favorites = favorites;
     await user.save();
+    await syncSqlUserAccount(user);
+    await syncSqlUserFavorites(user, favorites);
 
     return res.json({ favorites });
   });

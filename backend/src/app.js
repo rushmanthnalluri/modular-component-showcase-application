@@ -41,6 +41,7 @@ import { createSqlRouter } from "./routes/sqlRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
 import { initializeSqlSchema } from "./sql/initSchema.js";
 import { hasSqlConnectionConfig, pingSql } from "./sql/db.js";
+import { syncSqlDiscussion, syncSqlRating, syncSqlReview, syncSqlUserAccount, syncSqlUserFavorites } from "./services/userSyncService.js";
 import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
 
 const app = express();
@@ -241,6 +242,7 @@ apiRouter.use(
         readCsrfToken,
         requireCsrf,
         sendEmail,
+        syncSqlUserAccount,
     })
 );
 apiRouter.use(
@@ -259,6 +261,10 @@ apiRouter.use(
         requireAuth,
         requireDeveloper,
         requireCsrf,
+        syncSqlRating,
+        syncSqlReview,
+        syncSqlDiscussion,
+        syncSqlUserAccount,
     })
 );
 apiRouter.use(
@@ -280,6 +286,8 @@ apiRouter.use(
         Review,
         requireAuth,
         requireCsrf,
+        syncSqlUserAccount,
+        syncSqlUserFavorites,
     })
 );
 
@@ -289,8 +297,11 @@ apiRouter.use(
     createReviewsRouter({
         Review,
         Component,
+        User,
         requireAuth,
         requireCsrf,
+        syncSqlReview,
+        syncSqlUserAccount,
     })
 );
 apiRouter.use(
@@ -298,8 +309,11 @@ apiRouter.use(
     createDiscussionsRouter({
         Discussion,
         Component,
+        User,
         requireAuth,
         requireCsrf,
+        syncSqlDiscussion,
+        syncSqlUserAccount,
     })
 );
 

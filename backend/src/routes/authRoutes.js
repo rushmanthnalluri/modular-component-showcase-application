@@ -15,6 +15,7 @@ export function createAuthRouter({
     readCsrfToken,
     requireCsrf,
     sendEmail,
+    syncSqlUserAccount = async () => {},
 }) {
     const router = express.Router();
 
@@ -37,7 +38,7 @@ export function createAuthRouter({
 
             const passwordHash = await bcrypt.hash(password, 10);
 
-            await User.create({
+            const user = await User.create({
                 fullName,
                 email,
                 phone,
@@ -45,6 +46,8 @@ export function createAuthRouter({
                 role,
                 isVerifiedDeveloper: role === "developer",
             });
+
+            await syncSqlUserAccount(user);
 
             return res.status(201).json({ message: "Registration successful." });
         } catch (error) {
@@ -70,6 +73,8 @@ export function createAuthRouter({
             if (!isValidPassword) {
                 return res.status(401).json({ message: "Invalid email or password." });
             }
+
+            await syncSqlUserAccount(user);
 
             const token = createAuthToken(user.id);
             issueAuthCookie(req, res, token);
@@ -122,6 +127,8 @@ export function createAuthRouter({
             } catch (mailError) {
                 console.warn("Password reset email failed:", mailError.message);
             }
+
+            await syncSqlUserAccount(user);
 
             return res.json({ message: "Password reset successful. Please login with your new password." });
         } catch (error) {
