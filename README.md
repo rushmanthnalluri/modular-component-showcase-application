@@ -1,27 +1,24 @@
-
 # Modular Component Showcase Application
 
-A full-stack React and Node.js platform for exploring, previewing, and publishing reusable UI components.
+A full-stack React and Node.js platform for exploring reusable UI components, seeding them into MongoDB/PostgreSQL, and supporting authenticated feedback workflows.
 
-It includes a local curated showcase and cloud-backed custom components, with authentication, role-based actions, favorites, ratings/reviews, and discussion support.
+The project combines a curated showcase with backend-backed features such as favorites, ratings, reviews, discussions, semantic search, and an admin SQL view.
 
 ## Live URLs
 
 - Frontend: https://rushmanthnalluri.github.io/modular-component-showcase-application/
-- Backend API base: https://modular-component-showcase-application.onrender.com/api
+- Backend API: https://modular-component-showcase-application.onrender.com/api
 - Health endpoint: https://modular-component-showcase-application.onrender.com/health
 
-## Core Features
+## What This Project Does
 
-- Component gallery with category filtering and search
-- Detail page with preview, code blocks, and playground controls
-- Custom component submission for developer/admin roles
-- Favorites sync for authenticated users
-- Ratings and review workflows
-- Component discussions
-- Tutorial/content endpoints and admin content management
-- Contact/support ticket flow with captcha support
-- Light/dark theme support and responsive layout
+- Displays a curated component showcase with search and category filtering
+- Shows component details with preview, code, and responsive/accessibility notes
+- Supports favorites, ratings, reviews, and discussions for authenticated users
+- Syncs selected user interactions into PostgreSQL for reporting and admin views
+- Supports semantic search and Mongo-backed content utilities
+- Includes SQL admin pages and backend seeding for showcase data
+- Provides captcha-protected support/email flows
 
 ## Tech Stack
 
@@ -29,47 +26,38 @@ It includes a local curated showcase and cloud-backed custom components, with au
 - React 18
 - Vite
 - React Router
-- Radix Toast
 - Lucide React
+- Radix Toast
 - React Syntax Highlighter
 
 ### Backend
 - Express 5
 - MongoDB + Mongoose
-- PostgreSQL + raw `pg`
-- JWT + cookie-based sessions
+- PostgreSQL + `pg`
+- JWT auth with cookie sessions
 - bcryptjs
 - Nodemailer
+- express-rate-limit
 
-### Security
-- CSRF token enforcement for `/api` write operations
-- CORS allowlist
+### Security and Reliability
+- CSRF protection for state-changing `/api` requests
+- CORS allowlist for local and production origins
 - Helmet hardening
-- Route-specific rate limiting
-- Input validation/sanitization for auth, components, and support payloads
+- Route-level rate limiting
+- Mongo SRV fallback for environments where DNS SRV lookup fails
 
-### Deployment
-- GitHub Pages (frontend)
-- Render (backend)
-- GitHub Actions (CI, CodeQL, Pages deploy)
-
-## Project Structure
+## Repository Layout
 
 ```text
 .
 ├─ src/
-│  ├─ assets/
 │  ├─ components/
-│  │  ├─ common/
-│  │  ├─ feedback/
-│  │  ├─ layout/
-│  │  └─ search/
 │  ├─ context/
-│  ├─ data/
 │  ├─ demos/
 │  ├─ hooks/
 │  ├─ pages/
 │  ├─ services/
+│  ├─ styles/
 │  ├─ tests/
 │  ├─ App.jsx
 │  └─ main.jsx
@@ -79,6 +67,8 @@ It includes a local curated showcase and cloud-backed custom components, with au
 │  │  ├─ middleware/
 │  │  ├─ models/
 │  │  ├─ routes/
+│  │  ├─ scripts/
+│  │  ├─ seeds/
 │  │  ├─ services/
 │  │  ├─ sql/
 │  │  ├─ tests/
@@ -87,8 +77,6 @@ It includes a local curated showcase and cloud-backed custom components, with au
 ├─ docs/
 ├─ public/
 ├─ .github/workflows/
-├─ package.json
-├─ vite.config.js
 └─ README.md
 ```
 
@@ -100,11 +88,11 @@ It includes a local curated showcase and cloud-backed custom components, with au
 npm install
 ```
 
-Root install triggers backend install via `postinstall`.
+The root install also installs backend dependencies through `postinstall`.
 
 ### 2) Configure frontend env
 
-Create `.env` in repo root:
+Create a root `.env` file:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5000/api
@@ -117,7 +105,7 @@ Create `backend/.env`:
 ```bash
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/modular_components
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/modular_components
 SQL_AUTO_MIGRATE=true
 JWT_SECRET=your_secure_jwt_secret
 FRONTEND_ORIGINS=http://localhost:8080,http://localhost:5173
@@ -153,112 +141,95 @@ Local URLs:
 - Frontend: http://localhost:8080
 - Backend: http://localhost:5000
 
+### 5) Seed showcase data
+
+```bash
+npm --prefix backend run seed:showcase
+```
+
+This seeds the curated showcase components into MongoDB and PostgreSQL.
+
 ## Scripts
 
-- `npm run dev`: start frontend dev server
-- `npm run start`: start backend server (root script proxies to backend)
-- `npm run build`: production frontend build
-- `npm run preview`: preview built frontend
-- `npm run lint`: ESLint
-- `npm run test`: backend tests
-- `npm run test:ui`: frontend tests
-- `npm run test:all`: backend + frontend tests
-- `npm run predeploy`: production frontend build for GitHub Pages
+Root:
+
+- `npm run dev`: start the Vite frontend dev server
+- `npm run start`: start the backend server through the root package
+- `npm run build`: build the frontend for production
+- `npm run preview`: preview the production frontend build
+- `npm run lint`: run ESLint
+- `npm run test`: run backend tests
+- `npm run test:ui`: run frontend tests
+- `npm run test:all`: run backend and frontend tests
+- `npm run predeploy`: create the production frontend build for Pages
 - `npm run deploy`: publish `dist` to GitHub Pages
 
-Backend tests run from `backend/src/tests`.
+Backend:
+
+- `npm --prefix backend run start`: start the Express API
+- `npm --prefix backend run dev`: start the backend with nodemon
+- `npm --prefix backend run test`: run backend integration/unit tests
+- `npm --prefix backend run seed:showcase`: seed showcase components into MongoDB and PostgreSQL
 
 ## API Overview
 
 ### System
 - `GET /health`
 
-### Auth
+### Authentication and Users
 - `GET /api/auth/csrf`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
-- `POST /api/auth/forgot-password`
+- `GET /api/users/me`
+- `PUT /api/users/me`
+- `GET /api/users/me/favorites`
+- `POST /api/users/me/favorites/:componentId`
 
-### Components
+### Components and Engagement
 - `GET /api/components`
 - `GET /api/components/:id`
 - `POST /api/components`
 - `PUT /api/components/:id`
 - `DELETE /api/components/:id`
-- `GET /api/components/stats/most-viewed`
-- `GET /api/components/stats/top-rated`
-- `POST /api/components/:id/ratings`
 - `GET /api/components/:id/reviews`
 - `POST /api/components/:id/reviews`
 - `GET /api/components/:id/discussions`
 - `POST /api/components/:id/discussions`
+- `POST /api/components/:id/ratings`
 
-### SQL
+### SQL and Mongo Utilities
 - `GET /api/sql/users`
 - `GET /api/sql/categories`
 - `GET /api/sql/components`
 - `POST /api/sql/components`
 - `PUT /api/sql/components/:id`
 - `DELETE /api/sql/components/:id`
-
-### Mongo
 - `GET /api/reviews`
 - `POST /api/reviews`
 - `GET /api/discussions`
 - `POST /api/discussions`
-- `GET /api/logs`
 - `POST /api/search`
+- `GET /api/logs`
 - `POST /api/embeddings`
-- `POST /api/mongo/search/semantic`
-- `GET /api/mongo/descriptions/:componentId`
-
-### Users
-- `GET /api/users/me`
-- `PUT /api/users/me`
-- `GET /api/users/me/dashboard`
-- `GET /api/users/me/favorites`
-- `POST /api/users/me/favorites/:componentId`
 
 ### Content and Support
 - `GET /api/content/tutorials`
 - `GET /api/content/tutorials/:slug`
 - `POST /api/email/send`
-- `GET /api/captcha/getcaptcha/:length`
-
-## Security Notes
-
-- `/api` requests are routed through cookie parsing, CSRF cookie issuance, and CSRF validation before state-changing handlers run.
-- Auth, component write, user update, and support endpoints all require token-backed requests from the frontend.
-- The repository has had a CodeQL `missing-token-validation` false positive on the middleware chain before; the current `/api` router structure is the intended protection pattern.
-- `/health` reports both MongoDB and PostgreSQL status in a compact JSON payload.
+- `GET /captcha/getcaptcha/:length`
 
 ## Deployment Notes
 
-- Pushing to `main` triggers CI and frontend deployment workflows.
-- Frontend base path is configured for GitHub Pages:
-  `/modular-component-showcase-application/`
-- Backend runs independently on Render and is consumed by the frontend through API endpoints.
-
-### Render Backend Environment Variables
-
-- `PORT`
-- `MONGODB_URI`
-- `DATABASE_URL`
-- `SQL_AUTO_MIGRATE`
-- `JWT_SECRET`
-- `FRONTEND_ORIGINS`
-- `ALLOW_MEMORY_FALLBACK=false`
-
-### MongoDB Atlas Notes
-
-- Use an Atlas SRV connection string in `MONGODB_URI`.
-- Allow Render egress access (or temporary `0.0.0.0/0`) in Atlas network access.
-- Ensure the Atlas user in the URI has read/write privileges for your application database.
+- GitHub Pages hosts the frontend.
+- Render hosts the backend API.
+- Frontend base path is configured for `/modular-component-showcase-application/`.
+- The backend accepts `MONGODB_URI`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGINS`, and `SQL_AUTO_MIGRATE` in production.
+- If using MongoDB Atlas, provide an SRV connection string and allow Render access in the Atlas network rules.
 
 ## Architecture Notes
 
-- Current backend/data architecture: [docs/database-layer-extension.md](docs/database-layer-extension.md)
+- Backend/data architecture: [docs/database-layer-extension.md](docs/database-layer-extension.md)
 
 ## Author
 
