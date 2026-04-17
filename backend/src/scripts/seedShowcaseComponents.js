@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { User, Component } from "../models/appModels.js";
 import { initializeSqlSchema } from "../sql/initSchema.js";
 import { closeSqlPool, hasSqlConnectionConfig, sqlQuery } from "../sql/db.js";
+import { connectMongoWithSrvFallback, isMongoSrvUri } from "../utils/mongoSrvFallback.js";
 import {
   SHOWCASE_COMPONENT_SEED_USER,
   showcaseComponentsSeedData,
@@ -18,38 +19,45 @@ async function ensureMongoConnection() {
     throw new Error("MONGODB_URI is required to run showcase seeding.");
   }
 
-  await mongoose.connect(uri, {
+  const connectOptions = {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     connectTimeoutMS: 10000,
     maxPoolSize: 10,
     minPoolSize: 1,
+  };
+
+  const { usedSrvFallback } = await connectMongoWithSrvFallback({
+    mongoUri: uri,
+    connect: mongoose.connect.bind(mongoose),
+    connectOptions,
   });
+
+  if (usedSrvFallback && isMongoSrvUri(uri)) {
+    console.warn("[seed-showcase] SRV DNS lookup failed; connected using DNS-over-HTTPS fallback URI.");
+  }
 }
 
 async function ensureMongoSeedUser() {
-  const values = {
-    fullName: SHOWCASE_COMPONENT_SEED_USER.fullName,
-    email: SHOWCASE_COMPONENT_SEED_USER.email,
-    role: SHOWCASE_COMPONENT_SEED_USER.role,
-    phone: "",
-    isVerifiedDeveloper: true,
-  };
+  const fullName = SHOWCASE_COMPONENT_SEED_USER.fullName;
+  const email = SHOWCASE_COMPONENT_SEED_USER.email;
+  const role = SHOWCASE_COMPONENT_SEED_USER.role;
 
   const user = await User.findOneAndUpdate(
-    { email: values.email },
+    { email },
     {
       $set: {
-        fullName: values.fullName,
-        role: values.role,
+        fullName,
+        role,
         isVerifiedDeveloper: true,
       },
       $setOnInsert: {
-        ...values,
+        email,
+        phone: "",
         passwordHash: "showcase-seed-no-login",
       },
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
 
   return user;
@@ -98,7 +106,7 @@ async function seedMongoComponents(seedUser) {
           createdAt: startedAt,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
   }
 }
