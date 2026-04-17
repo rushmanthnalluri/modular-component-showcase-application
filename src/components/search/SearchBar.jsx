@@ -18,7 +18,7 @@ function SearchBar({ value = "", onChange }) {
       <input
         id="component-search"
         type="text"
-        placeholder="Search components..."
+        placeholder="Search components, use cases, or UI ideas..."
         aria-label="Search components"
         value={value}
         onChange={handleChange}

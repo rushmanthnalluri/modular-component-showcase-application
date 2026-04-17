@@ -232,6 +232,16 @@
   line-height: 1.45;
 }
 
+.component-card-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
 .component-link {
   text-decoration: none;
   display: inline-flex;

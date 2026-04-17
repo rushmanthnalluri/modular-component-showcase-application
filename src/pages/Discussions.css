@@ -1,0 +1,39 @@
+.discussions-page {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  min-height: calc(100vh - 160px);
+}
+
+.discussions-page p {
+  margin: 8px 0 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.discussions-state {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.discussions-list {
+  display: grid;
+  gap: 12px;
+}
+
+.discussions-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 12px;
+}
+
+.discussions-item p {
+  margin: 0 0 8px;
+}
+
+.discussions-item span {
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+}

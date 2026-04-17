@@ -4,7 +4,6 @@ export function createUserRouter({
   User,
   Component,
   SubmissionHistory,
-  Review,
   requireAuth,
   requireCsrf,
   syncSqlUserAccount = async () => {},
@@ -80,55 +79,6 @@ export function createUserRouter({
     } catch (error) {
       console.error("Update profile error:", error.message);
       return res.status(500).json({ message: "Unable to update profile." });
-    }
-  });
-
-  // GET user dashboard
-  router.get("/me/dashboard", requireAuth, async (req, res) => {
-    try {
-      // Get submitted components
-      const submittedComponents = await Component.find({ createdBy: req.user._id })
-        .sort({ createdAt: -1 })
-        .lean();
-
-      // Get submission history
-      const submissionHistory = await SubmissionHistory.find({ userId: req.user._id })
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .lean();
-
-      // Get user's reviews
-      const userReviews = await Review.find({ userId: req.user._id })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .lean();
-
-      // Calculate statistics
-      const totalComponentsViewed = await Component.aggregate([
-        { $match: { createdBy: req.user._id } },
-        { $group: { _id: null, totalViews: { $sum: "$viewCount" } } },
-      ]);
-
-      const averageRating = submittedComponents.length > 0
-        ? submittedComponents.reduce((sum, c) => sum + (c.averageRating || 0), 0) / submittedComponents.length
-        : 0;
-
-      return res.json({
-        stats: {
-          totalComponentsSubmitted: submittedComponents.length,
-          totalComponentsViewed: totalComponentsViewed[0]?.totalViews || 0,
-          averageRating: averageRating.toFixed(2),
-          totalReviewsReceived: await Review.countDocuments({
-            componentId: { $in: submittedComponents.map(c => c._id) },
-          }),
-        },
-        components: submittedComponents,
-        recentHistory: submissionHistory,
-        userReviews,
-      });
-    } catch (error) {
-      console.error("Dashboard error:", error.message);
-      return res.status(500).json({ message: "Unable to fetch dashboard." });
     }
   });
 

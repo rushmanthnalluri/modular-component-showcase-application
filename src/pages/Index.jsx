@@ -7,6 +7,7 @@ import SearchBar from "@/components/search/SearchBar";
 import { useComponents } from "@/hooks/useComponents";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { getFavoriteIds, toggleFavorite } from "@/services/favoritesService";
+import { semanticComponentSearch } from "@/services/componentEngagementService";
 import { categories } from "@/data/components.data";
 import "./Index.css";
 
@@ -17,7 +18,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [semanticLoading, setSemanticLoading] = useState(false);
+  const [semanticIds, setSemanticIds] = useState([]);
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
@@ -122,23 +124,116 @@ const Index = () => {
     await removeComponent(id);
   };
 
-  // Derived: filtered view of the component list — never stored in state.
-  const filteredComponents = useMemo(() => {
-    const searchText = searchQuery.trim().toLowerCase();
-
+  const baseScopedComponents = useMemo(() => {
     return componentItems.filter((item) => {
-      const isFavorite = favoriteIds.includes(item.id);
       const matchesCategory = activeCategory === "all" || item.category === activeCategory;
-      const matchesFavorites = !showFavoritesOnly || isFavorite;
-      const matchesSearch =
-        searchText === "" ||
-        item.name.toLowerCase().includes(searchText) ||
-        item.description.toLowerCase().includes(searchText) ||
-        item.tags.some((tag) => tag.toLowerCase().includes(searchText));
-
-      return matchesCategory && matchesFavorites && matchesSearch;
+      return matchesCategory;
     });
-  }, [activeCategory, componentItems, favoriteIds, searchQuery, showFavoritesOnly]);
+  }, [activeCategory, componentItems]);
+
+  const normalizedQuery = useMemo(() => searchQuery.trim().toLowerCase(), [searchQuery]);
+  const queryTokens = useMemo(
+    () => normalizedQuery.split(/\s+/).filter(Boolean),
+    [normalizedQuery]
+  );
+  const shouldUseSemanticSearch = queryTokens.length >= 2;
+
+  const keywordRankedComponents = useMemo(() => {
+    if (!normalizedQuery) {
+      return baseScopedComponents;
+    }
+
+    const scored = baseScopedComponents
+      .map((item) => {
+        const name = String(item.name || "").toLowerCase();
+        const description = String(item.description || "").toLowerCase();
+        const category = String(item.category || "").toLowerCase();
+        const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag || "").toLowerCase()) : [];
+
+        const hasMatch =
+          name.includes(normalizedQuery) ||
+          description.includes(normalizedQuery) ||
+          category.includes(normalizedQuery) ||
+          tags.some((tag) => tag.includes(normalizedQuery));
+
+        if (!hasMatch) {
+          return null;
+        }
+
+        let score = 0;
+        if (name.includes(normalizedQuery)) score += 5;
+        if (category.includes(normalizedQuery)) score += 4;
+        if (tags.some((tag) => tag.includes(normalizedQuery))) score += 3;
+        if (description.includes(normalizedQuery)) score += 2;
+        if (name === normalizedQuery) score += 3;
+
+        return { item, score };
+      })
+      .filter(Boolean)
+      .sort((left, right) => right.score - left.score || String(left.item.name).localeCompare(String(right.item.name)));
+
+    return scored.map((entry) => entry.item);
+  }, [baseScopedComponents, normalizedQuery]);
+
+  useEffect(() => {
+    let active = true;
+
+    const runHybridSearch = async () => {
+      if (!shouldUseSemanticSearch || !normalizedQuery) {
+        setSemanticIds([]);
+        return;
+      }
+
+      setSemanticLoading(true);
+      try {
+        const items = await semanticComponentSearch(normalizedQuery, 24);
+        if (!active) {
+          return;
+        }
+        setSemanticIds(items.map((item) => String(item.componentId || "")).filter(Boolean));
+      } catch {
+        if (active) setSemanticIds([]);
+      } finally {
+        if (active) {
+          setSemanticLoading(false);
+        }
+      }
+    };
+
+    runHybridSearch();
+    return () => {
+      active = false;
+    };
+  }, [normalizedQuery, shouldUseSemanticSearch]);
+
+  const visibleComponents = useMemo(() => {
+    if (!normalizedQuery) {
+      return baseScopedComponents;
+    }
+
+    if (!shouldUseSemanticSearch) {
+      return keywordRankedComponents;
+    }
+
+    if (semanticIds.length === 0) {
+      return keywordRankedComponents;
+    }
+
+    const mapById = new Map(baseScopedComponents.map((item) => [item.id, item]));
+    const keywordIds = new Set(keywordRankedComponents.map((item) => item.id));
+    const merged = [...keywordRankedComponents];
+
+    semanticIds.forEach((id) => {
+      if (!keywordIds.has(id)) {
+        const candidate = mapById.get(id);
+        if (candidate) {
+          merged.push(candidate);
+        }
+      }
+    });
+
+    return merged;
+  }, [baseScopedComponents, keywordRankedComponents, normalizedQuery, semanticIds, shouldUseSemanticSearch]);
 
   return (
     <Layout>
@@ -155,15 +250,6 @@ const Index = () => {
                 clean single-page React application.
               </p>
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
-              <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "center" }}>
-                <button
-                  type="button"
-                  className={`filter-btn ${showFavoritesOnly ? "active" : ""}`}
-                  onClick={() => setShowFavoritesOnly((prev) => !prev)}
-                >
-                  Favorites
-                </button>
-              </div>
             </div>
           </div>
         </section>
@@ -176,14 +262,14 @@ const Index = () => {
                 onCategoryChange={handleCategoryChange}
               />
             </div>
-            {isLoading ? (
+            {isLoading || semanticLoading ? (
               <div className="loader-wrap" role="status" aria-live="polite">
                 <div className="loader" aria-hidden="true" />
                 <span className="sr-only">Loading components</span>
               </div>
-            ) : filteredComponents.length > 0 ? (
+            ) : visibleComponents.length > 0 ? (
               <div className="component-grid">
-                {filteredComponents.map((component) => (
+                {visibleComponents.map((component) => (
                   <ComponentCard
                     key={component.id}
                     id={component.id}
@@ -193,6 +279,8 @@ const Index = () => {
                     tags={component.tags}
                     isFavorite={favoriteIds.includes(component.id)}
                     onToggleFavorite={handleToggleFavorite}
+                    averageRating={component.averageRating}
+                    totalReviews={component.totalReviews}
                     canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
                     onDelete={handleDelete}
                   />
@@ -200,7 +288,7 @@ const Index = () => {
               </div>
             ) : (
               <div className="empty-state">
-                No components found. Try adjusting search or category.
+                No matching components found.
               </div>
             )}
           </div>
