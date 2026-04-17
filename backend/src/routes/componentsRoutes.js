@@ -16,6 +16,10 @@ export function createComponentsRouter({
     requireAuth,
     requireDeveloper,
     requireCsrf,
+    syncSqlRating = async () => {},
+    syncSqlReview = async () => {},
+    syncSqlDiscussion = async () => {},
+    syncSqlUserAccount = async () => {},
 }) {
     const router = express.Router();
     const announcementQueue = new Map();
@@ -534,6 +538,11 @@ export function createComponentsRouter({
                 });
             }
 
+            const user = (await User.findById(req.user._id).lean()) || req.user;
+            await syncSqlUserAccount(user);
+            const latestRating = existingRating || (await Rating.findOne({ componentId: component._id, userId: req.user._id }).lean());
+            await syncSqlRating(latestRating, { user, componentMongoId: component.id });
+
             // Recalculate average rating
             const ratings = await Rating.find({ componentId: component._id });
             const average = ratings.length > 0
@@ -595,6 +604,10 @@ export function createComponentsRouter({
                 comment,
                 isVerified: false,
             });
+
+            const user = (await User.findById(req.user._id).lean()) || req.user;
+            await syncSqlUserAccount(user);
+            await syncSqlReview(review, { user, componentMongoId: component.id });
 
             // Update total reviews count
             const reviewCount = await Review.countDocuments({ componentId: component._id, status: "approved" });
@@ -668,6 +681,10 @@ export function createComponentsRouter({
             }
 
             await review.save();
+            const component = await Component.findOne({ id: req.params.componentId }).select("id").lean();
+            const user = (await User.findById(req.user._id).lean()) || req.user;
+            await syncSqlUserAccount(user);
+            await syncSqlReview(review, { user, componentMongoId: component?.id || req.params.componentId });
             return res.json(review);
         } catch (error) {
             console.error("Error marking review:", error.message);
@@ -777,6 +794,10 @@ export function createComponentsRouter({
                 message,
             });
 
+            const user = (await User.findById(req.user._id).lean()) || req.user;
+            await syncSqlUserAccount(user);
+            await syncSqlDiscussion(discussion, { user, componentMongoId: component.id });
+
             const populated = await discussion.populate("userId", "fullName avatarUrl");
             return res.status(201).json(populated);
         } catch (error) {
@@ -801,6 +822,11 @@ export function createComponentsRouter({
 
             discussion.status = req.body?.status === "active" ? "active" : "hidden";
             await discussion.save();
+
+            const component = await Component.findById(discussion.componentId).select("id").lean();
+            const user = (await User.findById(req.user._id).lean()) || req.user;
+            await syncSqlUserAccount(user);
+            await syncSqlDiscussion(discussion, { user, componentMongoId: component?.id || "" });
 
             return res.json({ status: discussion.status });
         } catch (error) {
