@@ -1,6 +1,14 @@
 import express from "express";
 
-export function createDiscussionsRouter({ Discussion, Component, requireAuth, requireCsrf }) {
+export function createDiscussionsRouter({
+    Discussion,
+    Component,
+    User = null,
+    requireAuth,
+    requireCsrf,
+    syncSqlDiscussion = async () => {},
+    syncSqlUserAccount = async () => {},
+}) {
     const router = express.Router();
 
     router.get("/", async (req, res) => {
@@ -38,6 +46,10 @@ export function createDiscussionsRouter({ Discussion, Component, requireAuth, re
             parentId,
             message,
         });
+
+        const user = User ? (await User.findById(req.user._id).lean()) || req.user : req.user;
+        await syncSqlUserAccount(user);
+        await syncSqlDiscussion(discussion, { user, componentMongoId: component.id });
 
         return res.status(201).json({ discussion });
     });

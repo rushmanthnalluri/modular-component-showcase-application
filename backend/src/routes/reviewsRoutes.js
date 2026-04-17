@@ -1,6 +1,14 @@
 import express from "express";
 
-export function createReviewsRouter({ Review, Component, requireAuth, requireCsrf }) {
+export function createReviewsRouter({
+    Review,
+    Component,
+    User = null,
+    requireAuth,
+    requireCsrf,
+    syncSqlReview = async () => {},
+    syncSqlUserAccount = async () => {},
+}) {
     const router = express.Router();
 
     router.get("/", async (req, res) => {
@@ -33,6 +41,10 @@ export function createReviewsRouter({ Review, Component, requireAuth, requireCsr
             comment,
             status: "approved",
         });
+
+        const user = User ? (await User.findById(req.user._id).lean()) || req.user : req.user;
+        await syncSqlUserAccount(user);
+        await syncSqlReview(review, { user, componentMongoId: component.id });
 
         return res.status(201).json({ review });
     });
