@@ -1,5 +1,10 @@
 import { components } from "@/data/components.data";
 import { apiRequest } from "@/services/apiClient";
+import {
+  preloadComponentLookup,
+  registerBackendComponents,
+  resolveBackendComponentId,
+} from "@/services/componentLookupService";
 
 let lastCloudSyncError = null;
 const VERIFIER_NAME_PREFIX = "Verifier Component";
@@ -45,6 +50,15 @@ function mapCloudComponent(rawItem) {
     performanceMetrics: rawItem.performanceMetrics || {},
     accessibilityScore: Number(rawItem.accessibilityScore || 0),
     accessibilityReport: String(rawItem.accessibilityReport || ""),
+    difficulty: String(rawItem.difficulty || ""),
+    useCase: String(rawItem.useCase || ""),
+    accessibilityNotes: String(rawItem.accessibilityNotes || ""),
+    responsiveNotes: String(rawItem.responsiveNotes || ""),
+    demoAvailable: Boolean(rawItem.demoAvailable),
+    previewMetadata:
+      rawItem.previewMetadata && typeof rawItem.previewMetadata === "object"
+        ? rawItem.previewMetadata
+        : {},
     createdAt: String(rawItem.createdAt || ""),
     updatedAt: String(rawItem.updatedAt || ""),
     code: {
@@ -70,9 +84,12 @@ async function getCloudComponents() {
     return [];
   }
 
-  return collection
+  const mapped = collection
     .map((item) => mapCloudComponent(item))
     .filter((item) => item.id && !isVerifierArtifact(item));
+
+  registerBackendComponents(mapped);
+  return mapped;
 }
 
 export function getCloudComponentsStatus() {
@@ -92,8 +109,30 @@ export function getCloudComponentsStatus() {
 export async function getAllComponents() {
   try {
     const customComponents = await getCloudComponents();
+    await preloadComponentLookup();
     lastCloudSyncError = null;
-    return [...components, ...customComponents];
+
+    const localMap = new Map(components.map((item) => [item.id, item]));
+    const mergedLocals = components.map((localItem) => {
+      const backendMatch = customComponents.find((cloudItem) => cloudItem.id === localItem.id);
+      if (!backendMatch) {
+        return localItem;
+      }
+
+      return {
+        ...backendMatch,
+        ...localItem,
+        id: localItem.id,
+        averageRating: backendMatch.averageRating,
+        totalReviews: backendMatch.totalReviews,
+        viewCount: backendMatch.viewCount,
+        createdAt: backendMatch.createdAt,
+        updatedAt: backendMatch.updatedAt,
+      };
+    });
+
+    const cloudOnly = customComponents.filter((item) => !localMap.has(item.id));
+    return [...mergedLocals, ...cloudOnly];
   } catch (error) {
     lastCloudSyncError =
       error instanceof Error
@@ -156,14 +195,35 @@ export async function addCustomComponent({
 
 export async function fetchComponentById(id) {
   const local = components.find((c) => c.id === id);
-  if (local) return local;
+  const backendId = await resolveBackendComponentId(id, {
+    localName: local?.name,
+    allowRefresh: true,
+  });
 
   try {
-    const payload = await apiRequest(`/components/${id}`, {
+    const payload = await apiRequest(`/components/${backendId || id}`, {
       method: "GET",
     });
-    return mapCloudComponent(payload);
+    const mapped = mapCloudComponent(payload);
+
+    if (!local) {
+      return mapped;
+    }
+
+    return {
+      ...mapped,
+      ...local,
+      id: local.id,
+      averageRating: mapped.averageRating,
+      totalReviews: mapped.totalReviews,
+      viewCount: mapped.viewCount,
+      createdAt: mapped.createdAt,
+      updatedAt: mapped.updatedAt,
+    };
   } catch {
+    if (local) {
+      return local;
+    }
     return null;
   }
 }

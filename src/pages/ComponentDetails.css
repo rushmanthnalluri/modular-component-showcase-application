@@ -286,6 +286,131 @@
   line-height: 1.5;
 }
 
+.details-engagement {
+  margin-top: 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 14px;
+}
+
+.details-engagement h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.details-engagement-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.details-engagement-summary span {
+  border: 1px solid hsl(var(--border-light));
+  border-radius: 8px;
+  background: hsl(var(--bg-main));
+  padding: 8px;
+  font-size: 13px;
+}
+
+.details-engagement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.details-engagement-actions select {
+  min-height: var(--btn-height);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--btn-radius);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 0 10px;
+}
+
+.details-engagement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.details-engagement-card {
+  border: 1px solid hsl(var(--border-light));
+  border-radius: 10px;
+  background: hsl(var(--bg-main));
+  padding: 12px;
+}
+
+.details-engagement-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.details-engagement-form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.details-engagement-form input,
+.details-engagement-form textarea {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 10px;
+  font: inherit;
+}
+
+.details-engagement-list {
+  display: grid;
+  gap: 8px;
+}
+
+.details-engagement-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--card));
+  padding: 10px;
+}
+
+.details-engagement-item p {
+  margin: 6px 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+}
+
+.details-engagement-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.details-engagement-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.details-engagement-item-actions button {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--btn-radius);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  min-height: var(--btn-height);
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.details-engagement-item-actions button:hover {
+  background: hsl(var(--bg-main));
+}
+
 @media (max-width: 980px) {
   .details-grid {
     grid-template-columns: 1fr;

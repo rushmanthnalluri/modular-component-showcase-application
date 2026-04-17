@@ -11,6 +11,8 @@ const ComponentCard = ({
   tags = [],
   isFavorite = false,
   onToggleFavorite,
+  averageRating = 0,
+  totalReviews = 0,
   canDelete,
   onDelete,
 }) => {
@@ -61,6 +63,10 @@ const ComponentCard = ({
             ))}
           </div>
         ) : null}
+        <div className="component-card-metrics" aria-label="Component rating summary">
+          <span>Rating: {Number(averageRating || 0).toFixed(1)} / 5</span>
+          <span>Reviews: {Number(totalReviews || 0)}</span>
+        </div>
         <div className="component-card-actions">
           <Link to={`/component/${id}`} className="component-link">
             View Component

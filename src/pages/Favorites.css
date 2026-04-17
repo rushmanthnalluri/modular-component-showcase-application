@@ -1,0 +1,23 @@
+.favorites-page {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  min-height: calc(100vh - 160px);
+}
+
+.favorites-page h1 {
+  margin: 0;
+}
+
+.favorites-page p {
+  margin: 8px 0 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.favorites-loading,
+.favorites-empty {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 16px;
+  color: hsl(var(--muted-foreground));
+}
