@@ -1,25 +1,22 @@
-
-const RENDER_API_BASE_URL = "https://modular-component-showcase-application.onrender.com/api";
 const DEFAULT_DEV_API_BASE_URL = "/api";
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? RENDER_API_BASE_URL : DEFAULT_DEV_API_BASE_URL);
+const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-const ENABLE_READONLY_FALLBACK = import.meta.env.VITE_ENABLE_READONLY_FALLBACK !== "false";
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
 let csrfBootstrapPromise = null;
 let memoryCsrfToken = null;
 
-function isSafeReadonlyMethod(method) {
-  return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
+function normalizeBaseUrl(value) {
+  return String(value || "").trim().replace(/\/+$/, "");
 }
 
-function canFallbackToRender(path, method) {
-  if (!ENABLE_READONLY_FALLBACK || !isSafeReadonlyMethod(method)) {
-    return false;
-  }
+export const API_BASE_URL =
+  normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
+export const GATEWAY_BASE_URL =
+  normalizeBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
+  (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
 
-  return path === "/components" || path.startsWith("/components?");
+function isSafeReadonlyMethod(method) {
+  return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
 }
 
 function getCookieValue(name) {
@@ -66,7 +63,7 @@ async function callApi(method, url, body, options = {}) {
       const data = await response.json();
       message = data?.message || data?.msg || message;
     } catch {
-      // ignore parse errors
+      // Ignore JSON parse errors for non-JSON error responses.
     }
     throw new Error(message);
   }
@@ -110,33 +107,33 @@ export async function apiRequest(path, options = {}) {
     await ensureCsrfCookie(API_BASE_URL);
   }
 
-  try {
-    return await callApi(
-      method,
-      `${API_BASE_URL}${path}`,
-      options.body,
-      {
-        headers,
-      }
-    );
-  } catch (primaryError) {
-    if (API_BASE_URL === RENDER_API_BASE_URL || !canFallbackToRender(path, method)) {
-      throw primaryError;
-    }
+  return callApi(
+    method,
+    `${API_BASE_URL}${path}`,
+    options.body,
+    { headers }
+  );
+}
 
-    try {
-      return await callApi(
-        method,
-        `${RENDER_API_BASE_URL}${path}`,
-        options.body,
-        { headers }
-      );
-    } catch (fallbackError) {
-      if (fallbackError instanceof Error) {
-        throw fallbackError;
-      }
+export async function gatewayRequest(path, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
 
-      throw new Error("Request failed.");
-    }
+  if (!GATEWAY_BASE_URL) {
+    throw new Error("Gateway base URL is not configured.");
   }
+
+  return callApi(
+    method,
+    `${GATEWAY_BASE_URL}${path}`,
+    options.body,
+    {
+      headers,
+      withCredentials: options.withCredentials ?? false,
+      timeoutMs: options.timeoutMs,
+    }
+  );
 }

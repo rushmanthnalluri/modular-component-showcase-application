@@ -1,12 +1,34 @@
 services:
   - type: web
-    name: modular-component-showcase-application
+    name: modular-component-showcase-frontend
+    runtime: static
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeployTrigger: commit
+    pullRequestPreviewsEnabled: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_GATEWAY_URL
+        sync: false
+      - key: VITE_APP_NAME
+        value: Modular Component Showcase Application
+
+  - type: web
+    name: modular-component-showcase-backend
     runtime: node
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
-    autoDeploy: true
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: 20
@@ -18,11 +40,31 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: SQL_AUTO_MIGRATE
-        value: true
       - key: JWT_SECRET
         generateValue: true
-      - key: ALLOW_MEMORY_FALLBACK
-        value: false
       - key: FRONTEND_ORIGINS
         sync: false
+      - key: ALLOW_MEMORY_FALLBACK
+        value: false
+      - key: SQL_AUTO_MIGRATE
+        value: true
+      - key: PGSSL
+        value: true
+
+  - type: web
+    name: modular-component-showcase-gateway
+    runtime: python
+    rootDir: gateway
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: BACKEND_URL
+        sync: false
+      - key: SQL_SERVICE_URL
+        sync: false
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: 20

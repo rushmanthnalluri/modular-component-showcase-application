@@ -1,11 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import express from "express";
-import { rateLimit } from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 import { createSqlRouter } from "../routes/sqlRoutes.js";
 import { createMongoRouter, getMongoLogs, semanticSearch } from "../routes/mongoRoutes.js";
 import { createReviewsRouter } from "../routes/reviewsRoutes.js";
 import { createDiscussionsRouter } from "../routes/discussionsRoutes.js";
+
+const testLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many requests, please try again later.",
+    },
+});
 
 async function withServer(app, run) {
     const server = await new Promise((resolve) => {
@@ -48,13 +59,6 @@ test("GET /api/sql/components returns wrapped component list", async () => {
 test("top-level mongo routes return reviews, discussions, logs, and compact search payloads", async () => {
     const app = express();
     app.use(express.json());
-
-    const testRateLimiter = rateLimit({
-        windowMs: 60 * 1000,
-        max: 50,
-        standardHeaders: true,
-        legacyHeaders: false,
-    });
 
     const allowAuth = (req, _res, next) => {
         req.user = { _id: "user-1", role: "developer" };
@@ -137,9 +141,19 @@ test("top-level mongo routes return reviews, discussions, logs, and compact sear
         requireCsrf: allowCsrf,
     }));
 
-    app.use("/api/mongo", testRateLimiter, createMongoRouter(mongoDeps));
-    app.post("/api/search", testRateLimiter, (req, res) => semanticSearch(req, res, mongoDeps));
-    app.get("/api/logs", testRateLimiter, (req, res) => getMongoLogs(req, res, mongoDeps));
+    app.use("/api/mongo", testLimiter, createMongoRouter(mongoDeps));
+
+    app.post(
+        "/api/search",
+        testLimiter,
+        (req, res) => semanticSearch(req, res, mongoDeps)
+    );
+
+    app.get(
+        "/api/logs",
+        testLimiter,
+        (req, res) => getMongoLogs(req, res, mongoDeps)
+    );
 
     await withServer(app, async (baseUrl) => {
         const reviewsResponse = await fetch(`${baseUrl}/api/reviews`);
