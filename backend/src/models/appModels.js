@@ -267,12 +267,17 @@ const componentDescriptionSchema = new mongoose.Schema(
 const componentEmbeddingSchema = new mongoose.Schema(
     {
         componentId: { type: String, required: true, unique: true, trim: true },
-        text: { type: String, required: true, trim: true },
+        componentName: { type: String, default: "", trim: true },
+        category: { type: String, default: "", trim: true },
+        text: { type: String, default: "", trim: true },
         model: { type: String, default: "mock", trim: true },
         embedding: { type: [Number], required: true },
     },
     { timestamps: true, collection: "component_embeddings" }
 );
+
+componentEmbeddingSchema.index({ componentName: 1 });
+componentEmbeddingSchema.index({ category: 1 });
 
 const usageLogSchema = new mongoose.Schema(
     {

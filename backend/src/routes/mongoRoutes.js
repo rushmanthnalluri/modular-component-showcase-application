@@ -2,6 +2,7 @@ import express from "express";
 import {
     buildDummyEmbeddingFromText,
     cosineSimilarity,
+    generateMockEmbedding,
     normalizeEmbedding,
 } from "../services/vectorSearchService.js";
 
@@ -38,7 +39,7 @@ export async function putMongoDescription(req, res, { ComponentDescription }) {
                 examples: Array.isArray(req.body?.examples) ? req.body.examples : [],
             },
         },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
+        { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     ).lean();
 
     return res.json({ item: updated });
@@ -64,12 +65,14 @@ export async function getMongoLogs(_req, res, { UsageLog }) {
 
 export async function upsertMongoEmbedding(req, res, { ComponentEmbedding }) {
     const componentId = String(req.body?.componentId || "").trim();
-    const text = String(req.body?.text || "").trim();
+    const text = String(req.body?.text || req.body?.componentName || "").trim();
+    const componentName = String(req.body?.componentName || req.body?.text || "").trim();
+    const category = String(req.body?.category || "").trim();
     const model = String(req.body?.model || "manual").trim();
     const embedding = normalizeEmbedding(req.body?.embedding);
 
-    if (!componentId || !text || embedding.length === 0) {
-        return res.status(400).json({ message: "componentId, text and non-empty embedding are required." });
+    if (!componentId || !componentName || embedding.length === 0) {
+        return res.status(400).json({ message: "componentId, componentName and non-empty embedding are required." });
     }
 
     const item = await ComponentEmbedding.findOneAndUpdate(
@@ -77,12 +80,14 @@ export async function upsertMongoEmbedding(req, res, { ComponentEmbedding }) {
         {
             $set: {
                 componentId,
+                componentName,
+                category,
                 text,
                 model,
                 embedding,
             },
         },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
+        { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     ).lean();
 
     return res.status(201).json({ item });
@@ -90,14 +95,18 @@ export async function upsertMongoEmbedding(req, res, { ComponentEmbedding }) {
 
 export async function semanticSearch(req, res, { ComponentEmbedding, Component, UsageLog }) {
     const query = String(req.body?.query || "").trim();
+    if (!query) {
+        return res.status(400).json({ message: "query is required." });
+    }
+
     const providedQueryEmbedding = normalizeEmbedding(req.body?.queryEmbedding);
     const queryEmbedding = providedQueryEmbedding.length > 0
         ? providedQueryEmbedding
-        : buildDummyEmbeddingFromText(query);
+        : generateMockEmbedding(query);
     const limit = Math.max(1, Math.min(25, Number.parseInt(String(req.body?.limit || 10), 10) || 10));
 
-    if (!query || queryEmbedding.length === 0) {
-        return res.status(400).json({ message: "query and queryEmbedding are required." });
+    if (queryEmbedding.length === 0) {
+        return res.status(400).json({ message: "query embedding generation failed." });
     }
 
     const candidates = await ComponentEmbedding.find({}).limit(500).lean();
@@ -105,6 +114,8 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
     const items = candidates
         .map((item) => ({
             componentId: item.componentId,
+            componentName: String(item.componentName || "").trim(),
+            category: String(item.category || "").trim(),
             text: item.text,
             model: item.model,
             score: cosineSimilarity(queryEmbedding, item.embedding),
@@ -121,6 +132,12 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
     const enrichedItems = items.map((item) => ({
         ...item,
         component: componentMap.get(item.componentId) || null,
+        componentName:
+            item.componentName ||
+            String(componentMap.get(item.componentId)?.name || "").trim(),
+        category:
+            item.category ||
+            String(componentMap.get(item.componentId)?.category || "").trim(),
     }));
 
     await UsageLog.create({
@@ -133,6 +150,8 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
 
     const compactItems = enrichedItems.map((item) => ({
         componentId: item.componentId,
+        componentName: item.componentName,
+        category: item.category,
         score: Number(item.score.toFixed(6)),
     }));
 

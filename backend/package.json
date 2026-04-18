@@ -6,7 +6,8 @@
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "test": "node --test src/tests/*.test.js",
-    "seed:showcase": "node src/scripts/seedShowcaseComponents.js"
+    "seed:showcase": "node src/scripts/seedShowcaseComponents.js",
+    "seed:embeddings": "node src/scripts/seedComponentEmbeddings.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
