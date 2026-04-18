@@ -42,6 +42,10 @@ export function buildDummyEmbeddingFromText(text, dimensions = 32) {
     return vector;
 }
 
+export function generateMockEmbedding(text, dimensions = 32) {
+    return buildDummyEmbeddingFromText(text, dimensions);
+}
+
 export function normalizeEmbedding(value) {
     return normalizeVector(value);
 }

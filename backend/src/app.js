@@ -133,6 +133,13 @@ const rateLimitTracker = {
     },
 };
 
+const metricsTracker = {
+    startedAt: Date.now(),
+    requestsTotal: 0,
+    responsesTotal: 0,
+    errorsTotal: 0,
+};
+
 function createAuthToken(userId) {
     return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
 }
@@ -176,6 +183,10 @@ app.use((req, res, next) => {
     if (isSupport) rateLimitTracker.totals.support += 1;
 
     res.on("finish", () => {
+        metricsTracker.responsesTotal += 1;
+        if (res.statusCode >= 500) {
+            metricsTracker.errorsTotal += 1;
+        }
         if (res.statusCode !== 429) {
             return;
         }
@@ -185,6 +196,10 @@ app.use((req, res, next) => {
         if (isSupport) rateLimitTracker.blocked.support += 1;
     });
 
+    next();
+});
+app.use((_req, _res, next) => {
+    metricsTracker.requestsTotal += 1;
     next();
 });
 app.use(express.json({ limit: "1mb" }));
@@ -205,6 +220,26 @@ app.get("/health", async (_req, res) => {
         postgres,
         mode: mongoMode,
     });
+});
+
+app.get("/metrics", (_req, res) => {
+    const uptimeSeconds = Math.max(0, (Date.now() - metricsTracker.startedAt) / 1000);
+    const lines = [
+        "# HELP app_requests_total Total HTTP requests received by the Node backend.",
+        "# TYPE app_requests_total counter",
+        `app_requests_total ${metricsTracker.requestsTotal}`,
+        "# HELP app_responses_total Total HTTP responses sent by the Node backend.",
+        "# TYPE app_responses_total counter",
+        `app_responses_total ${metricsTracker.responsesTotal}`,
+        "# HELP app_errors_total Total HTTP 5xx responses sent by the Node backend.",
+        "# TYPE app_errors_total counter",
+        `app_errors_total ${metricsTracker.errorsTotal}`,
+        "# HELP app_uptime_seconds Backend uptime in seconds.",
+        "# TYPE app_uptime_seconds gauge",
+        `app_uptime_seconds ${uptimeSeconds.toFixed(2)}`,
+    ];
+
+    res.type("text/plain; version=0.0.4").send(`${lines.join("\n")}\n`);
 });
 
 app.use("/captcha", captchaRouter);
