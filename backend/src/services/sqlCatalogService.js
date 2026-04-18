@@ -2,49 +2,39 @@ import { sqlQuery } from "../sql/db.js";
 
 function mapUser(row) {
     return {
-        userId: row.user_id,
-        mongoUserId: row.mongo_user_id || null,
+        id: row.id,
         name: row.name,
-        fullName: row.full_name,
         email: row.email,
-        phone: row.phone,
         role: row.role,
-        isVerifiedDeveloper: Boolean(row.is_verified_developer),
-        bio: row.bio,
-        avatarUrl: row.avatar_url,
-        socialLinks: row.social_links,
-        stats: row.stats,
-        emailPreferences: row.email_preferences,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        created_at: row.created_at,
     };
 }
 
 function mapCategory(row) {
     return {
-        categoryId: row.category_id,
-        categoryName: row.category_name,
-        createdAt: row.created_at,
+        id: row.id,
+        name: row.name,
+        created_at: row.created_at,
     };
 }
 
 function mapComponent(row) {
     return {
-        componentId: row.component_id,
+        id: row.id,
         name: row.name,
         description: row.description,
-        categoryId: row.category_id,
-        userId: row.user_id,
-        categoryName: row.category_name,
-        userName: row.user_name,
-        userEmail: row.email,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        category_id: row.category_id,
+        user_id: row.user_id,
+        created_at: row.created_at,
     };
 }
 
 export async function listUsers() {
-    const { rows } = await sqlQuery("SELECT * FROM users ORDER BY user_id ASC");
+    const { rows } = await sqlQuery(
+        `SELECT user_id AS id, name, email, role, created_at
+         FROM users
+         ORDER BY user_id ASC`
+    );
     return rows.map(mapUser);
 }
 
@@ -82,7 +72,11 @@ export async function deleteUser(userId) {
 }
 
 export async function listCategories() {
-    const { rows } = await sqlQuery("SELECT * FROM categories ORDER BY category_name ASC");
+    const { rows } = await sqlQuery(
+        `SELECT category_id AS id, category_name AS name, created_at
+         FROM categories
+         ORDER BY category_name ASC`
+    );
     return rows.map(mapCategory);
 }
 
@@ -119,10 +113,13 @@ export async function deleteCategory(categoryId) {
 
 export async function listComponents() {
     const { rows } = await sqlQuery(
-        `SELECT c.*, cat.category_name, u.name AS user_name, u.email
+        `SELECT c.component_id AS id,
+                c.name,
+                c.description,
+                c.category_id,
+                c.user_id,
+                c.created_at
          FROM components c
-         JOIN categories cat ON cat.category_id = c.category_id
-         JOIN users u ON u.user_id = c.user_id
          ORDER BY c.component_id ASC`
     );
     return rows.map(mapComponent);
