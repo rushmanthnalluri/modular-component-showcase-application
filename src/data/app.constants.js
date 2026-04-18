@@ -1,6 +1,10 @@
+const configuredAppName = String(
+  import.meta.env.VITE_APP_NAME || "Modular Component Showcase Application"
+).trim();
+
 export const APP_INFO = {
-  shortName: "Modular Showcase",
-  fullName: "Modular Component Showcase",
+  shortName: configuredAppName,
+  fullName: configuredAppName,
   supportEmail: "rushmanth21@gmail.com",
   supportPhoneDisplay: "+91 99123 87093",
   supportPhoneRaw: "+919912387093",

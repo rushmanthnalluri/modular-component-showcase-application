@@ -20,6 +20,26 @@ function resolveConnectionString() {
     return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
 }
 
+function shouldUseSsl(connectionString) {
+    const explicitPgSsl = String(process.env.PGSSL || "").trim().toLowerCase();
+    if (explicitPgSsl === "true") {
+        return true;
+    }
+
+    if (explicitPgSsl === "false") {
+        return false;
+    }
+
+    try {
+        const url = new URL(connectionString);
+        const sslMode = String(url.searchParams.get("sslmode") || "").trim().toLowerCase();
+        const sslEnabled = String(url.searchParams.get("ssl") || "").trim().toLowerCase();
+        return ["require", "verify-ca", "verify-full"].includes(sslMode) || sslEnabled === "true";
+    } catch {
+        return false;
+    }
+}
+
 export function hasSqlConnectionConfig() {
     return Boolean(resolveConnectionString());
 }
@@ -39,7 +59,7 @@ export function getSqlPool() {
         max: Number.parseInt(process.env.PG_POOL_MAX || "10", 10),
         idleTimeoutMillis: Number.parseInt(process.env.PG_IDLE_TIMEOUT_MS || "30000", 10),
         connectionTimeoutMillis: Number.parseInt(process.env.PG_CONNECT_TIMEOUT_MS || "5000", 10),
-        ssl: process.env.PGSSL === "true" ? { rejectUnauthorized: false } : false,
+        ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : false,
     });
 
     pool.on("error", (error) => {

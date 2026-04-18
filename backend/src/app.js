@@ -72,20 +72,39 @@ const mongoConnectOptions = {
     minPoolSize: 1,
 };
 
+function normalizeOriginValue(value) {
+    const trimmedValue = String(value || "").trim();
+    if (!trimmedValue) {
+        return "";
+    }
+
+    try {
+        return new URL(trimmedValue).origin;
+    } catch {
+        return trimmedValue.replace(/\/+$/, "");
+    }
+}
+
 const defaultLocalOrigins = [
+    "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8080",
     "http://localhost:8081",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
     "http://127.0.0.1:4173"
 ];
-const defaultProductionOrigins = ["https://rushmanthnalluri.github.io"];
+const defaultProductionOrigins = [
+    "https://rushmanthnalluri.github.io",
+    "https://modular-component-showcase-frontend.onrender.com",
+];
 const allowedOrigins = Array.from(new Set([
     ...(isProduction ? defaultProductionOrigins : defaultLocalOrigins),
     ...String(process.env.FRONTEND_ORIGINS || "")
         .split(",")
-        .map((origin) => origin.trim())
+        .map((origin) => normalizeOriginValue(origin))
         .filter(Boolean),
-]));
+].map((origin) => normalizeOriginValue(origin)).filter(Boolean)));
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -155,7 +174,8 @@ app.set("trust proxy", 1);
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+            const normalizedOrigin = normalizeOriginValue(origin);
+            if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
                 callback(null, true);
                 return;
             }
