@@ -1,4 +1,5 @@
 import { apiRequest } from "@/services/apiClient";
+import { getAllComponents } from "@/services/componentsStore";
 import {
   mapBackendIdsToLocal,
   preloadComponentLookup,
@@ -48,6 +49,21 @@ export async function getFavoriteIds() {
   }
 
   return readLocal();
+}
+
+export async function getFavoriteComponents() {
+  try {
+    const payload = await apiRequest("/users/me/favorites/components", { method: "GET" });
+    if (payload && Array.isArray(payload.components)) {
+      return payload.components;
+    }
+  } catch {
+    // fall back to local filtering below
+  }
+
+  const favoriteIds = await getFavoriteIds();
+  const components = await getAllComponents();
+  return components.filter((component) => favoriteIds.includes(String(component.id)));
 }
 
 export async function toggleFavorite(componentId) {

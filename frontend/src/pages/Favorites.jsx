@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import ComponentCard from "@/components/common/ComponentCard";
-import { getAllComponents } from "@/services/componentsStore";
-import { getFavoriteIds, toggleFavorite } from "@/services/favoritesService";
+import { getFavoriteIds, getFavoriteComponents, toggleFavorite } from "@/services/favoritesService";
 import { useToast } from "@/use-toast";
 import "./Favorites.css";
 
@@ -18,7 +17,7 @@ const Favorites = () => {
     const load = async () => {
       setIsLoading(true);
       try {
-        const [items, ids] = await Promise.all([getAllComponents(), getFavoriteIds()]);
+        const [items, ids] = await Promise.all([getFavoriteComponents(), getFavoriteIds()]);
         if (!active) {
           return;
         }
@@ -47,9 +46,9 @@ const Favorites = () => {
   const handleToggleFavorite = async (componentId) => {
     const next = await toggleFavorite(componentId);
     setFavoriteIds(next);
+    const updatedFavorites = await getFavoriteComponents();
+    setComponents(updatedFavorites);
   };
-
-  const favoriteComponents = components.filter((component) => favoriteIds.includes(component.id));
 
   return (
     <Layout>
@@ -59,9 +58,9 @@ const Favorites = () => {
 
         {isLoading ? (
           <div className="favorites-loading">Loading favorites...</div>
-        ) : favoriteComponents.length > 0 ? (
+        ) : components.length > 0 ? (
           <div className="component-grid">
-            {favoriteComponents.map((component) => (
+            {components.map((component) => (
               <ComponentCard
                 key={component.id}
                 id={component.id}
