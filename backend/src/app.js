@@ -65,6 +65,7 @@ const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
 const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
 const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 const PORT = Number(process.env.PORT || 5000);
+const HOST = process.env.HOST || "0.0.0.0";
 const mongoUri = process.env.NODE_ENV === "test" ? "" : process.env.MONGODB_URI;
 
 const mongoConnectOptions = {
@@ -820,8 +821,8 @@ export async function startServer() {
     }
 
     await new Promise((resolve, reject) => {
-        httpServer = app.listen(PORT, () => {
-            logger.info(`Server is running on http://localhost:${PORT}`);
+        httpServer = app.listen(PORT, HOST, () => {
+            logger.info(`Server is running on http://${HOST}:${PORT}`);
             resolve();
         });
 
