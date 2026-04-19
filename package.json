@@ -4,7 +4,7 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "npm --prefix backend install",
+    "postinstall": "npm --prefix backend install && echo 'Backend dependencies installed'",
     "start": "npm --prefix backend run start",
     "dev": "vite",
     "build": "vite build",

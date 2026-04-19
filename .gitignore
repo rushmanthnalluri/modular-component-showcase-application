@@ -40,5 +40,12 @@ backend/*.log
 __pycache__/
 .pytest_cache/
 target/
-gateway/
-sql-service/
+
+# Build & test artifacts
+*.out
+*.log
+vitest-*.log
+
+# Legacy migration artifacts
+.tsupgrader/
+.github/modernize/
