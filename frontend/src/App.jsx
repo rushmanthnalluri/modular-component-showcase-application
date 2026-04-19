@@ -24,6 +24,26 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+function resolveRouterBasename() {
+  if (typeof window === "undefined") {
+    return import.meta.env.BASE_URL || "/";
+  }
+
+  const host = String(window.location.hostname || "").toLowerCase();
+
+  // Render and local environments should always use root-based routing.
+  if (host.endsWith(".onrender.com") || host === "localhost" || host === "127.0.0.1") {
+    return "/";
+  }
+
+  // Keep repo subpath routing for GitHub Pages deployments.
+  if (host.endsWith("github.io")) {
+    return import.meta.env.BASE_URL || "/";
+  }
+
+  return "/";
+}
+
 function RouteFallback() {
   return <div role="status" aria-live="polite" style={{ padding: "1rem" }}>Loading page...</div>;
 }
@@ -33,7 +53,7 @@ const App = () => {
     <ErrorBoundary>
       <Toaster />
       <BrowserRouter
-        basename={import.meta.env.BASE_URL}
+        basename={resolveRouterBasename()}
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
