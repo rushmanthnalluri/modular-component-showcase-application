@@ -33,12 +33,18 @@ dist-ssr
 
 # node
 node_modules
+frontend/node_modules
 backend/node_modules
+gateway/node_modules
 dist
 backend/*.log
+frontend/dist
+frontend/.vite/
 *.pyc
 __pycache__/
+gateway/__pycache__/
 .pytest_cache/
+gateway/.pytest_cache/
 target/
 
 # Build & test artifacts
@@ -49,3 +55,6 @@ vitest-*.log
 # Legacy migration artifacts
 .tsupgrader/
 .github/modernize/
+frontend/.env
+backend/.env
+gateway/.env

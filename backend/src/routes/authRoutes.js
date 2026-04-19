@@ -9,12 +9,16 @@ import {
 
 export function createAuthRouter({
     User,
-    createAuthToken,
-    issueAuthCookie,
-    clearAuthCookie,
+    createAccessToken,
+    createRefreshToken,
+    verifyRefreshToken,
+    issueAuthCookies,
+    clearAuthCookies,
+    readRefreshToken,
     readCsrfToken,
     requireCsrf,
     sendEmail,
+    logger = console,
     syncSqlUserAccount = async () => {},
 }) {
     const router = express.Router();
@@ -51,7 +55,7 @@ export function createAuthRouter({
 
             return res.status(201).json({ message: "Registration successful." });
         } catch (error) {
-            console.error("Register error:", error.message, error.stack);
+            logger.error("Register error", { error: error.message, stack: error.stack });
             return res.status(500).json({ message: "Unable to register right now." });
         }
     });
@@ -76,11 +80,12 @@ export function createAuthRouter({
 
             await syncSqlUserAccount(user);
 
-            const token = createAuthToken(user.id);
-            issueAuthCookie(req, res, token);
+            const accessToken = createAccessToken(user.id);
+            const refreshToken = createRefreshToken(user.id);
+            issueAuthCookies(req, res, { accessToken, refreshToken });
 
             return res.json({
-                token,
+                token: accessToken,
                 user: {
                     id: user.id,
                     fullName: user.fullName,
@@ -91,13 +96,49 @@ export function createAuthRouter({
                 },
             });
         } catch (error) {
-            console.error("Login error:", error.message, error.stack);
+            logger.error("Login error", { error: error.message, stack: error.stack });
             return res.status(500).json({ message: "Unable to login right now." });
         }
     });
 
+    router.post("/refresh", requireCsrf, async (req, res) => {
+        try {
+            const refreshToken = readRefreshToken(req);
+            if (!refreshToken) {
+                return res.status(401).json({ message: "Refresh token is required." });
+            }
+
+            const payload = verifyRefreshToken(refreshToken);
+            const user = await User.findById(payload.userId).select(
+                "fullName email phone role isVerifiedDeveloper"
+            );
+
+            if (!user) {
+                return res.status(401).json({ message: "Invalid refresh token." });
+            }
+
+            const newAccessToken = createAccessToken(user.id);
+            const newRefreshToken = createRefreshToken(user.id);
+            issueAuthCookies(req, res, { accessToken: newAccessToken, refreshToken: newRefreshToken });
+
+            return res.json({
+                token: newAccessToken,
+                user: {
+                    id: user.id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    phone: user.phone,
+                    role: user.role,
+                    isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+                },
+            });
+        } catch {
+            return res.status(401).json({ message: "Invalid refresh token." });
+        }
+    });
+
     router.post("/logout", requireCsrf, (req, res) => {
-        clearAuthCookie(req, res);
+        clearAuthCookies(req, res);
         return res.json({ message: "Logged out." });
     });
 
@@ -125,14 +166,14 @@ export function createAuthRouter({
             try {
                 await sendEmail(user.email);
             } catch (mailError) {
-                console.warn("Password reset email failed:", mailError.message);
+                logger.warn("Password reset email failed", { error: mailError.message });
             }
 
             await syncSqlUserAccount(user);
 
             return res.json({ message: "Password reset successful. Please login with your new password." });
         } catch (error) {
-            console.error("Forgot password error:", error.message, error.stack);
+            logger.error("Forgot password error", { error: error.message, stack: error.stack });
             return res.status(500).json({ message: "Unable to reset password right now." });
         }
     });

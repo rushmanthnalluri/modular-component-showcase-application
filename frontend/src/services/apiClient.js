@@ -14,6 +14,21 @@ export const API_BASE_URL =
 export const GATEWAY_BASE_URL =
   normalizeBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
+export const USE_GATEWAY =
+  String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";
+
+function resolveBaseUrl(path = "") {
+  const useGatewayForApi =
+    USE_GATEWAY &&
+    Boolean(GATEWAY_BASE_URL) &&
+    (String(path).startsWith("/api") || String(path).startsWith("/auth") || String(path).startsWith("/"));
+
+  if (useGatewayForApi) {
+    return GATEWAY_BASE_URL;
+  }
+
+  return API_BASE_URL;
+}
 
 function isSafeReadonlyMethod(method) {
   return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
@@ -98,18 +113,22 @@ async function ensureCsrfCookie(baseUrl) {
 
 export async function apiRequest(path, options = {}) {
   const method = String(options.method || "GET").toUpperCase();
+  const baseUrl = resolveBaseUrl(path);
+  const normalizedPath = String(path || "").startsWith("/api")
+    ? String(path)
+    : `${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}${String(path || "")}`;
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
   };
 
   if (!isSafeReadonlyMethod(method)) {
-    await ensureCsrfCookie(API_BASE_URL);
+    await ensureCsrfCookie(`${baseUrl}${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}`);
   }
 
   return callApi(
     method,
-    `${API_BASE_URL}${path}`,
+    `${baseUrl}${normalizedPath}`,
     options.body,
     { headers }
   );

@@ -4,14 +4,11 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "npm --prefix backend install && echo 'Backend dependencies installed'",
-    "start": "npm --prefix backend run start",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "npm --prefix backend run test",
+    "test": "vitest run",
     "test:ui": "vitest run",
-    "test:all": "npm run test && npm run test:ui",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"

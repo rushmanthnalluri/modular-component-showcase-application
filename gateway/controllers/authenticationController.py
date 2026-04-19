@@ -66,6 +66,19 @@ async def login(payload: SigninSchema):
     return await signin(payload)
 
 
+@router.post("/refresh")
+async def refresh(payload: dict | None = None):
+    """Refresh auth session and return a new access token."""
+    try:
+        result = await AuthService.refresh(payload or {})
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Refresh failed: {str(e)}",
+        )
+
+
 @router.post("/logout")
 async def logout():
     """Logout user.
