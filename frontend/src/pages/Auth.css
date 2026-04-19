@@ -150,13 +150,13 @@
   background: transparent;
   padding: 0;
   font-size: 13px;
-  color: #0f172a;
+  color: hsl(var(--foreground));
   font-weight: bold;
   cursor: pointer;
 }
 
 .forgot-password-link:hover {
-  color: #1f2937;
+  color: hsl(var(--primary));
 }
 
 .forgot-password-panel {
@@ -210,8 +210,14 @@
 
 .auth-switch a {
   font-weight: bold;
-  color: #0f172a;
+  color: hsl(var(--primary-dark));
   text-decoration: none;
+}
+
+.auth-switch a:hover,
+.auth-switch a:focus-visible,
+.forgot-password-link:focus-visible {
+  color: hsl(var(--primary));
 }
 
 .auth-submit {
@@ -243,7 +249,7 @@
   margin: 16px 0 0;
   font-size: 13px;
   text-align: center;
-  color: #475569;
+  color: hsl(var(--muted-foreground));
 }
 
 .captcha-group {
