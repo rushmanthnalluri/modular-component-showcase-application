@@ -17,6 +17,7 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUserRole, setAuthUserRole] = useState("");
   const [canAddComponent, setCanAddComponent] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -57,16 +58,27 @@ const Header = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const updateScrollState = () => {
+      setIsScrolled(window.scrollY > 8);
+    };
+
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
+
   return (
-    <header className="app-header">
+    <header className={`app-header ${isScrolled ? "app-header--scrolled" : ""}`}>
       <div className="layout-container app-header-content">
         <Link to="/" className="brand">
           Modular Showcase<span>.</span>
         </Link>
 
         <div className="desktop-actions">
-          <Link className="btn-outline" to="/tutorials">
-            Tutorials
+          <Link className="btn-outline" to="/favorites">
+            Favorites
           </Link>
           <button
             type="button"
@@ -84,6 +96,11 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
+              {canAddComponent ? (
+                <Link className="btn-outline" to="/developer/dashboard">
+                  Developer Dashboard
+                </Link>
+              ) : null}
               {canAddComponent ? (
                 <Link className="btn-outline" to="/add-component">
                   Add Component
@@ -130,8 +147,8 @@ const Header = () => {
       {isMenuOpen ? (
         <div className="mobile-nav-wrap" id="mobile-navigation">
           <nav className="layout-container mobile-nav" aria-label="Mobile navigation">
-            <Link to="/tutorials" onClick={() => setIsMenuOpen(false)}>
-              Tutorials
+            <Link to="/favorites" onClick={() => setIsMenuOpen(false)}>
+              Favorites
             </Link>
             <button
               type="button"
@@ -149,6 +166,11 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
+                {canAddComponent ? (
+                  <Link to="/developer/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    Developer Dashboard
+                  </Link>
+                ) : null}
                 {canAddComponent ? (
                   <Link to="/add-component" onClick={() => setIsMenuOpen(false)}>
                     Add Component

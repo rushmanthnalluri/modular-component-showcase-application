@@ -241,15 +241,18 @@ const Index = () => {
         <section className="index-hero">
           <div className="layout-container">
             <div className="hero-content">
-              <h1>
-                <span>Modular Component</span>
-                <span>Showcase Application</span>
-              </h1>
-              <p>
-                Explore reusable components and prop-driven interactions in a
-                clean single-page React application.
-              </p>
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              <div className="hero-copy">
+                <span className="hero-kicker">Reusable UI system</span>
+                <h1>
+                  <span>Modular Component</span>
+                  <span>Showcase Application</span>
+                </h1>
+                <p>
+                  Explore reusable components and prop-driven interactions in a
+                  clean single-page React application.
+                </p>
+                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              </div>
             </div>
           </div>
         </section>
@@ -288,7 +291,8 @@ const Index = () => {
               </div>
             ) : (
               <div className="empty-state">
-                No matching components found.
+                <strong>No matching components found.</strong>
+                <span>Try a different keyword or switch to another category to continue exploring.</span>
               </div>
             )}
           </div>

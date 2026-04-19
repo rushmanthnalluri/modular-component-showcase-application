@@ -426,8 +426,6 @@ Gateway:
 - `POST /api/embeddings`
 
 ### Content and Support
-- `GET /api/content/tutorials`
-- `GET /api/content/tutorials/:slug`
 - `POST /api/email/send`
 - `GET /captcha/getcaptcha/:length`
 

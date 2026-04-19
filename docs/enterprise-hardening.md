@@ -5,7 +5,6 @@ This document captures the hardening controls implemented in this repository and
 ## Implemented Controls
 
 1. Route authorization hardening
-- `/tutorials/manage` is protected by both authenticated and admin guards.
 - `/admin/sql` remains protected by both authenticated and admin guards.
 - Non-admin access attempts produce a warning toast and are redirected safely.
 
@@ -14,7 +13,6 @@ This document captures the hardening controls implemented in this repository and
   - captcha fallback in `authAccess`
   - local favorites fallback in `favoritesService`
   - local ratings/reviews/discussions fallback in `componentEngagementService`
-  - tutorial content fallback in `contentService`
 
 3. Degraded-mode telemetry
 - Frontend sends best-effort telemetry to `/api/mongo/logs` using event type `CLIENT_DEGRADED_MODE`.

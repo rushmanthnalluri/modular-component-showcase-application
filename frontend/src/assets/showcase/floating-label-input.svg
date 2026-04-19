@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="40" y1="30" x2="600" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0F8FF"/>
+      <stop offset="1" stop-color="#E8F4FF"/>
+    </linearGradient>
+    <linearGradient id="input" x1="160" y1="140" x2="480" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F8FBFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#bg)"/>
+  <circle cx="120" cy="80" r="85" fill="#0284C7" fill-opacity=".08"/>
+  <circle cx="540" cy="280" r="95" fill="#06B6D4" fill-opacity=".09"/>
+  <g>
+    <rect x="160" y="128" width="320" height="88" rx="16" fill="url(#input)" stroke="#06B6D4" stroke-width="2.5"/>
+    <rect x="180" y="108" width="120" height="28" rx="14" fill="#CFFAFE" />
+    <text x="240" y="130" fill="#0369A1" font-family="Arial, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Email Address</text>
+    <text x="180" y="172" fill="#64748B" font-family="Arial, sans-serif" font-size="16">name@example.com</text>
+    <circle cx="470" cy="165" r="3" fill="#06B6D4"/>
+  </g>
+</svg>
