@@ -2,7 +2,7 @@ services:
   - type: web
     name: modular-component-showcase-frontend
     runtime: static
-    rootDir: .
+    rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     autoDeployTrigger: commit
@@ -18,6 +18,8 @@ services:
         sync: false
       - key: VITE_GATEWAY_URL
         sync: false
+      - key: VITE_USE_GATEWAY
+        value: true
       - key: VITE_APP_NAME
         value: Modular Component Showcase Application
 
@@ -56,7 +58,7 @@ services:
     runtime: python
     rootDir: gateway
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:

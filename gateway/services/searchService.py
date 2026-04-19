@@ -50,7 +50,7 @@ class SearchService:
         client = get_service_client(settings.search_service_base_url)
         try:
             async with client as http_client:
-            return await http_client.request_json("GET", "/api/logs")
+                return await http_client.request_json("GET", "/api/logs")
         except httpx.HTTPError as e:
             logger.error(f"Get search history failed: {e}")
             raise
@@ -61,7 +61,7 @@ class SearchService:
         client = get_service_client(settings.search_service_base_url)
         try:
             async with client as http_client:
-            data = await http_client.request_json("GET", "/health")
+                data = await http_client.request_json("GET", "/health")
                 return {"status": "up", "backend": data.get("status", "up")}
         except httpx.HTTPError:
             return {"status": "down", "backend": "down"}

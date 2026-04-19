@@ -43,8 +43,8 @@ def record_request_metric(duration_ms: float, status_code: int) -> None:
         METRICS_STATE["errors_total"] += 1
 
 
-def snapshot_metrics() -> dict:
-    total_requests = METRICS_STATE["requests_total"]
+def snapshot_metrics(include_current_request: bool = False) -> dict:
+    total_requests = METRICS_STATE["requests_total"] + (1 if include_current_request else 0)
     avg_response_time_ms = (
         METRICS_STATE["response_time_total_ms"] / total_requests if total_requests else 0.0
     )
@@ -160,7 +160,7 @@ async def metrics():
         Metrics data
     """
     try:
-        metrics_snapshot = snapshot_metrics()
+        metrics_snapshot = snapshot_metrics(include_current_request=True)
         return {
             **metrics_snapshot,
             "downstream_service_availability": dict(LAST_DOWNSTREAM_AVAILABILITY),

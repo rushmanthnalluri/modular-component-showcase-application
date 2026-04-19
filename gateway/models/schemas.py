@@ -1,19 +1,15 @@
 """Pydantic schemas for request/response validation."""
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field, ConfigDict
+
+EMAIL_PATTERN = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
 
 
 class SignupSchema(BaseModel):
     """User signup request schema."""
 
-    fullName: str = Field(..., min_length=1, max_length=255)
-    email: EmailStr
-    phone: str = Field(..., min_length=10, max_length=20)
-    password: str = Field(..., min_length=8)
-    confirmPassword: str = Field(..., min_length=8)
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "fullName": "John Doe",
                 "email": "john@example.com",
@@ -22,55 +18,56 @@ class SignupSchema(BaseModel):
                 "confirmPassword": "password123",
             }
         }
+    )
+
+    fullName: str = Field(..., min_length=1, max_length=255)
+    email: str = Field(..., pattern=EMAIL_PATTERN)
+    phone: str = Field(..., min_length=10, max_length=20)
+    password: str = Field(..., min_length=8)
+    confirmPassword: str = Field(..., min_length=8)
 
 
 class SigninSchema(BaseModel):
     """User signin request schema."""
 
-    email: EmailStr
-    password: str = Field(..., min_length=1)
-    captcha: Optional[str] = None
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "john@example.com",
                 "password": "password123",
                 "captcha": "ABC123",
             }
         }
+    )
+
+    email: str = Field(..., pattern=EMAIL_PATTERN)
+    password: str = Field(..., min_length=1)
+    captcha: Optional[str] = None
 
 
 class SearchSchema(BaseModel):
     """Search request schema."""
 
-    query: str = Field(..., min_length=1, max_length=500)
-    limit: int = Field(default=10, ge=1, le=100)
-    offset: int = Field(default=0, ge=0)
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "query": "button component",
                 "limit": 10,
                 "offset": 0,
             }
         }
+    )
+
+    query: str = Field(..., min_length=1, max_length=500)
+    limit: int = Field(default=10, ge=1, le=100)
+    offset: int = Field(default=0, ge=0)
 
 
 class ComponentSchema(BaseModel):
     """Component schema for response."""
 
-    id: str
-    name: str
-    description: Optional[str] = None
-    category: Optional[str] = None
-    framework: Optional[str] = None
-    tags: Optional[List[str]] = []
-    previewUrl: Optional[str] = None
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "button-primary",
                 "name": "Primary Button",
@@ -81,22 +78,22 @@ class ComponentSchema(BaseModel):
                 "previewUrl": "https://example.com/preview",
             }
         }
+    )
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    framework: Optional[str] = None
+    tags: Optional[List[str]] = []
+    previewUrl: Optional[str] = None
 
 
 class SQLComponentSchema(BaseModel):
     """SQL component schema."""
 
-    id: int
-    name: str
-    description: str
-    category_id: int
-    user_id: int
-    category_name: Optional[str] = None
-    user_name: Optional[str] = None
-    created_at: Optional[str] = None
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": 1,
                 "name": "Input Component",
@@ -108,18 +105,23 @@ class SQLComponentSchema(BaseModel):
                 "created_at": "2024-01-15T10:30:00Z",
             }
         }
+    )
+
+    id: int
+    name: str
+    description: str
+    category_id: int
+    user_id: int
+    category_name: Optional[str] = None
+    user_name: Optional[str] = None
+    created_at: Optional[str] = None
 
 
 class ServiceHealthSchema(BaseModel):
     """Structured downstream service health information."""
 
-    service: str
-    status: str = Field(..., pattern="^(up|down|unknown)$")
-    response_time_ms: float
-    error_message: Optional[str] = None
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "service": "backend",
                 "status": "up",
@@ -127,25 +129,19 @@ class ServiceHealthSchema(BaseModel):
                 "error_message": None,
             }
         }
+    )
+
+    service: str
+    status: str = Field(..., pattern="^(up|down|unknown)$")
+    response_time_ms: float
+    error_message: Optional[str] = None
 
 
 class HealthCheckSchema(BaseModel):
     """Health check response schema."""
 
-    status: str = Field(..., pattern="^(healthy|degraded|unhealthy)$")
-    gateway: str = Field(..., pattern="^(up|down)$")
-    backend: str = Field(..., pattern="^(up|down)$")
-    auth_service: str = Field(..., pattern="^(up|down)$")
-    search_service: str = Field(..., pattern="^(up|down)$")
-    sql_service: str = Field(..., pattern="^(up|down)$")
-    component_service: str = Field(..., pattern="^(up|down)$")
-    mongo: str = Field(..., pattern="^(up|down)$")
-    postgres: str = Field(..., pattern="^(up|down)$")
-    services: List[ServiceHealthSchema]
-    timestamp: str
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "status": "healthy",
                 "gateway": "up",
@@ -167,18 +163,26 @@ class HealthCheckSchema(BaseModel):
                 "timestamp": "2024-01-15T10:30:00Z",
             }
         }
+    )
+
+    status: str = Field(..., pattern="^(healthy|degraded|unhealthy)$")
+    gateway: str = Field(..., pattern="^(up|down)$")
+    backend: str = Field(..., pattern="^(up|down)$")
+    auth_service: str = Field(..., pattern="^(up|down)$")
+    search_service: str = Field(..., pattern="^(up|down)$")
+    sql_service: str = Field(..., pattern="^(up|down)$")
+    component_service: str = Field(..., pattern="^(up|down)$")
+    mongo: str = Field(..., pattern="^(up|down)$")
+    postgres: str = Field(..., pattern="^(up|down)$")
+    services: List[ServiceHealthSchema]
+    timestamp: str
 
 
 class MetricsSchema(BaseModel):
     """Metrics response schema."""
 
-    requests_total: int
-    requests_success: int
-    requests_error: int
-    avg_response_time_ms: float
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "requests_total": 1000,
                 "requests_success": 950,
@@ -186,3 +190,9 @@ class MetricsSchema(BaseModel):
                 "avg_response_time_ms": 45.2,
             }
         }
+    )
+
+    requests_total: int
+    requests_success: int
+    requests_error: int
+    avg_response_time_ms: float
