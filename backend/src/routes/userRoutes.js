@@ -11,6 +11,44 @@ export function createUserRouter({
 }) {
   const router = express.Router();
 
+  async function resolveFavoritePublicId(rawComponentId) {
+    const value = String(rawComponentId || "").trim();
+    if (!value) {
+      return "";
+    }
+
+    const byPublicId = await Component.findOne({ id: value }).select("id").lean();
+    if (byPublicId?.id) {
+      return String(byPublicId.id);
+    }
+
+    if (/^[a-f0-9]{24}$/i.test(value)) {
+      const byMongoId = await Component.findById(value).select("id").lean();
+      if (byMongoId?.id) {
+        return String(byMongoId.id);
+      }
+    }
+
+    return value;
+  }
+
+  async function normalizeFavoriteIds(ids = []) {
+    const normalized = [];
+    const seen = new Set();
+
+    for (const entry of Array.isArray(ids) ? ids : []) {
+      const resolved = await resolveFavoritePublicId(entry);
+      const key = String(resolved || "").trim();
+      if (!key || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      normalized.push(key);
+    }
+
+    return normalized;
+  }
+
   // GET current user profile
   router.get("/me", requireAuth, async (req, res) => {
     return res.json({
@@ -150,8 +188,22 @@ export function createUserRouter({
 
   // GET favorites
   router.get("/me/favorites", requireAuth, async (req, res) => {
+    const user = await User.findById(req.user.id).select("favorites");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const currentFavorites = Array.isArray(user.favorites) ? user.favorites : [];
+    const normalizedFavorites = await normalizeFavoriteIds(currentFavorites);
+
+    if (JSON.stringify(currentFavorites) !== JSON.stringify(normalizedFavorites)) {
+      user.favorites = normalizedFavorites;
+      await user.save();
+      await syncSqlUserFavorites(user, normalizedFavorites);
+    }
+
     return res.json({
-      favorites: Array.isArray(req.user.favorites) ? req.user.favorites : [],
+      favorites: normalizedFavorites,
     });
   });
 
@@ -167,12 +219,13 @@ export function createUserRouter({
       return res.status(404).json({ message: "User not found." });
     }
 
-    const favorites = Array.isArray(user.favorites) ? user.favorites : [];
-    const existingIndex = favorites.indexOf(componentId);
+    const normalizedComponentId = await resolveFavoritePublicId(componentId);
+    const favorites = await normalizeFavoriteIds(Array.isArray(user.favorites) ? user.favorites : []);
+    const existingIndex = favorites.indexOf(normalizedComponentId);
     if (existingIndex >= 0) {
       favorites.splice(existingIndex, 1);
     } else {
-      favorites.push(componentId);
+      favorites.push(normalizedComponentId);
     }
 
     user.favorites = favorites;
@@ -191,7 +244,13 @@ export function createUserRouter({
         return res.status(404).json({ message: "User not found." });
       }
 
-      const favorites = Array.isArray(user.favorites) ? user.favorites : [];
+      const favorites = await normalizeFavoriteIds(Array.isArray(user.favorites) ? user.favorites : []);
+
+      if (JSON.stringify(user.favorites || []) !== JSON.stringify(favorites)) {
+        user.favorites = favorites;
+        await user.save();
+        await syncSqlUserFavorites(user, favorites);
+      }
 
       const components = await Component.find({ id: { $in: favorites } })
         .lean();
