@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/common/CodeBlock";
 import Layout from "@/components/layout/Layout";
+import loadingIcon from "@/assets/showcase/loading.svg";
 import { fetchComponentById } from "@/services/componentsStore";
 import { copyToClipboard, exportComponentCode, downloadFile, generateImportStatement } from "@/services/exportService";
 import { useToast } from "@/use-toast";
@@ -40,7 +41,9 @@ const ComponentCode = () => {
     return (
       <Layout>
         <div className="layout-container details-state">
-          <h2>Loading component code...</h2>
+          <div className="app-loading" role="status" aria-live="polite">
+            <img src={loadingIcon} alt="Loading" className="app-loading-logo" />
+          </div>
         </div>
       </Layout>
     );
