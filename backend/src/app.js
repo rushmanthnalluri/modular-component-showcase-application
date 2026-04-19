@@ -6,6 +6,7 @@ import helmet from "helmet";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { randomBytes, randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controllers/captchaController.js";
@@ -19,7 +20,6 @@ import {
     ComponentView,
     ComponentDependency,
     SubmissionHistory,
-    BlogPost,
     ComponentDescription,
     ComponentEmbedding,
     UsageLog,
@@ -75,6 +75,21 @@ const mongoConnectOptions = {
     maxPoolSize: 10,
     minPoolSize: 1,
 };
+
+const execFileAsync = (file, args, options) =>
+    new Promise((resolve, reject) => {
+        execFile(file, args, options, (error, stdout, stderr) => {
+            if (error) {
+                reject(Object.assign(error, { stdout, stderr }));
+                return;
+            }
+
+            resolve({ stdout, stderr });
+        });
+    });
+
+const shouldSeedShowcaseOnStart =
+    isProduction || String(process.env.SEED_SHOWCASE_ON_START || "").toLowerCase() === "true";
 
 function normalizeOriginValue(value) {
     const trimmedValue = String(value || "").trim();
@@ -321,7 +336,6 @@ apiRouter.get("/", (_req, res) => {
             email: "POST /api/email/contact, /api/email/support",
             sql: "GET/POST /api/sql/components",
             search: "POST /api/search",
-            content: "GET /api/content/tutorials, POST /api/content/tutorials (admin)",
             admin: "GET /api/admin/rate-limits (admin)",
         },
     });
@@ -489,121 +503,6 @@ apiRouter.get("/admin/dashboard", requireAuth, async (req, res) => {
         logger.error("admin_dashboard_failed", { error: error.message });
         return res.status(500).json({ message: "Unable to fetch dashboard data." });
     }
-});
-
-apiRouter.get("/content/tutorials", async (_req, res) => {
-    try {
-        const posts = await BlogPost.find({ isPublished: true })
-            .sort({ createdAt: -1 })
-            .select("slug title summary tags createdAt updatedAt")
-            .lean();
-        return res.json({ posts });
-    } catch {
-        return res.json({ posts: [] });
-    }
-});
-
-apiRouter.get("/content/tutorials/:slug", async (req, res) => {
-    try {
-        const post = await BlogPost.findOne({ slug: req.params.slug, isPublished: true }).lean();
-        if (!post) {
-            return res.status(404).json({ message: "Post not found." });
-        }
-        return res.json({ post });
-    } catch {
-        return res.status(500).json({ message: "Unable to fetch tutorial." });
-    }
-});
-
-function toSlug(value) {
-    return String(value || "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
-}
-
-apiRouter.post("/content/tutorials", requireAuth, requireCsrf, async (req, res) => {
-    if (String(req.user?.role || "").toLowerCase() !== "admin") {
-        return res.status(403).json({ message: "Admin access required." });
-    }
-
-    const title = String(req.body?.title || "").trim();
-    const markdown = String(req.body?.markdown || "").trim();
-    const summary = String(req.body?.summary || "").trim();
-    const slug = toSlug(req.body?.slug || title);
-    const tags = Array.isArray(req.body?.tags) ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean) : [];
-
-    if (!title || !markdown || !slug) {
-        return res.status(400).json({ message: "title, markdown and slug are required." });
-    }
-
-    try {
-        const post = await BlogPost.create({
-            slug,
-            title,
-            summary,
-            markdown,
-            tags,
-            authorId: req.user._id,
-            isPublished: req.body?.isPublished !== false,
-        });
-        return res.status(201).json({ post });
-    } catch (error) {
-        if (String(error?.message || "").toLowerCase().includes("duplicate")) {
-            return res.status(409).json({ message: "A tutorial with this slug already exists." });
-        }
-        return res.status(500).json({ message: "Unable to create tutorial." });
-    }
-});
-
-apiRouter.put("/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
-    if (String(req.user?.role || "").toLowerCase() !== "admin") {
-        return res.status(403).json({ message: "Admin access required." });
-    }
-
-    const updates = {
-        title: req.body?.title,
-        summary: req.body?.summary,
-        markdown: req.body?.markdown,
-        tags: Array.isArray(req.body?.tags) ? req.body.tags : undefined,
-        isPublished: typeof req.body?.isPublished === "boolean" ? req.body.isPublished : undefined,
-    };
-
-    Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined) {
-            delete updates[key];
-        }
-    });
-
-    try {
-        const post = await BlogPost.findOneAndUpdate(
-            { slug: req.params.slug },
-            { $set: updates },
-            { new: true }
-        );
-        if (!post) {
-            return res.status(404).json({ message: "Tutorial not found." });
-        }
-        return res.json({ post });
-    } catch {
-        return res.status(500).json({ message: "Unable to update tutorial." });
-    }
-});
-
-apiRouter.delete("/content/tutorials/:slug", requireAuth, requireCsrf, async (req, res) => {
-    if (String(req.user?.role || "").toLowerCase() !== "admin") {
-        return res.status(403).json({ message: "Admin access required." });
-    }
-
-    const deleted = await BlogPost.findOneAndDelete({ slug: req.params.slug });
-    if (!deleted) {
-        return res.status(404).json({ message: "Tutorial not found." });
-    }
-
-    return res.json({ message: "Tutorial deleted." });
 });
 
 app.use("/api", apiRouter);
@@ -817,6 +716,19 @@ export async function startServer() {
             }
         } else {
             logger.warn("Skipping PostgreSQL schema initialization: no SQL connection is configured.");
+        }
+    }
+
+    if (shouldSeedShowcaseOnStart) {
+        try {
+            await execFileAsync(process.execPath, ["src/scripts/seedShowcaseComponents.js"], {
+                cwd: process.cwd(),
+                env: process.env,
+                maxBuffer: 10 * 1024 * 1024,
+            });
+            logger.info("Showcase seed completed on startup.");
+        } catch (error) {
+            logger.warn(`Skipping startup showcase seed: ${error.message}`);
         }
     }
 

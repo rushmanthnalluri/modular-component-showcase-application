@@ -1,6 +1,12 @@
 .auth-page {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #a1cbe6, #ffffff);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(96, 165, 250, 0.14), transparent 24%),
+    radial-gradient(circle at 84% 16%, rgba(45, 212, 191, 0.1), transparent 22%),
+    radial-gradient(circle at 50% 72%, rgba(249, 115, 22, 0.05), transparent 26%),
+    linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -8,18 +14,23 @@
 }
 
 .auth-page.with-navbar {
-  min-height: calc(100vh - 80px);
-  padding-top: 104px;
-  padding-bottom: 24px;
+  min-height: calc(100vh - var(--header-height));
+  padding-top: 32px;
+  padding-bottom: 32px;
 }
 
 .auth-card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 22px;
-  box-shadow: none;
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow:
+    0 24px 64px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
 }
@@ -27,7 +38,7 @@
 .auth-card h2 {
   margin: 0 0 18px;
   text-align: center;
-  font-size: 20px;
+  font-size: clamp(20px, 2.6vw, 24px);
   color: #1c1c1e;
 }
 
@@ -37,6 +48,8 @@
   border-radius: 50%;
   overflow: hidden;
   margin: 0 auto 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
 
 .auth-avatar img {
@@ -57,21 +70,28 @@
 .input-group input {
   width: 100%;
   height: 44px;
-  border: 1px solid #f2f2f2;
-  background: #f2f2f2;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 10px;
   box-sizing: border-box;
-  padding: 0 38px;
+  padding: 0 12px 0 38px;
   font-size: 14px;
   color: #111827;
   line-height: 1.2;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: rgba(249, 115, 22, 0.42);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.08);
 }
 
 .input-group select {
   width: 100%;
   height: 44px;
-  border: 1px solid #f2f2f2;
-  background: #f2f2f2;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 10px;
   box-sizing: border-box;
   padding: 0 12px;
@@ -315,11 +335,12 @@
   }
 
   .auth-page.with-navbar {
-    padding-top: 94px;
-    padding-bottom: 14px;
+    padding-top: 20px;
+    padding-bottom: 20px;
   }
 
   .auth-card {
     max-width: 100%;
+    padding: 20px;
   }
 }

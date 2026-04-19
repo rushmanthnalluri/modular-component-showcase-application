@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CodeBlock from "@/components/common/CodeBlock";
+import StarRating from "@/components/common/StarRating";
 import ComponentPlayground from "@/components/search/ComponentPlayground";
 import ResponsivePreview from "@/components/search/ResponsivePreview";
 
@@ -615,25 +616,45 @@ const ComponentDetail = () => {
           <h2>Ratings, Reviews, and Discussion</h2>
 
           <div className="details-engagement-summary">
-            <span>Average Rating: {Number(ratingsSummary.average || 0).toFixed(2)} / 5</span>
-            <span>Total Ratings: {Number(ratingsSummary.total || 0)}</span>
-            <span>Total Reviews: {reviews.length}</span>
-            <span>Discussion Threads: {discussions.length}</span>
+            <div className="details-engagement-summary-rating">
+              <span className="details-summary-label">Average Rating</span>
+              <div className="details-summary-rating-row">
+                <StarRating rating={ratingsSummary.average} showValue={false} className="details-rating" />
+                <strong className="details-summary-value">{Number(ratingsSummary.average || 0).toFixed(1)}</strong>
+              </div>
+            </div>
+            <div className="details-engagement-summary-metric">
+              <span className="details-summary-label">Total Ratings</span>
+              <strong className="details-summary-value">{Number(ratingsSummary.total || 0)}</strong>
+            </div>
+            <div className="details-engagement-summary-metric">
+              <span className="details-summary-label">Total Reviews</span>
+              <strong className="details-summary-value">{reviews.length}</strong>
+            </div>
+            <div className="details-engagement-summary-metric">
+              <span className="details-summary-label">Discussion Threads</span>
+              <strong className="details-summary-value">{discussions.length}</strong>
+            </div>
           </div>
 
           <div className="details-engagement-actions">
-            <label htmlFor="rating-input">Your rating</label>
-            <select
-              id="rating-input"
-              value={ratingInput}
-              onChange={(event) => setRatingInput(Number(event.target.value))}
-            >
+            <label>Your rating</label>
+            <div className="details-rating-picker" role="radiogroup" aria-label="Select your rating">
               {[1, 2, 3, 4, 5].map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
+                <button
+                  key={value}
+                  type="button"
+                  className={value <= ratingInput ? "details-rating-star active" : "details-rating-star"}
+                  onClick={() => setRatingInput(value)}
+                  role="radio"
+                  aria-checked={value === ratingInput}
+                  aria-label={`Rate ${value} out of 5`}
+                >
+                  ★
+                </button>
               ))}
-            </select>
+              <span className="details-rating-value">{ratingInput} / 5</span>
+            </div>
             <button
               type="button"
               className="filter-btn"
@@ -673,7 +694,7 @@ const ComponentDetail = () => {
                     <strong>{review.title || "Review"}</strong>
                     <p>{review.comment}</p>
                     <div className="details-engagement-item-meta">
-                      <span>Rating: {Number(review.rating || 0).toFixed(1)} / 5</span>
+                      <StarRating rating={review.rating} className="details-rating" />
                       <span>Helpful: {Number(review.helpful || 0)}</span>
                       <span>Unhelpful: {Number(review.unhelpful || 0)}</span>
                     </div>
@@ -687,7 +708,12 @@ const ComponentDetail = () => {
                     </div>
                   </div>
                 ))}
-                {!engagementLoading && reviews.length === 0 ? <p>No reviews yet.</p> : null}
+                {!engagementLoading && reviews.length === 0 ? (
+                  <div className="details-empty-state">
+                    <strong>Be the first to review this component.</strong>
+                    <span>Your feedback helps other builders decide what to try next.</span>
+                  </div>
+                ) : null}
               </div>
             </article>
 
@@ -731,7 +757,12 @@ const ComponentDetail = () => {
                     ) : null}
                   </div>
                 ))}
-                {!engagementLoading && discussions.length === 0 ? <p>No discussion threads yet.</p> : null}
+                {!engagementLoading && discussions.length === 0 ? (
+                  <div className="details-empty-state">
+                    <strong>Start the discussion.</strong>
+                    <span>Share implementation notes, questions, or ideas for improvement.</span>
+                  </div>
+                ) : null}
               </div>
             </article>
           </div>

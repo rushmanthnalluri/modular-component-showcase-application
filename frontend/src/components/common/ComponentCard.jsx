@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import "@/styles/showcase-components.css";
+import StarRating from "@/components/common/StarRating";
 
 const ComponentCard = ({
   id,
@@ -44,10 +45,11 @@ const ComponentCard = ({
           {typeof onToggleFavorite === "function" ? (
             <button
               type="button"
-              className="component-favorite-btn"
+              className={isFavorite ? "component-favorite-btn active" : "component-favorite-btn"}
               onClick={() => onToggleFavorite(id)}
               aria-label={isFavorite ? `Unfavorite ${name}` : `Favorite ${name}`}
               title={isFavorite ? "Unfavorite" : "Favorite"}
+              aria-pressed={isFavorite}
             >
               <Star size={18} fill={isFavorite ? "currentColor" : "none"} />
             </button>
@@ -64,7 +66,7 @@ const ComponentCard = ({
           </div>
         ) : null}
         <div className="component-card-metrics" aria-label="Component rating summary">
-          <span>Rating: {Number(averageRating || 0).toFixed(1)} / 5</span>
+          <StarRating rating={averageRating} showValue={false} className="component-card-rating" />
           <span>Reviews: {Number(totalReviews || 0)}</span>
         </div>
         <div className="component-card-actions">

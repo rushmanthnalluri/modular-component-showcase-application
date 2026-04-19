@@ -2,20 +2,20 @@ import { Toaster } from "@/components/feedback/Toaster";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import AdminRoute from "@/components/common/AdminRoute";
+import DeveloperRoute from "@/components/common/DeveloperRoute";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 
 const Index = lazy(() => import("./pages/Index"));
 const ComponentDetail = lazy(() => import("./pages/ComponentDetails"));
 const ComponentCode = lazy(() => import("./pages/ComponentCode"));
-const Tutorials = lazy(() => import("./pages/Tutorials"));
-const TutorialManager = lazy(() => import("./pages/TutorialManager"));
 const Contact = lazy(() => import("./pages/Contact"));
 const About = lazy(() => import("./pages/About"));
 const Help = lazy(() => import("./pages/Help"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const AddComponentPage = lazy(() => import("./pages/AddComponentPage"));
+const DeveloperDashboard = lazy(() => import("./pages/DeveloperDashboard"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Reviews = lazy(() => import("./pages/Reviews"));
 const Discussions = lazy(() => import("./pages/Discussions"));
@@ -74,15 +74,6 @@ const App = () => {
                 )}
               />
             </Route>
-            <Route path="/tutorials" element={<Tutorials />} />
-            <Route
-              path="/tutorials/manage"
-              element={(
-                <ProtectedRoute>
-                  <TutorialManager />
-                </ProtectedRoute>
-              )}
-            />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route
@@ -115,6 +106,16 @@ const App = () => {
               element={(
                 <ProtectedRoute>
                   <AddComponentPage />
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/developer/dashboard"
+              element={(
+                <ProtectedRoute>
+                  <DeveloperRoute>
+                    <DeveloperDashboard />
+                  </DeveloperRoute>
                 </ProtectedRoute>
               )}
             />

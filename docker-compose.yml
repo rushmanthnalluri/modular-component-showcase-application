@@ -5,14 +5,14 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: modular_components
+      POSTGRES_DB: modular_component_showcase_application
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/sql/postgres_schema.sql:/docker-entrypoint-initdb.d/01-postgres_schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d modular_components"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d modular_component_showcase_application"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,7 +57,7 @@ services:
     environment:
       PORT: 5000
       MONGODB_URI: mongodb://mongo:27017/modular_components
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modular_components
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application
       SQL_AUTO_MIGRATE: "true"
       JWT_SECRET: development-secret
       FRONTEND_ORIGINS: http://localhost:5173,http://localhost:8080

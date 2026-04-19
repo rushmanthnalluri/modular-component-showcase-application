@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 260" role="img" aria-labelledby="title desc">
+  <title id="title">Pricing Card Component</title>
+  <desc id="desc">Modern pricing card with highlighted plan and checklist.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+  <rect width="420" height="260" rx="24" fill="url(#bg)" />
+  <rect x="120" y="34" width="180" height="192" rx="18" fill="#ffffff" />
+  <text x="146" y="68" fill="#334155" font-family="Segoe UI, sans-serif" font-size="14" font-weight="700">Pro Plan</text>
+  <text x="146" y="102" fill="#0f172a" font-family="Segoe UI, sans-serif" font-size="26" font-weight="800">$19</text>
+  <text x="196" y="102" fill="#64748b" font-family="Segoe UI, sans-serif" font-size="12">/month</text>
+  <circle cx="150" cy="130" r="4" fill="#10b981" />
+  <circle cx="150" cy="148" r="4" fill="#10b981" />
+  <circle cx="150" cy="166" r="4" fill="#10b981" />
+  <rect x="160" y="126" width="102" height="8" rx="4" fill="#cbd5e1" />
+  <rect x="160" y="144" width="86" height="8" rx="4" fill="#cbd5e1" />
+  <rect x="160" y="162" width="96" height="8" rx="4" fill="#cbd5e1" />
+  <rect x="146" y="184" width="128" height="26" rx="13" fill="#0ea5e9" />
+</svg>

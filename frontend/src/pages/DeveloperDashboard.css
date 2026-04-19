@@ -1,0 +1,105 @@
+.developer-dashboard-page {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  min-height: calc(100vh - 160px);
+}
+
+.developer-dashboard-header h1 {
+  margin: 0;
+}
+
+.developer-dashboard-header p {
+  margin: 8px 0 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.developer-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.developer-dashboard-stats article {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 12px;
+}
+
+.developer-dashboard-stats h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+
+.developer-dashboard-stats strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.developer-dashboard-state {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.developer-dashboard-table-wrap {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: auto;
+  background: hsl(var(--card));
+}
+
+.developer-dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.developer-dashboard-table th,
+.developer-dashboard-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: middle;
+}
+
+.developer-dashboard-table td strong {
+  display: block;
+  font-size: 14px;
+}
+
+.developer-dashboard-table td span {
+  display: block;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.developer-dashboard-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.developer-dashboard-actions a {
+  text-decoration: none;
+  color: hsl(var(--primary));
+}
+
+.developer-dashboard-actions button {
+  border: 1px solid hsl(var(--destructive));
+  color: hsl(var(--destructive));
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.developer-dashboard-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

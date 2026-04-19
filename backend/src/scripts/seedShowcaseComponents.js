@@ -1,5 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
+import { pathToFileURL } from "node:url";
 import { User, Component } from "../models/appModels.js";
 import { initializeSqlSchema } from "../sql/initSchema.js";
 import { closeSqlPool, hasSqlConnectionConfig, sqlQuery } from "../sql/db.js";
@@ -182,7 +183,7 @@ async function seedSqlComponents(seedUserId) {
   }
 }
 
-async function run() {
+export async function seedShowcaseComponents() {
   const startedAt = Date.now();
   let sqlSeeded = false;
 
@@ -210,7 +211,9 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error("[seed-showcase] Failed:", error.message);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seedShowcaseComponents().catch((error) => {
+    console.error("[seed-showcase] Failed:", error.message);
+    process.exitCode = 1;
+  });
+}

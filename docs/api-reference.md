@@ -129,23 +129,6 @@ Update SQL component.
 ### `DELETE /api/sql/components/:componentId`
 Delete SQL component.
 
-## Content and Tutorials
-
-### `GET /api/content/tutorials`
-Published tutorial summaries.
-
-### `GET /api/content/tutorials/:slug`
-Published tutorial detail.
-
-### `POST /api/content/tutorials`
-Create tutorial (admin).
-
-### `PUT /api/content/tutorials/:slug`
-Update tutorial (admin).
-
-### `DELETE /api/content/tutorials/:slug`
-Delete tutorial (admin).
-
 ## Admin
 
 ### `GET /api/admin/rate-limits`

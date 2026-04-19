@@ -237,22 +237,6 @@ const discussionSchema = new mongoose.Schema(
 discussionSchema.index({ componentId: 1, createdAt: -1 });
 discussionSchema.index({ parentId: 1 });
 
-// Markdown tutorial/blog schema
-const blogPostSchema = new mongoose.Schema(
-    {
-        slug: { type: String, required: true, unique: true },
-        title: { type: String, required: true, trim: true, maxlength: 180 },
-        summary: { type: String, default: "", trim: true, maxlength: 500 },
-        markdown: { type: String, required: true },
-        tags: { type: [String], default: [] },
-        isPublished: { type: Boolean, default: true },
-        authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    },
-    { timestamps: true }
-);
-
-blogPostSchema.index({ isPublished: 1, createdAt: -1 });
-
 const componentDescriptionSchema = new mongoose.Schema(
     {
         componentId: { type: String, required: true, unique: true, trim: true },
@@ -300,7 +284,6 @@ export const ComponentView = mongoose.models.ComponentView || mongoose.model("Co
 export const ComponentDependency = mongoose.models.ComponentDependency || mongoose.model("ComponentDependency", componentDependencySchema);
 export const SubmissionHistory = mongoose.models.SubmissionHistory || mongoose.model("SubmissionHistory", submissionHistorySchema);
 export const Discussion = mongoose.models.Discussion || mongoose.model("Discussion", discussionSchema);
-export const BlogPost = mongoose.models.BlogPost || mongoose.model("BlogPost", blogPostSchema);
 export const ComponentDescription = mongoose.models.ComponentDescription || mongoose.model("ComponentDescription", componentDescriptionSchema);
 export const ComponentEmbedding = mongoose.models.ComponentEmbedding || mongoose.model("ComponentEmbedding", componentEmbeddingSchema);
 export const UsageLog = mongoose.models.UsageLog || mongoose.model("UsageLog", usageLogSchema);

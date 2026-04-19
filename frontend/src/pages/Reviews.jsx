@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
+import StarRating from "@/components/common/StarRating";
 import { fetchReviewsFeed } from "@/services/componentEngagementService";
 import { useToast } from "@/use-toast";
 import "./Reviews.css";
@@ -53,14 +54,17 @@ const Reviews = () => {
               <article className="reviews-item" key={review._id || `${review.componentId}-${review.createdAt}`}>
                 <div className="reviews-item-head">
                   <strong>{review.title || "Review"}</strong>
-                  <span>Rating: {Number(review.rating || 0).toFixed(1)} / 5</span>
+                  <StarRating rating={review.rating} className="reviews-item-rating" />
                 </div>
                 <p>{review.comment || "No comment provided."}</p>
               </article>
             ))}
           </div>
         ) : (
-          <div className="reviews-state">No reviews available yet.</div>
+          <div className="reviews-state reviews-state--empty">
+            <strong>Be the first to review a component.</strong>
+            <span>Once the community starts sharing feedback, the latest ratings will appear here.</span>
+          </div>
         )}
       </div>
     </Layout>

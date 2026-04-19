@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import CodeBlock from "@/components/common/CodeBlock";
 import Layout from "@/components/layout/Layout";
-import { components } from "@/data/components.data";
+import { fetchComponentById } from "@/services/componentsStore";
 import { copyToClipboard, exportComponentCode, downloadFile, generateImportStatement } from "@/services/exportService";
 import { useToast } from "@/use-toast";
 
@@ -14,10 +15,36 @@ const ComponentCode = () => {
   const { toast } = useToast();
   const [selectedFormat, setSelectedFormat] = useState("jsx");
   const [showImportOptions, setShowImportOptions] = useState(false);
+  const [item, setItem] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const item = useMemo(() => {
-    return components.find((c) => c.id === id) || null;
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      setIsLoading(true);
+      const component = await fetchComponentById(id);
+      if (active) {
+        setItem(component);
+        setIsLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="layout-container details-state">
+          <h2>Loading component code...</h2>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!item) {
     return (

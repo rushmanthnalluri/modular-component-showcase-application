@@ -1,7 +1,11 @@
 .reviews-page {
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 44px;
+  padding-bottom: 56px;
   min-height: calc(100vh - 160px);
+}
+
+.reviews-page h1 {
+  margin-bottom: 6px;
 }
 
 .reviews-page p {
@@ -10,33 +14,63 @@
 }
 
 .reviews-state {
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--card));
-  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 18px 20px;
   color: hsl(var(--muted-foreground));
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.reviews-state--empty {
+  display: grid;
+  gap: 4px;
+}
+
+.reviews-state--empty strong {
+  color: hsl(var(--foreground));
+}
+
+.reviews-state--empty span {
+  max-width: 520px;
 }
 
 .reviews-list {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .reviews-item {
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--card));
-  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 16px 18px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
 }
 
 .reviews-item-head {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  align-items: center;
   font-size: 14px;
 }
 
 .reviews-item p {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: hsl(var(--muted-foreground));
+}
+
+.reviews-item-rating {
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] .reviews-state,
+html[data-theme="dark"] .reviews-item {
+  background: rgba(15, 23, 42, 0.76);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+html[data-theme="dark"] .reviews-state--empty strong {
+  color: hsl(var(--foreground));
 }
