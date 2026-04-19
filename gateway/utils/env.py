@@ -33,18 +33,18 @@ class Settings(BaseSettings):
 
     def __init__(self, **values):
         defaults = {
-            "backend_url": os.getenv("BACKEND_URL", self.backend_url),
+            "backend_url": os.getenv("BACKEND_URL", "http://localhost:5000"),
             "auth_service_url": os.getenv("AUTH_SERVICE_URL"),
             "search_service_url": os.getenv("SEARCH_SERVICE_URL"),
             "sql_service_url": os.getenv("SQL_SERVICE_URL"),
             "component_service_url": os.getenv("COMPONENT_SERVICE_URL"),
-            "frontend_url": os.getenv("FRONTEND_URL", self.frontend_url),
-            "gateway_port": int(os.getenv("GATEWAY_PORT", self.gateway_port)),
-            "gateway_host": os.getenv("GATEWAY_HOST", self.gateway_host),
-            "log_level": os.getenv("LOG_LEVEL", self.log_level),
-            "debug": os.getenv("DEBUG", str(self.debug)).lower() == "true",
-            "request_timeout_seconds": int(os.getenv("REQUEST_TIMEOUT_SECONDS", self.request_timeout_seconds)),
-            "request_max_retries": int(os.getenv("REQUEST_MAX_RETRIES", self.request_max_retries)),
+            "frontend_url": os.getenv("FRONTEND_URL", "http://localhost:8080"),
+            "gateway_port": int(os.getenv("GATEWAY_PORT", "8000")),
+            "gateway_host": os.getenv("GATEWAY_HOST", "0.0.0.0"),
+            "log_level": os.getenv("LOG_LEVEL", "info"),
+            "debug": os.getenv("DEBUG", "false").lower() == "true",
+            "request_timeout_seconds": int(os.getenv("REQUEST_TIMEOUT_SECONDS", "20")),
+            "request_max_retries": int(os.getenv("REQUEST_MAX_RETRIES", "2")),
         }
         defaults.update(values)
         super().__init__(**defaults)
