@@ -23,6 +23,30 @@ export function createAuthRouter({
 }) {
     const router = express.Router();
 
+    function looksLikeBcryptHash(value) {
+        return /^\$2[aby]\$\d{2}\$/.test(String(value || ""));
+    }
+
+    async function verifyPassword(user, password) {
+        const storedPassword = String(user?.passwordHash || "");
+        if (!storedPassword) {
+            return false;
+        }
+
+        if (looksLikeBcryptHash(storedPassword)) {
+            return bcrypt.compare(password, storedPassword);
+        }
+
+        // Legacy support: allow one-time plain text match, then upgrade storage to bcrypt.
+        if (password !== storedPassword) {
+            return false;
+        }
+
+        user.passwordHash = await bcrypt.hash(password, 10);
+        await user.save();
+        return true;
+    }
+
     router.get("/csrf", (req, res) => {
         return res.json({ csrfToken: readCsrfToken(req) });
     });
@@ -73,7 +97,7 @@ export function createAuthRouter({
                 return res.status(401).json({ message: "Invalid email or password." });
             }
 
-            const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+            const isValidPassword = await verifyPassword(user, password);
             if (!isValidPassword) {
                 return res.status(401).json({ message: "Invalid email or password." });
             }
