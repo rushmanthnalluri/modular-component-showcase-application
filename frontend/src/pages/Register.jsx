@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/layout/Header";
-import { registerUser } from "@/services/authAccess";
+import { fetchRegisterCaptcha, registerUser } from "@/services/authAccess";
 import userIcon from "@/assets/showcase/user.png";
 import userdarkIcon from "@/assets/showcase/user dark.png";
 import mailIcon from "@/assets/showcase/mail.png";
@@ -38,6 +38,39 @@ const Register = () => {
   });
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captcha, setCaptcha] = useState({ text: "", image: "" });
+  const [captchaInput, setCaptchaInput] = useState("");
+
+  const getCaptchaImageSrc = (rawImage) => {
+    const value = String(rawImage || "").trim();
+    if (!value) {
+      return "";
+    }
+
+    return value.startsWith("data:image")
+      ? value
+      : `data:image/svg+xml;base64,${value}`;
+  };
+
+  const showCaptchaUnavailableToast = useCallback(() => {
+    toast({
+      title: "Captcha unavailable",
+      description: "Captcha service unavailable. Please refresh.",
+      duration: 4000,
+    });
+  }, [toast]);
+
+  const loadCaptcha = useCallback(async () => {
+    const payload = await fetchRegisterCaptcha(6);
+    setCaptcha({ text: payload.text, image: payload.image });
+    setCaptchaInput("");
+  }, []);
+
+  useEffect(() => {
+    loadCaptcha().catch(() => {
+      showCaptchaUnavailableToast();
+    });
+  }, [loadCaptcha, showCaptchaUnavailableToast]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -141,6 +174,28 @@ const Register = () => {
       return;
     }
 
+    const captchaMatches =
+      captchaInput.trim().toLowerCase() !== "" &&
+      captcha.text.trim().toLowerCase() !== "" &&
+      captchaInput.trim().toLowerCase() === captcha.text.trim().toLowerCase();
+
+    if (!captchaMatches) {
+      toast({
+        title: "Invalid captcha",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Please enter the captcha exactly as shown.
+          </span>
+        ),
+        duration: 4000,
+      });
+      await loadCaptcha().catch(() => {
+        showCaptchaUnavailableToast();
+      });
+      return;
+    }
+
     try {
       await registerUser({
         fullName: data.fullName,
@@ -171,6 +226,9 @@ const Register = () => {
           </span>
         ),
         duration: 4000,
+      });
+      await loadCaptcha().catch(() => {
+        showCaptchaUnavailableToast();
       });
     }
   };
@@ -308,6 +366,44 @@ const Register = () => {
                 }
                 autoComplete="new-password"
                 aria-invalid={errors.confirmPassword || passwordMismatch ? "true" : "false"}
+              />
+            </div>
+
+            <div className="captcha-group">
+              {captcha.image ? (
+                <img
+                  className="captcha-image"
+                  src={getCaptchaImageSrc(captcha.image)}
+                  alt="Captcha"
+                />
+              ) : (
+                <div className="captcha-placeholder">Loading captcha...</div>
+              )}
+              <button
+                type="button"
+                className="captcha-refresh"
+                onClick={() => {
+                  loadCaptcha().catch(() => {
+                    showCaptchaUnavailableToast();
+                  });
+                }}
+              >
+                Refresh Captcha
+              </button>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-captcha" className="sr-only">
+                Captcha
+              </label>
+              <input
+                id="register-captcha"
+                type="text"
+                name="captcha"
+                value={captchaInput}
+                onChange={(event) => setCaptchaInput(event.target.value)}
+                placeholder="Enter captcha"
+                autoComplete="off"
               />
             </div>
 
