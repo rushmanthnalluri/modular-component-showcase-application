@@ -50,6 +50,8 @@ services:
         value: false
       - key: SQL_AUTO_MIGRATE
         value: true
+      - key: SEED_SHOWCASE_ON_START
+        value: true
       - key: PGSSL
         value: true
 

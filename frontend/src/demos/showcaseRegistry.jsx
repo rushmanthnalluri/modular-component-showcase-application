@@ -5,11 +5,21 @@ const CHART_MAX = 100;
 const NAV_LINKS = ["Home", "Components", "Patterns", "Support"];
 
 const TABLE_ROWS = [
-  { id: "c-101", name: "Button Variants", owner: "Priya", status: "Stable", adoption: 92 },
-  { id: "c-102", name: "Card Layout System", owner: "Rahul", status: "Review", adoption: 84 },
-  { id: "c-103", name: "Form Validation Kit", owner: "Maya", status: "Stable", adoption: 88 },
-  { id: "c-104", name: "Navigation Shell", owner: "Kiran", status: "Experiment", adoption: 69 },
-  { id: "c-105", name: "Feedback Alerts", owner: "Asha", status: "Stable", adoption: 95 },
+  { id: "c-101", name: "Glass Card", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 92 },
+  { id: "c-102", name: "Gradient Button", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 94 },
+  { id: "c-103", name: "Neon Input", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 88 },
+  { id: "c-104", name: "Animated Navbar", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 90 },
+  { id: "c-105", name: "Toast Notification", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 96 },
+  { id: "c-106", name: "Profile Card", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 85 },
+  { id: "c-107", name: "Modal", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 89 },
+  { id: "c-108", name: "Accordion", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 87 },
+  { id: "c-109", name: "Tabs", owner: "RUSHMANTH NALLURI", status: "Review", adoption: 82 },
+  { id: "c-110", name: "Data Table", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 91 },
+  { id: "c-111", name: "Line Chart", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 80 },
+  { id: "c-112", name: "Split Button", owner: "RUSHMANTH NALLURI", status: "Review", adoption: 75 },
+  { id: "c-113", name: "Pricing Card", owner: "RUSHMANTH NALLURI", status: "Review", adoption: 78 },
+  { id: "c-114", name: "Floating Label Input", owner: "RUSHMANTH NALLURI", status: "Experiment", adoption: 70 },
+  { id: "c-115", name: "Breadcrumb Navigation", owner: "RUSHMANTH NALLURI", status: "Review", adoption: 73 },
 ];
 
 function classNames(...names) {
@@ -485,6 +495,67 @@ function LiveLineChartDemo({ values }) {
   );
 }
 
+function SplitButtonDemo({ values }) {
+  const actionMap = {
+    publish: "Publish",
+    save: "Save Draft",
+    schedule: "Schedule",
+  };
+
+  return (
+    <div className="demo-split-button" role="group" aria-label="Split action button">
+      <button type="button" className="demo-split-main">{values.action ? actionMap[values.action] : "Publish"}</button>
+      <button type="button" className="demo-split-toggle" aria-label="Open action menu">▾</button>
+    </div>
+  );
+}
+
+function PricingCardDemo({ values }) {
+  const plans = {
+    pro: { name: "Pro", price: 19 },
+    business: { name: "Business", price: 49 },
+    enterprise: { name: "Enterprise", price: 99 },
+  };
+  const plan = plans[values.plan] || plans.pro;
+
+  return (
+    <article className="demo-pricing-card">
+      <h3>{plan.name} Plan</h3>
+      <p className="demo-pricing-cost">${plan.price}<span>/month</span></p>
+      <ul>
+        <li>Unlimited components</li>
+        <li>Theme presets</li>
+        <li>Priority support</li>
+      </ul>
+      <button type="button" className="demo-pricing-btn">{values.btnText || "Start Free Trial"}</button>
+    </article>
+  );
+}
+
+function FloatingLabelInputDemo({ values }) {
+  return (
+    <div className="demo-floating-input-wrap">
+      <input type="email" placeholder=" " defaultValue={values.value || ""} />
+      <label>{values.label || "Email address"}</label>
+    </div>
+  );
+}
+
+function BreadcrumbNavDemo({ values }) {
+  const items = ["Home", "Components", values.current || "Navigation"];
+
+  return (
+    <nav className="demo-breadcrumb-nav" aria-label="Breadcrumb">
+      {items.map((item, index) => (
+        <span key={item}>
+          {item}
+          {index < items.length - 1 ? <i aria-hidden="true">/</i> : null}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
 const SHOWCASE_DEMOS = {
   "gradient-button": {
     summary: "Configure button content and visual state for production-ready interactions.",
@@ -673,6 +744,56 @@ const SHOWCASE_DEMOS = {
       },
     ],
     Component: LiveLineChartDemo,
+  },
+  "split-button": {
+    summary: "Select primary action and dropdown trigger style for split-action workflows.",
+    controls: [
+      {
+        id: "action",
+        label: "Primary Action",
+        type: "select",
+        defaultValue: "publish",
+        options: [
+          { label: "Publish", value: "publish" },
+          { label: "Save Draft", value: "save" },
+          { label: "Schedule", value: "schedule" },
+        ],
+      },
+    ],
+    Component: SplitButtonDemo,
+  },
+  "pricing-card": {
+    summary: "Switch between plan tiers and customize call-to-action text.",
+    controls: [
+      {
+        id: "plan",
+        label: "Plan Tier",
+        type: "select",
+        defaultValue: "pro",
+        options: [
+          { label: "Pro ($19)", value: "pro" },
+          { label: "Business ($49)", value: "business" },
+          { label: "Enterprise ($99)", value: "enterprise" },
+        ],
+      },
+      { id: "btnText", label: "Button Text", type: "text", defaultValue: "Start Free Trial" },
+    ],
+    Component: PricingCardDemo,
+  },
+  "floating-label-input": {
+    summary: "Configure label text and input value for floating-label form scenarios.",
+    controls: [
+      { id: "label", label: "Label Text", type: "text", defaultValue: "Email address" },
+      { id: "value", label: "Input Value", type: "text", defaultValue: "user@example.com" },
+    ],
+    Component: FloatingLabelInputDemo,
+  },
+  "breadcrumb-nav": {
+    summary: "Customize the current page label in breadcrumb hierarchy.",
+    controls: [
+      { id: "current", label: "Current Page", type: "text", defaultValue: "Navigation" },
+    ],
+    Component: BreadcrumbNavDemo,
   },
 };
 

@@ -587,6 +587,168 @@
   color: hsl(var(--muted-foreground));
 }
 
+.demo-split-button {
+  display: inline-flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #0284c7;
+  background: #0284c7;
+}
+
+.demo-split-main,
+.demo-split-toggle {
+  border: none;
+  color: #e0f2fe;
+  background: #0284c7;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.demo-split-main {
+  flex: 1;
+  min-width: 100px;
+}
+
+.demo-split-toggle {
+  background: #0369a1;
+  border-left: 1px solid rgba(224, 242, 254, 0.3);
+  padding: 10px 8px;
+}
+
+.demo-pricing-card {
+  width: min(280px, 100%);
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--card));
+  padding: 16px;
+}
+
+.demo-pricing-card h3 {
+  margin: 0;
+  color: hsl(var(--foreground));
+}
+
+.demo-pricing-cost {
+  margin: 8px 0 12px;
+  font-size: 26px;
+  font-weight: 800;
+  color: hsl(var(--foreground));
+}
+
+.demo-pricing-cost span {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+.demo-pricing-card ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+}
+
+.demo-pricing-card li {
+  margin: 4px 0;
+}
+
+.demo-pricing-btn {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  background: #0ea5e9;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.demo-floating-input-wrap {
+  width: min(320px, 100%);
+  position: relative;
+  display: inline-flex;
+}
+
+.demo-floating-input-wrap input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid #06b6d4;
+  padding: 16px 12px 10px;
+  font: inherit;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.demo-floating-input-wrap label {
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.2s ease;
+  pointer-events: none;
+  font-size: 13px;
+}
+
+.demo-floating-input-wrap input:focus + label,
+.demo-floating-input-wrap input:not(:placeholder-shown) + label {
+  top: 6px;
+  font-size: 11px;
+  color: #06b6d4;
+}
+
+.demo-breadcrumb-nav {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 10px 14px;
+  font-size: 12px;
+}
+
+.demo-breadcrumb-nav span {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.demo-breadcrumb-nav i {
+  font-style: normal;
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .demo-split-button,
+html[data-theme="dark"] .demo-split-main,
+html[data-theme="dark"] .demo-split-toggle {
+  background: #0284c7;
+  border-color: #0284c7;
+}
+
+html[data-theme="dark"] .demo-split-toggle {
+  background: #0369a1;
+}
+
+html[data-theme="dark"] .demo-pricing-card {
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+html[data-theme="dark"] .demo-floating-input-wrap input {
+  background: rgba(15, 23, 42, 0.84);
+  border-color: #06b6d4;
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .demo-breadcrumb-nav {
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(148, 163, 184, 0.14);
+  color: hsl(var(--foreground));
+}
+
 html[data-theme="dark"] .demo-glass-card {
   border-color: rgba(148, 163, 184, 0.32);
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.94));

@@ -112,27 +112,28 @@ export async function getAllComponents() {
     await preloadComponentLookup();
     lastCloudSyncError = null;
 
-    const localMap = new Map(components.map((item) => [item.id, item]));
-    const mergedLocals = components.map((localItem) => {
-      const backendMatch = customComponents.find((cloudItem) => cloudItem.id === localItem.id);
-      if (!backendMatch) {
-        return localItem;
-      }
+    if (customComponents.length > 0) {
+      const localMap = new Map(components.map((item) => [item.id, item]));
+      const cloudIds = new Set(customComponents.map((item) => item.id));
 
-      return {
-        ...backendMatch,
-        ...localItem,
-        id: localItem.id,
-        averageRating: backendMatch.averageRating,
-        totalReviews: backendMatch.totalReviews,
-        viewCount: backendMatch.viewCount,
-        createdAt: backendMatch.createdAt,
-        updatedAt: backendMatch.updatedAt,
-      };
-    });
+      const cloudFirst = customComponents.map((cloudItem) => {
+        const localItem = localMap.get(cloudItem.id);
+        if (!localItem) {
+          return cloudItem;
+        }
 
-    const cloudOnly = customComponents.filter((item) => !localMap.has(item.id));
-    return [...mergedLocals, ...cloudOnly];
+        return {
+          ...localItem,
+          ...cloudItem,
+          id: cloudItem.id,
+        };
+      });
+
+      const localFallbackOnly = components.filter((item) => !cloudIds.has(item.id));
+      return [...cloudFirst, ...localFallbackOnly];
+    }
+
+    return [...components];
   } catch (error) {
     lastCloudSyncError =
       error instanceof Error
@@ -234,4 +235,16 @@ export async function deleteComponent(id) {
   await apiRequest(`/components/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function getMyComponents({ page = 1, limit = 20 } = {}) {
+  const payload = await apiRequest(`/users/me/components?page=${page}&limit=${limit}`, {
+    method: "GET",
+  });
+
+  const collection = Array.isArray(payload?.components) ? payload.components : [];
+  return {
+    components: collection.map((item) => mapCloudComponent(item)),
+    pagination: payload?.pagination || null,
+  };
 }

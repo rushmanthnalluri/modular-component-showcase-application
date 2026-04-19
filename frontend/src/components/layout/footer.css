@@ -1,13 +1,15 @@
 .app-footer {
-  border-top: 1px solid #dbe2eb;
-  background: #f8fafc;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(96, 165, 250, 0.08), transparent 24%),
+    linear-gradient(180deg, #f7faff 0%, #eef3f8 100%);
 }
 
 .footer-shell {
   width: 100%;
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 40px 20px 16px;
+  padding: 52px 20px 18px;
 }
 
 .footer-main {
@@ -15,6 +17,8 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 40px;
+  padding: 6px 0 2px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .footer-left {
@@ -110,9 +114,8 @@
 }
 
 .footer-bottom {
-  border-top: 1px solid #dbe2eb;
-  margin-top: 20px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -149,8 +152,15 @@
 }
 
 html[data-theme="dark"] .app-footer {
-  background: hsl(var(--card));
-  border-top-color: hsl(var(--border));
+  background:
+    radial-gradient(circle at 12% 0%, rgba(96, 165, 250, 0.1), transparent 24%),
+    linear-gradient(180deg, hsl(var(--bg-main)) 0%, hsl(var(--background)) 100%);
+  border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+html[data-theme="dark"] .footer-main,
+html[data-theme="dark"] .footer-bottom {
+  background: transparent;
 }
 
 html[data-theme="dark"] .footer-brand,
@@ -170,5 +180,9 @@ html[data-theme="dark"] .footer-section a:hover {
 }
 
 html[data-theme="dark"] .footer-bottom {
-  border-top-color: hsl(var(--border));
+  border-top-color: transparent;
+}
+
+html[data-theme="dark"] .footer-main {
+  border-bottom-color: rgba(148, 163, 184, 0.14);
 }

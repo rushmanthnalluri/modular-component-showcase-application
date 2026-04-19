@@ -1,7 +1,11 @@
 .discussions-page {
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 44px;
+  padding-bottom: 56px;
   min-height: calc(100vh - 160px);
+}
+
+.discussions-page h1 {
+  margin-bottom: 6px;
 }
 
 .discussions-page p {
@@ -10,23 +14,38 @@
 }
 
 .discussions-state {
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--card));
-  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 18px 20px;
   color: hsl(var(--muted-foreground));
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.discussions-state--empty {
+  display: grid;
+  gap: 4px;
+}
+
+.discussions-state--empty strong {
+  color: hsl(var(--foreground));
+}
+
+.discussions-state--empty span {
+  max-width: 520px;
 }
 
 .discussions-list {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .discussions-item {
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--card));
-  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 16px 18px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
 }
 
 .discussions-item p {
@@ -36,4 +55,10 @@
 .discussions-item span {
   color: hsl(var(--muted-foreground));
   font-size: 13px;
+}
+
+html[data-theme="dark"] .discussions-state,
+html[data-theme="dark"] .discussions-item {
+  background: rgba(15, 23, 42, 0.76);
+  border-color: rgba(148, 163, 184, 0.14);
 }

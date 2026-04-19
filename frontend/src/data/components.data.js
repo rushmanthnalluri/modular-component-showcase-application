@@ -28,7 +28,10 @@ import dataTableThumb from "@/assets/showcase/data-table.svg";
 
 import lineChartThumb from "@/assets/showcase/line-chart.svg";
 import glassCardThumb from "@/assets/showcase/glass-card.svg";
-
+import splitButtonThumb from "@/assets/showcase/split-button.svg";
+import pricingCardThumb from "@/assets/showcase/pricing-card.svg";
+import floatingLabelInputThumb from "@/assets/showcase/floating-label-input.svg";
+import breadcrumbNavThumb from "@/assets/showcase/breadcrumb-nav.svg";
 
 export const categories = [
   { id: "all", name: "All Components", icon: Palette },
@@ -742,6 +745,230 @@ export default LiveLineChart;`,
   stroke: #0ea5e9;
   stroke-width: 3;
   fill: none;
+}`,
+    },
+  },
+  {
+    id: "split-button",
+    name: "Split Button",
+    description: "Primary action button with secondary dropdown trigger for related actions.",
+    category: "buttons",
+    tags: ["button", "split", "menu"],
+    thumbnail: splitButtonThumb,
+    screenshot: undefined,
+    code: {
+      jsx: `import React from "react";
+import "./SplitButton.css";
+
+const SplitButton = () => {
+  return (
+    <div className="split-button" role="group" aria-label="Primary and secondary actions">
+      <button type="button" className="split-button-main">Publish</button>
+      <button type="button" className="split-button-toggle" aria-label="Open action menu">▾</button>
+    </div>
+  );
+};
+
+export default SplitButton;`,
+      css: `.split-button {
+  display: inline-flex;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #0369a1;
+}
+
+.split-button-main,
+.split-button-toggle {
+  border: none;
+  color: #e0f2fe;
+  background: #0284c7;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+.split-button-main {
+  padding-inline: 18px;
+}
+
+.split-button-toggle {
+  background: #0369a1;
+  border-left: 1px solid rgba(224, 242, 254, 0.3);
+}`,
+    },
+  },
+  {
+    id: "pricing-card",
+    name: "Pricing Card",
+    description: "Plan pricing card with feature checklist and prominent call to action.",
+    category: "cards",
+    tags: ["pricing", "card", "plan"],
+    thumbnail: pricingCardThumb,
+    screenshot: undefined,
+    code: {
+      jsx: `import React from "react";
+import "./PricingCard.css";
+
+const features = ["Unlimited components", "Theme presets", "Priority support"];
+
+const PricingCard = () => {
+  return (
+    <article className="pricing-card">
+      <h3>Pro Plan</h3>
+      <p className="pricing-card-cost">$19<span>/month</span></p>
+      <ul>
+        {features.map((feature) => (
+          <li key={feature}>{feature}</li>
+        ))}
+      </ul>
+      <button type="button">Start Free Trial</button>
+    </article>
+  );
+};
+
+export default PricingCard;`,
+      css: `.pricing-card {
+  width: 280px;
+  border-radius: 16px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #dbe2eb;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.pricing-card h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.pricing-card-cost {
+  margin: 8px 0 14px;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.pricing-card-cost span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pricing-card ul {
+  margin: 0 0 16px;
+  padding-left: 18px;
+  color: #334155;
+}
+
+.pricing-card button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+  background: #0ea5e9;
+  cursor: pointer;
+}`,
+    },
+  },
+  {
+    id: "floating-label-input",
+    name: "Floating Label Input",
+    description: "Input control with floating label and smooth focus transitions.",
+    category: "forms",
+    tags: ["input", "floating-label", "form"],
+    thumbnail: floatingLabelInputThumb,
+    screenshot: undefined,
+    code: {
+      jsx: `import React from "react";
+import "./FloatingLabelInput.css";
+
+const FloatingLabelInput = () => {
+  return (
+    <label className="floating-input-wrap">
+      <input type="email" placeholder=" " />
+      <span>Email address</span>
+    </label>
+  );
+};
+
+export default FloatingLabelInput;`,
+      css: `.floating-input-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.floating-input-wrap input {
+  width: 280px;
+  border-radius: 12px;
+  border: 1px solid #94a3b8;
+  padding: 16px 12px 10px;
+  font: inherit;
+}
+
+.floating-input-wrap span {
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  color: #64748b;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.floating-input-wrap input:focus + span,
+.floating-input-wrap input:not(:placeholder-shown) + span {
+  top: 6px;
+  font-size: 11px;
+  color: #0284c7;
+}`,
+    },
+  },
+  {
+    id: "breadcrumb-nav",
+    name: "Breadcrumb Navigation",
+    description: "Compact breadcrumb trail for nested pages and hierarchy context.",
+    category: "navigation",
+    tags: ["breadcrumb", "navigation", "hierarchy"],
+    thumbnail: breadcrumbNavThumb,
+    screenshot: undefined,
+    code: {
+      jsx: `import React from "react";
+import "./BreadcrumbNavigation.css";
+
+const items = ["Home", "Components", "Navigation"];
+
+const BreadcrumbNavigation = () => {
+  return (
+    <nav className="breadcrumb-nav" aria-label="Breadcrumb">
+      {items.map((item, index) => (
+        <span key={item}>
+          {item}
+          {index < items.length - 1 ? <i aria-hidden="true">/</i> : null}
+        </span>
+      ))}
+    </nav>
+  );
+};
+
+export default BreadcrumbNavigation;`,
+      css: `.breadcrumb-nav {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #cbd5e1;
+  padding: 10px 14px;
+}
+
+.breadcrumb-nav span {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.breadcrumb-nav i {
+  font-style: normal;
+  color: #64748b;
 }`,
     },
   },
