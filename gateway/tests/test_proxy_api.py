@@ -35,6 +35,9 @@ class _FakeAsyncClient:
     async def request(self, method, url, headers=None, params=None, content=None):
         assert method in ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
         assert "/api/health" in url
+        assert headers is not None
+        assert headers.get("accept-encoding") == "identity"
+        assert "origin" not in {key.lower() for key in headers.keys()}
         return _FakeAsyncResponse(
             status_code=200,
             content=b'{"ok":true}',

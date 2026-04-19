@@ -126,6 +126,8 @@ async def proxy_api(full_path: str, request: Request):
         for key, value in request.headers.items()
         if key.lower() not in {"host", "content-length", "origin", "referer"}
     }
+    # Ask backend for uncompressed payloads so the proxy always relays decodable JSON/text bodies.
+    outbound_headers["accept-encoding"] = "identity"
 
     timeout = httpx.Timeout(settings.request_timeout_seconds)
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
