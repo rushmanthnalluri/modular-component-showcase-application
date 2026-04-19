@@ -8,7 +8,7 @@ export default defineConfig(() => {
     process.env.GITHUB_ACTIONS === "true" && Boolean(repoName);
 
   return {
-    base: process.env.VITE_BASE_PATH || (isGitHubPagesBuild ? `/${repoName}/` : "/"),
+    base: isGitHubPagesBuild ? `/${repoName}/` : "/",
     server: {
       host: "::",
       port: 8080,
