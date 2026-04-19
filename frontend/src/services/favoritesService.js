@@ -1,6 +1,7 @@
 import { apiRequest } from "@/services/apiClient";
 import {
   mapBackendIdsToLocal,
+  preloadComponentLookup,
   resolveBackendComponentId,
 } from "@/services/componentLookupService";
 
@@ -20,11 +21,25 @@ function writeLocal(ids) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(Array.from(new Set(ids.map(String)))));
 }
 
+async function mapFavoritesToLocalIds(ids = []) {
+  await preloadComponentLookup();
+  let localIds = mapBackendIdsToLocal(ids).map(String);
+
+  // Retry once with refreshed lookup when unresolved backend ids are present.
+  const hasUnresolved = localIds.some((id) => /^[a-f0-9]{24}$/i.test(id));
+  if (hasUnresolved) {
+    await preloadComponentLookup(true);
+    localIds = mapBackendIdsToLocal(ids).map(String);
+  }
+
+  return Array.from(new Set(localIds));
+}
+
 export async function getFavoriteIds() {
   try {
     const payload = await apiRequest("/users/me/favorites", { method: "GET" });
     if (payload && Array.isArray(payload.favorites)) {
-      const localIds = mapBackendIdsToLocal(payload.favorites).map(String);
+      const localIds = await mapFavoritesToLocalIds(payload.favorites);
       writeLocal(localIds);
       return localIds;
     }
@@ -46,7 +61,7 @@ export async function toggleFavorite(componentId) {
       body: JSON.stringify({}),
     });
     if (payload && Array.isArray(payload.favorites)) {
-      const localIds = mapBackendIdsToLocal(payload.favorites).map(String);
+      const localIds = await mapFavoritesToLocalIds(payload.favorites);
       writeLocal(localIds);
       return localIds;
     }
