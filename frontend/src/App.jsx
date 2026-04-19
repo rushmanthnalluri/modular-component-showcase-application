@@ -3,6 +3,7 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import AdminRoute from "@/components/common/AdminRoute";
 import DeveloperRoute from "@/components/common/DeveloperRoute";
+import loadingIcon from "@/assets/showcase/loading.svg";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 
@@ -45,7 +46,11 @@ function resolveRouterBasename() {
 }
 
 function RouteFallback() {
-  return <div role="status" aria-live="polite" style={{ padding: "1rem" }}>Loading page...</div>;
+  return (
+    <div className="app-loading" role="status" aria-live="polite">
+      <img src={loadingIcon} alt="Loading" className="app-loading-logo" />
+    </div>
+  );
 }
 
 const App = () => {

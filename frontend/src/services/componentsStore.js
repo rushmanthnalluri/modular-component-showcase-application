@@ -10,6 +10,20 @@ let lastCloudSyncError = null;
 const VERIFIER_NAME_PREFIX = "Verifier Component";
 const VERIFIER_DESCRIPTION_MARKER = "Created by verify-connection script";
 
+function mergeWithLocalFallback(localItem, cloudItem) {
+  if (!localItem) {
+    return cloudItem;
+  }
+
+  return {
+    ...localItem,
+    ...cloudItem,
+    id: cloudItem.id,
+    thumbnail: cloudItem.thumbnail || localItem.thumbnail || "",
+    screenshot: cloudItem.screenshot || localItem.screenshot || "",
+  };
+}
+
 function mapCloudComponent(rawItem) {
   const rawAuthor =
     rawItem?.createdBy && typeof rawItem.createdBy === "object" ? rawItem.createdBy : null;
@@ -116,18 +130,7 @@ export async function getAllComponents() {
       const localMap = new Map(components.map((item) => [item.id, item]));
       const cloudIds = new Set(customComponents.map((item) => item.id));
 
-      const cloudFirst = customComponents.map((cloudItem) => {
-        const localItem = localMap.get(cloudItem.id);
-        if (!localItem) {
-          return cloudItem;
-        }
-
-        return {
-          ...localItem,
-          ...cloudItem,
-          id: cloudItem.id,
-        };
-      });
+      const cloudFirst = customComponents.map((cloudItem) => mergeWithLocalFallback(localMap.get(cloudItem.id), cloudItem));
 
       const localFallbackOnly = components.filter((item) => !cloudIds.has(item.id));
       return [...cloudFirst, ...localFallbackOnly];
