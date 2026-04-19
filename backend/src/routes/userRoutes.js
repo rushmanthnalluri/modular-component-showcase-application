@@ -86,23 +86,30 @@ export function createUserRouter({
   router.get("/me/components", requireAuth, async (req, res) => {
     try {
       const { page = 1, limit = 10 } = req.query;
+      const role = String(req.user?.role || "").toLowerCase();
+      const isAdmin = role === "admin";
 
-      const skip = (page - 1) * limit;
-      const components = await Component.find({ createdBy: req.user._id })
+      const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+      const parsedLimit = Math.max(1, parseInt(limit, 10) || 10);
+
+      const filter = isAdmin ? {} : { createdBy: req.user._id };
+
+      const skip = (parsedPage - 1) * parsedLimit;
+      const components = await Component.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(parsedLimit)
         .lean();
 
-      const total = await Component.countDocuments({ createdBy: req.user._id });
+      const total = await Component.countDocuments(filter);
 
       return res.json({
         components,
         pagination: {
           total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit),
+          page: parsedPage,
+          limit: parsedLimit,
+          pages: Math.ceil(total / parsedLimit),
         },
       });
     } catch (error) {
