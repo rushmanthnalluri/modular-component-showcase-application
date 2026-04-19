@@ -4,12 +4,14 @@ import sys
 import os
 import time
 from pathlib import Path
+import httpx
 
 # Add gateway directory to path for imports to work in container
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
 
 try:
     # Import from package structure (when run as `uvicorn gateway.main:app`)
@@ -54,6 +56,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_request: Request, exc: Exception):
+    logger.exception("Unhandled gateway exception")
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Gateway request failed.", "detail": str(exc)},
+    )
 
 
 @app.middleware("http")
@@ -101,6 +112,43 @@ async def status():
         "gateway_port": settings.gateway_port,
         "debug": settings.debug,
     }
+
+
+@app.api_route("/api/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+async def proxy_api(full_path: str, request: Request):
+    """Forward all /api/* traffic to backend while preserving cookies and query params."""
+    target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"
+    body = await request.body()
+    query_params = dict(request.query_params)
+
+    outbound_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in {"host", "content-length"}
+    }
+
+    timeout = httpx.Timeout(settings.request_timeout_seconds)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        backend_response = await client.request(
+            method=request.method,
+            url=target_url,
+            headers=outbound_headers,
+            params=query_params,
+            content=body if body else None,
+        )
+
+    response_headers = {}
+    set_cookie = backend_response.headers.get("set-cookie")
+    if set_cookie:
+        response_headers["set-cookie"] = set_cookie
+
+    content_type = backend_response.headers.get("content-type", "application/json")
+    return Response(
+        content=backend_response.content,
+        status_code=backend_response.status_code,
+        media_type=content_type,
+        headers=response_headers,
+    )
 
 
 if __name__ == "__main__":

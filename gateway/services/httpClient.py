@@ -1,5 +1,6 @@
 """HTTP client for forwarding requests to backend services."""
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -176,8 +177,8 @@ def get_service_client(base_url: Optional[str] = None):
     """Factory function for a gateway downstream HTTP client."""
     return GatewayHTTPClient(
         base_url=base_url or settings.backend_url,
-        timeout=30,
-        max_retries=2,
+        timeout=settings.request_timeout_seconds,
+        max_retries=settings.request_max_retries,
     )
 
 

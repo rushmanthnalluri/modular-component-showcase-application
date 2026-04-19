@@ -1,5 +1,18 @@
-"""Environment variable configuration using pydantic-settings."""
-from pydantic_settings import BaseSettings
+"""Environment variable configuration with a pydantic-settings fallback."""
+
+from __future__ import annotations
+
+import os
+
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:  # pragma: no cover - fallback for stripped local environments
+    class BaseSettings:
+        """Minimal settings fallback when pydantic-settings is unavailable."""
+
+        def __init__(self, **values):
+            for key, value in values.items():
+                setattr(self, key, value)
 
 
 class Settings(BaseSettings):
@@ -15,10 +28,26 @@ class Settings(BaseSettings):
     gateway_host: str = "0.0.0.0"
     log_level: str = "info"
     debug: bool = False
+    request_timeout_seconds: int = 20
+    request_max_retries: int = 2
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    def __init__(self, **values):
+        defaults = {
+            "backend_url": os.getenv("BACKEND_URL", self.backend_url),
+            "auth_service_url": os.getenv("AUTH_SERVICE_URL"),
+            "search_service_url": os.getenv("SEARCH_SERVICE_URL"),
+            "sql_service_url": os.getenv("SQL_SERVICE_URL"),
+            "component_service_url": os.getenv("COMPONENT_SERVICE_URL"),
+            "frontend_url": os.getenv("FRONTEND_URL", self.frontend_url),
+            "gateway_port": int(os.getenv("GATEWAY_PORT", self.gateway_port)),
+            "gateway_host": os.getenv("GATEWAY_HOST", self.gateway_host),
+            "log_level": os.getenv("LOG_LEVEL", self.log_level),
+            "debug": os.getenv("DEBUG", str(self.debug)).lower() == "true",
+            "request_timeout_seconds": int(os.getenv("REQUEST_TIMEOUT_SECONDS", self.request_timeout_seconds)),
+            "request_max_retries": int(os.getenv("REQUEST_MAX_RETRIES", self.request_max_retries)),
+        }
+        defaults.update(values)
+        super().__init__(**defaults)
 
     @property
     def cors_origins(self) -> list[str]:

@@ -5,7 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { rateLimit } from "express-rate-limit";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import captchaRouter from "./controllers/captchaController.js";
@@ -43,6 +43,7 @@ import { initializeSqlSchema } from "./sql/initSchema.js";
 import { hasSqlConnectionConfig, pingSql } from "./sql/db.js";
 import { syncSqlDiscussion, syncSqlRating, syncSqlReview, syncSqlUserAccount, syncSqlUserFavorites } from "./services/userSyncService.js";
 import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
+import logger, { withRequestContext } from "./utils/logger.js";
 
 const app = express();
 const apiRouter = express.Router();
@@ -61,6 +62,8 @@ const allowMemoryFallback =
         ? process.env.ALLOW_MEMORY_FALLBACK !== "false"
         : true);
 const jwtSecret = process.env.JWT_SECRET || randomBytes(48).toString("hex");
+const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
+const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 const PORT = Number(process.env.PORT || 5000);
 const mongoUri = process.env.NODE_ENV === "test" ? "" : process.env.MONGODB_URI;
 
@@ -159,12 +162,25 @@ const metricsTracker = {
     errorsTotal: 0,
 };
 
-function createAuthToken(userId) {
-    return jwt.sign({ userId }, jwtSecret, { expiresIn: "7d" });
+function createAccessToken(userId) {
+    return jwt.sign({ userId, tokenType: "access" }, jwtSecret, { expiresIn: accessTokenExpiresIn });
+}
+
+function createRefreshToken(userId) {
+    return jwt.sign({ userId, tokenType: "refresh" }, jwtSecret, { expiresIn: refreshTokenExpiresIn });
+}
+
+function verifyRefreshToken(token) {
+    const payload = jwt.verify(token, jwtSecret);
+    if (!payload?.userId || payload?.tokenType !== "refresh") {
+        throw new Error("Invalid refresh token payload");
+    }
+
+    return payload;
 }
 
 const { ensureCsrfCookie, readCsrfToken, requireCsrf } = createCsrfMiddleware({ isProduction });
-const { requireAuth, requireDeveloper, issueAuthCookie, clearAuthCookie } = createAuthMiddleware({
+const { requireAuth, requireDeveloper, issueAuthCookies, clearAuthCookies, readRefreshToken } = createAuthMiddleware({
     User,
     jwtSecret,
     isProduction,
@@ -190,6 +206,24 @@ app.use(
         crossOriginResourcePolicy: false,
     })
 );
+app.use((req, res, next) => {
+    req.id = req.headers["x-request-id"] || randomUUID();
+    res.setHeader("x-request-id", req.id);
+    next();
+});
+app.use((req, res, next) => {
+    const startedAt = Date.now();
+    res.on("finish", () => {
+        const durationMs = Date.now() - startedAt;
+        const context = withRequestContext(req);
+        logger.info("request_completed", {
+            ...context,
+            statusCode: res.statusCode,
+            durationMs,
+        });
+    });
+    next();
+});
 app.use(globalLimiter);
 app.use((req, res, next) => {
     const path = String(req.path || "").toLowerCase();
@@ -239,6 +273,9 @@ app.get("/health", async (_req, res) => {
         mongo,
         postgres,
         mode: mongoMode,
+        uptimeSeconds: Math.max(0, (Date.now() - metricsTracker.startedAt) / 1000),
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || "unknown",
     });
 });
 
@@ -254,6 +291,9 @@ app.get("/metrics", (_req, res) => {
         "# HELP app_errors_total Total HTTP 5xx responses sent by the Node backend.",
         "# TYPE app_errors_total counter",
         `app_errors_total ${metricsTracker.errorsTotal}`,
+        "# HELP app_rate_limited_total Total HTTP 429 responses sent by the Node backend.",
+        "# TYPE app_rate_limited_total counter",
+        `app_rate_limited_total ${rateLimitTracker.blocked.all}`,
         "# HELP app_uptime_seconds Backend uptime in seconds.",
         "# TYPE app_uptime_seconds gauge",
         `app_uptime_seconds ${uptimeSeconds.toFixed(2)}`,
@@ -291,12 +331,16 @@ apiRouter.use(
     authLimiter,
     createAuthRouter({
         User,
-        createAuthToken,
-        issueAuthCookie,
-        clearAuthCookie,
+        createAccessToken,
+        createRefreshToken,
+        verifyRefreshToken,
+        issueAuthCookies,
+        clearAuthCookies,
+        readRefreshToken,
         readCsrfToken,
         requireCsrf,
         sendEmail,
+        logger,
         syncSqlUserAccount,
     })
 );
@@ -397,6 +441,53 @@ apiRouter.get("/admin/rate-limits", requireAuth, async (req, res) => {
         requests: rateLimitTracker.totals,
         blocked: rateLimitTracker.blocked,
     });
+});
+
+apiRouter.get("/admin/dashboard", requireAuth, async (req, res) => {
+    if (String(req.user?.role || "").toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Admin access required." });
+    }
+
+    try {
+        const [users, components, reviews, discussions] = await Promise.all([
+            User.countDocuments(),
+            Component.countDocuments(),
+            Review.countDocuments(),
+            Discussion.countDocuments(),
+        ]);
+
+        const [mostViewed, topRated] = await Promise.all([
+            Component.find()
+                .sort({ views: -1, createdAt: -1 })
+                .limit(5)
+                .select("id name views averageRating category")
+                .lean(),
+            Component.find()
+                .sort({ averageRating: -1, ratingsCount: -1, createdAt: -1 })
+                .limit(5)
+                .select("id name averageRating ratingsCount category")
+                .lean(),
+        ]);
+
+        return res.json({
+            trackedAt: new Date().toISOString(),
+            counts: {
+                users,
+                components,
+                reviews,
+                discussions,
+            },
+            mostViewed,
+            topRated,
+            rateLimits: {
+                requests: rateLimitTracker.totals,
+                blocked: rateLimitTracker.blocked,
+            },
+        });
+    } catch (error) {
+        logger.error("admin_dashboard_failed", { error: error.message });
+        return res.status(500).json({ message: "Unable to fetch dashboard data." });
+    }
 });
 
 apiRouter.get("/content/tutorials", async (_req, res) => {
@@ -521,21 +612,40 @@ app.use((err, _req, res, _next) => {
         return res.status(403).json({ message: "CORS blocked for this origin." });
     }
 
-    console.error("Unhandled server error:", err?.message || err);
+    logger.error("unhandled_server_error", {
+        error: err?.message || String(err),
+        stack: err?.stack,
+    });
     return res.status(500).json({ message: "Server error." });
 });
 
 if (!process.env.JWT_SECRET) {
-    console.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
+    logger.warn("JWT_SECRET is not set. Using an auto-generated runtime secret; tokens will reset on restart.");
 }
 
 if (isProduction && process.env.ALLOW_MEMORY_FALLBACK === "true") {
-    console.warn("ALLOW_MEMORY_FALLBACK is ignored in production. Configure MONGODB_URI for persistent data.");
+    logger.warn("ALLOW_MEMORY_FALLBACK is ignored in production. Configure MONGODB_URI for persistent data.");
 }
 
 function assertProductionConfig() {
     if (isProduction && allowedOrigins.length === 0) {
         throw new Error("FRONTEND_ORIGINS must be configured in production.");
+    }
+
+    if (!isProduction) {
+        return;
+    }
+
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET must be configured in production.");
+    }
+
+    if (!process.env.MONGODB_URI) {
+        throw new Error("MONGODB_URI must be configured in production.");
+    }
+
+    if (!process.env.DATABASE_URL && !hasSqlConnectionConfig()) {
+        throw new Error("DATABASE_URL (or PG* connection variables) must be configured in production.");
     }
 }
 
@@ -566,13 +676,13 @@ function scheduleAtlasReconnect() {
         reconnectTimer = null;
 
         try {
-            console.warn(`MongoDB reconnect attempt ${reconnectAttempt}...`);
+            logger.warn(`MongoDB reconnect attempt ${reconnectAttempt}...`);
             await connectToAtlas();
             reconnectAttempt = 0;
             mongoMode = "atlas";
-            console.log("MongoDB Atlas reconnected");
+            logger.info("MongoDB Atlas reconnected");
         } catch (error) {
-            console.error("MongoDB reconnect failed:", error.message);
+            logger.error("MongoDB reconnect failed", { error: error.message });
             scheduleAtlasReconnect();
         }
     }, delayMs);
@@ -593,13 +703,13 @@ mongoose.connection.on("disconnected", () => {
         mongoMode !== "memory" &&
         mongoMode !== "memory-bootstrap"
     ) {
-        console.warn("MongoDB disconnected");
+        logger.warn("MongoDB disconnected");
         scheduleAtlasReconnect();
     }
 });
 
 mongoose.connection.on("error", (error) => {
-    console.error("MongoDB connection error:", error.message);
+    logger.error("MongoDB connection error", { error: error.message });
 });
 
 async function connectToAtlas() {
@@ -613,7 +723,7 @@ async function connectToAtlas() {
             return;
         } catch {
             resolvedMongoUri = null;
-            console.warn("Cached MongoDB direct-host URI failed. Re-resolving Atlas SRV record.");
+            logger.warn("Cached MongoDB direct-host URI failed. Re-resolving Atlas SRV record.");
         }
     }
 
@@ -629,7 +739,7 @@ async function connectToAtlas() {
             resolvedMongoUri = connectionResult.connectionUri;
             return;
         } catch (error) {
-            console.warn(`Direct Atlas resolution failed, falling back to standard SRV connection: ${error.message}`);
+            logger.warn(`Direct Atlas resolution failed, falling back to standard SRV connection: ${error.message}`);
         }
     }
 
@@ -642,7 +752,7 @@ async function connectToAtlas() {
     resolvedMongoUri = connectionResult.connectionUri;
 
     if (connectionResult.usedSrvFallback) {
-        console.warn("MongoDB SRV lookup failed. Connected using direct Atlas hosts resolved via DNS-over-HTTPS.");
+        logger.warn("MongoDB SRV lookup failed. Connected using direct Atlas hosts resolved via DNS-over-HTTPS.");
     }
 }
 
@@ -652,18 +762,18 @@ export async function connectWithFallback() {
             throw new Error("MONGODB_URI is required when memory fallback is disabled.");
         }
 
-        console.warn("MONGODB_URI is not set. Falling back to in-memory MongoDB.");
+        logger.warn("MONGODB_URI is not set. Falling back to in-memory MongoDB.");
     }
 
     try {
         if (mongoUri) {
             await connectToAtlas();
             mongoMode = "atlas";
-            console.log("MongoDB Atlas connected");
+            logger.info("MongoDB Atlas connected");
             return;
         }
     } catch (atlasError) {
-        console.error("MongoDB Atlas connection failed:", atlasError.message);
+        logger.error("MongoDB Atlas connection failed", { error: atlasError.message });
 
         if (!allowMemoryFallback) {
             throw atlasError;
@@ -682,12 +792,12 @@ export async function connectWithFallback() {
         const memoryUri = memoryServer.getUri("modularcomponent");
         mongoMode = "memory";
         await mongoose.connect(memoryUri, mongoConnectOptions);
-        console.log("MongoDB memory fallback connected");
+        logger.info("MongoDB memory fallback connected");
 
         await User.collection.createIndex({ email: 1 }, { unique: true, sparse: true });
         await Component.collection.createIndex({ id: 1 }, { unique: true });
     } catch (memoryError) {
-        console.error("MongoDB memory fallback failed:", memoryError.message);
+        logger.error("MongoDB memory fallback failed", { error: memoryError.message });
         throw memoryError;
     }
 }
@@ -702,16 +812,16 @@ export async function startServer() {
             try {
                 await initializeSqlSchema();
             } catch (error) {
-                console.warn(`Skipping PostgreSQL schema initialization: ${error.message}`);
+                logger.warn(`Skipping PostgreSQL schema initialization: ${error.message}`);
             }
         } else {
-            console.warn("Skipping PostgreSQL schema initialization: no SQL connection is configured.");
+            logger.warn("Skipping PostgreSQL schema initialization: no SQL connection is configured.");
         }
     }
 
     await new Promise((resolve, reject) => {
         httpServer = app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
+            logger.info(`Server is running on http://localhost:${PORT}`);
             resolve();
         });
 
@@ -751,7 +861,7 @@ export async function shutdownServer() {
 
 if (process.env.NODE_ENV !== "test") {
     startServer().catch((error) => {
-        console.error("Failed to start server:", error.message);
+        logger.error("Failed to start server", { error: error.message });
         process.exit(1);
     });
 

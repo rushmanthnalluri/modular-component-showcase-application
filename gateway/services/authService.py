@@ -1,6 +1,6 @@
 """Authentication service for forwarding auth requests to backend."""
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import sys
 from pathlib import Path
 import httpx
@@ -51,12 +51,23 @@ class AuthService:
             raise
 
     @staticmethod
+    async def refresh(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+        """Forward refresh request to backend."""
+        client = get_service_client(settings.auth_service_base_url)
+        try:
+            async with client as http_client:
+                return await http_client.request_json("POST", "/api/auth/refresh", json=payload or {})
+        except httpx.HTTPError as e:
+            logger.error(f"Refresh failed: {e}")
+            raise
+
+    @staticmethod
     async def logout() -> Dict[str, Any]:
         """Forward logout request to backend."""
         client = get_service_client(settings.auth_service_base_url)
         try:
             async with client as http_client:
-            return await http_client.request_json("POST", "/api/auth/logout")
+                return await http_client.request_json("POST", "/api/auth/logout")
         except httpx.HTTPError as e:
             logger.error(f"Logout failed: {e}")
             raise
@@ -67,7 +78,7 @@ class AuthService:
         client = get_service_client(settings.auth_service_base_url)
         try:
             async with client as http_client:
-            return await http_client.request_json("GET", "/api/auth/csrf")
+                return await http_client.request_json("GET", "/api/auth/csrf")
         except httpx.HTTPError as e:
             logger.error(f"CSRF fetch failed: {e}")
             raise

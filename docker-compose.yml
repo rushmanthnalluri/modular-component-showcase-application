@@ -33,19 +33,22 @@ services:
       - pgadmin_data:/var/lib/pgadmin
 
   frontend:
-    image: node:20-alpine
+    build:
+      context: ./frontend
     container_name: showcase-frontend
-    working_dir: /app
-    command: sh -c "npm install; npm run dev -- --host 0.0.0.0 --port 8080"
     environment:
-      VITE_API_BASE_URL: http://backend:5000/api
+      VITE_GATEWAY_URL: http://localhost:8000
+      VITE_USE_GATEWAY: "true"
     ports:
       - "8080:8080"
     depends_on:
       backend:
         condition: service_started
+      gateway:
+        condition: service_started
     volumes:
-      - ./:/app
+      - ./frontend:/app
+      - /app/node_modules
 
   backend:
     build:
@@ -66,6 +69,32 @@ services:
         condition: service_healthy
       mongo:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./gateway
+    container_name: showcase-gateway
+    environment:
+      PORT: 8000
+      BACKEND_URL: http://backend:5000
+      FRONTEND_URL: http://localhost:8080
+      REQUEST_TIMEOUT_SECONDS: 20
+      REQUEST_MAX_RETRIES: 2
+    ports:
+      - "8000:8000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo:7

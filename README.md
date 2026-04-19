@@ -47,7 +47,7 @@ The implementation follows the expected project sequence:
 7. Vector search implementation
 	- Embeddings are stored in MongoDB and retrieved through semantic search logic.
 8. API integration
-	- The frontend consumes backend endpoints directly and through shared service layers.
+	- The frontend consumes APIs through a FastAPI gateway (default) with direct backend fallback.
 9. Deployment
 	- The app is prepared for GitHub Pages and Render.
 10. Testing
@@ -173,7 +173,14 @@ The implementation follows the expected project sequence:
 - CORS allowlist for local and production origins
 - Helmet hardening
 - Route-level rate limiting
+- Access/refresh token lifecycle with `/api/auth/refresh`
 - Mongo SRV fallback for environments where DNS SRV lookup fails
+
+## Gateway Integration
+
+- Frontend defaults to gateway routing when `VITE_USE_GATEWAY=true`.
+- Gateway forwards `/api/*` traffic to backend while preserving cookies and query params.
+- This keeps client code stable and enables service-layer observability in one entry point.
 
 ## Data Design Summary
 
@@ -220,17 +227,18 @@ Why MongoDB:
 
 ```text
 .
-├─ src/
-│  ├─ components/
-│  ├─ context/
-│  ├─ demos/
-│  ├─ hooks/
-│  ├─ pages/
-│  ├─ services/
-│  ├─ styles/
+├─ frontend/
+│  ├─ src/
+│  ├─ public/
 │  ├─ tests/
-│  ├─ App.jsx
-│  └─ main.jsx
+│  ├─ package.json
+│  ├─ package-lock.json
+│  ├─ vite.config.js
+│  ├─ eslint.config.js
+│  ├─ jsconfig.json
+│  ├─ index.html
+│  ├─ .env
+│  └─ .env.example
 ├─ backend/
 │  ├─ src/
 │  │  ├─ controllers/
@@ -245,8 +253,13 @@ Why MongoDB:
 │  │  └─ utils/
 │  └─ Dockerfile
 ├─ docs/
-├─ public/
+├─ docker/
+├─ scripts/
 ├─ .github/workflows/
+├─ render.yaml
+├─ docker-compose.yml
+├─ .gitignore
+├─ .env.example
 └─ README.md
 ```
 
@@ -256,21 +269,24 @@ Why MongoDB:
 
 ```bash
 npm install
+cd frontend && npm install
 ```
 
-The root install also installs backend dependencies through `postinstall`.
+Frontend dependencies live under `frontend/`; backend and gateway dependencies are installed separately.
 
 ### 2) Configure frontend env
 
-Create a root `.env` file:
+Create `frontend/.env`:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5000/api
+VITE_GATEWAY_URL=http://localhost:8000
+VITE_USE_GATEWAY=true
 ```
 
-### 3) Configure backend env
+### 3) Configure backend and gateway env
 
-Create `backend/.env`:
+Use the service-specific `.env.example` files:
 
 ```bash
 PORT=5000
@@ -280,6 +296,8 @@ SQL_AUTO_MIGRATE=true
 JWT_SECRET=your_secure_jwt_secret
 FRONTEND_ORIGINS=http://localhost:8080,http://localhost:5173
 ALLOW_MEMORY_FALLBACK=true
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=7d
 PGHOST=localhost
 PGPORT=5432
 PGUSER=postgres
@@ -290,26 +308,39 @@ SMTP_PASS=your_email_password
 SMTP_FROM=no-reply@yourdomain.com
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
+BACKEND_URL=http://localhost:5000
+GATEWAY_PORT=8000
+REQUEST_TIMEOUT_SECONDS=20
+REQUEST_MAX_RETRIES=2
 ```
+
+Root `.env.example` now holds only shared monorepo metadata.
 
 ### 4) Run locally
 
 Backend:
 
 ```bash
-npm run start
+cd backend && npm run start
 ```
 
 Frontend:
 
 ```bash
-npm run dev
+cd frontend && npm run dev
 ```
 
 Local URLs:
 
 - Frontend: http://localhost:8080
 - Backend: http://localhost:5000
+- Gateway: http://localhost:8000
+
+Docker Compose:
+
+```bash
+docker compose up --build
+```
 
 ### 5) Seed showcase data
 
@@ -319,20 +350,26 @@ npm --prefix backend run seed:showcase
 
 This seeds the curated showcase components into MongoDB and PostgreSQL.
 
+## Additional Documentation
+
+- `docs/api-reference.md`
+- `docs/troubleshooting-guide.md`
+- `docs/database-backup-guide.md`
+- `docs/monitoring-guide.md`
+- `docs/performance-tuning-guide.md`
+
 ## Scripts
 
-Root:
+Frontend:
 
-- `npm run dev`: start the Vite frontend dev server
-- `npm run start`: start the backend server through the root package
-- `npm run build`: build the frontend for production
-- `npm run preview`: preview the production frontend build
-- `npm run lint`: run ESLint
-- `npm run test`: run backend tests
-- `npm run test:ui`: run frontend tests
-- `npm run test:all`: run backend and frontend tests
-- `npm run predeploy`: create the production frontend build for Pages
-- `npm run deploy`: publish `dist` to GitHub Pages
+- `cd frontend && npm run dev`: start the Vite frontend dev server
+- `cd frontend && npm run build`: build the frontend for production
+- `cd frontend && npm run preview`: preview the production frontend build
+- `cd frontend && npm run lint`: run ESLint
+- `cd frontend && npm run test`: run frontend tests
+- `cd frontend && npm run test:ui`: run frontend tests
+- `cd frontend && npm run predeploy`: create the production frontend build for Pages
+- `cd frontend && npm run deploy`: publish `dist` to GitHub Pages
 
 Backend:
 
@@ -340,6 +377,11 @@ Backend:
 - `npm --prefix backend run dev`: start the backend with nodemon
 - `npm --prefix backend run test`: run backend integration/unit tests
 - `npm --prefix backend run seed:showcase`: seed showcase components into MongoDB and PostgreSQL
+
+Gateway:
+
+- `python gateway/run.py`: start the FastAPI gateway
+- `uvicorn main:app --reload` from `gateway/`: run the gateway in reload mode
 
 ## API Overview
 
@@ -392,16 +434,21 @@ Backend:
 ## Deployment Notes
 
 - GitHub Pages hosts the frontend.
-- Render hosts the backend API.
+- Render hosts the frontend static build, backend API, and gateway service.
 - Frontend base path is configured for `/modular-component-showcase-application/`.
+- Frontend Render deployment uses `frontend/` as its root directory.
+- Backend Render deployment uses `backend/` as its root directory.
+- Gateway Render deployment uses `gateway/` as its root directory.
 - The backend accepts `MONGODB_URI`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_ORIGINS`, and `SQL_AUTO_MIGRATE` in production.
 - If using MongoDB Atlas, provide an SRV connection string and allow Render access in the Atlas network rules.
+- Docker Compose builds the frontend, backend, and gateway from their service directories.
 
 ## Testing and Verification
 
+- Frontend tests: `cd frontend && npm run test:ui`
 - Backend tests: `npm --prefix backend run test`
-- Frontend tests: `npm run test:ui`
-- Full test pass: `npm run test:all`
+- Gateway tests: `cd gateway && pytest -q`
+- Full test pass: `cd frontend && npm run test:ui` and `npm --prefix backend run test`
 - Showcase seed verification: `npm --prefix backend run seed:showcase`
 
 ## Architectural Justification

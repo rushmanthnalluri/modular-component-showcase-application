@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
 import { createCookieOptions } from "../utils/cookiePolicy.js";
 
-const AUTH_COOKIE_NAME = "auth_token";
-const AUTH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const ACCESS_COOKIE_NAME = "auth_token";
+const REFRESH_COOKIE_NAME = "refresh_token";
+const ACCESS_TOKEN_MAX_AGE_MS = 15 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
     function readToken(req) {
@@ -11,7 +13,11 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
             return header.slice(7).trim();
         }
 
-        return String(req.cookies?.[AUTH_COOKIE_NAME] || "").trim();
+        return String(req.cookies?.[ACCESS_COOKIE_NAME] || "").trim();
+    }
+
+    function readRefreshToken(req) {
+        return String(req.cookies?.[REFRESH_COOKIE_NAME] || req.body?.refreshToken || "").trim();
     }
 
     async function requireAuth(req, res, next) {
@@ -22,6 +28,9 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
             }
 
             const payload = jwt.verify(token, jwtSecret);
+            if (payload?.tokenType && payload.tokenType !== "access") {
+                return res.status(401).json({ message: "Invalid token." });
+            }
             const user = await User.findById(payload.userId).select(
                 "fullName email phone role isVerifiedDeveloper"
             );
@@ -47,25 +56,42 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
         return next();
     }
 
-    function issueAuthCookie(req, res, token) {
+    function issueAuthCookies(req, res, tokens) {
+        const accessToken = String(tokens?.accessToken || "").trim();
+        const refreshToken = String(tokens?.refreshToken || "").trim();
+
+        if (!accessToken || !refreshToken) {
+            throw new Error("Both accessToken and refreshToken are required.");
+        }
+
         res.cookie(
-            AUTH_COOKIE_NAME,
-            token,
+            ACCESS_COOKIE_NAME,
+            accessToken,
             createCookieOptions(req, {
                 isProduction,
                 httpOnly: true,
-                maxAge: AUTH_TOKEN_MAX_AGE_MS,
+                maxAge: ACCESS_TOKEN_MAX_AGE_MS,
+            })
+        );
+
+        res.cookie(
+            REFRESH_COOKIE_NAME,
+            refreshToken,
+            createCookieOptions(req, {
+                isProduction,
+                httpOnly: true,
+                maxAge: REFRESH_TOKEN_MAX_AGE_MS,
             })
         );
     }
 
-    function clearAuthCookie(req, res) {
+    function clearCookie(req, res, cookieName) {
         const options = createCookieOptions(req, {
             isProduction,
             httpOnly: true,
-            maxAge: AUTH_TOKEN_MAX_AGE_MS,
+            maxAge: REFRESH_TOKEN_MAX_AGE_MS,
         });
-        res.clearCookie(AUTH_COOKIE_NAME, {
+        res.clearCookie(cookieName, {
             httpOnly: options.httpOnly,
             secure: options.secure,
             sameSite: options.sameSite,
@@ -73,9 +99,15 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
         });
     }
 
+    function clearAuthCookies(req, res) {
+        clearCookie(req, res, ACCESS_COOKIE_NAME);
+        clearCookie(req, res, REFRESH_COOKIE_NAME);
+    }
+
     return {
-        issueAuthCookie,
-        clearAuthCookie,
+        issueAuthCookies,
+        clearAuthCookies,
+        readRefreshToken,
         requireAuth,
         requireDeveloper,
     };
