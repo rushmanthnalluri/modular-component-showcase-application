@@ -40,42 +40,25 @@ const Login = () => {
       : `data:image/svg+xml;base64,${value}`;
   };
 
+  const showCaptchaUnavailableToast = useCallback(() => {
+    toast({
+      title: "Captcha unavailable",
+      description: "Captcha service unavailable. Please refresh.",
+      duration: 4000,
+    });
+  }, [toast]);
+
   const loadCaptcha = useCallback(async () => {
     const payload = await fetchRegisterCaptcha(6);
-    setCaptcha({
-      text: String(payload?.text || ""),
-      image: String(payload?.image || ""),
-    });
+    setCaptcha({ text: payload.text, image: payload.image });
     setCaptchaInput("");
-
-    if (payload?.source === "local") {
-      toast({
-        title: "Backend unavailable",
-        description: (
-          <span className="toast-inline">
-            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
-            Using local captcha fallback. Login will require backend connection.
-          </span>
-        ),
-        duration: 3500,
-      });
-    }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     loadCaptcha().catch(() => {
-      toast({
-        title: "Captcha unavailable",
-        description: (
-          <span className="toast-inline">
-            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
-            Unable to load captcha. Please refresh and try again.
-          </span>
-        ),
-        duration: 4000,
-      });
+      showCaptchaUnavailableToast();
     });
-  }, [loadCaptcha, toast]);
+  }, [loadCaptcha, showCaptchaUnavailableToast]);
 
   useEffect(() => {
     if (!showForgotPasswordForm) {
@@ -386,7 +369,9 @@ const Login = () => {
                 type="button"
                 className="captcha-refresh"
                 onClick={() => {
-                  loadCaptcha().catch(() => {});
+                  loadCaptcha().catch(() => {
+                    showCaptchaUnavailableToast();
+                  });
                 }}
               >
                 Refresh Captcha
