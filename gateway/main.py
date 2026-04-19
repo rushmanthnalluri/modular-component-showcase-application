@@ -1,8 +1,11 @@
 """FastAPI application initialization and configuration."""
+import gzip
+import json
 import logging
 import sys
 import os
 import time
+import zlib
 from pathlib import Path
 import httpx
 
@@ -83,6 +86,46 @@ app.include_router(sqlController.router)
 app.include_router(componentController.router)
 
 
+def _decode_json_payload(content: bytes, headers: dict) -> dict | list | None:
+    """Decode backend JSON payloads, including compressed variants."""
+    if not content:
+        return {}
+
+    attempts: list[bytes] = [content]
+    encoding = str(headers.get("content-encoding", "")).lower()
+
+    if "gzip" in encoding:
+        try:
+            attempts.append(gzip.decompress(content))
+        except Exception:
+            pass
+
+    if "deflate" in encoding:
+        try:
+            attempts.append(zlib.decompress(content))
+        except Exception:
+            pass
+
+    # Some upstream layers may return compressed bytes without content-encoding.
+    try:
+        attempts.append(gzip.decompress(content))
+    except Exception:
+        pass
+
+    try:
+        attempts.append(zlib.decompress(content, zlib.MAX_WBITS | 32))
+    except Exception:
+        pass
+
+    for candidate in attempts:
+        try:
+            return json.loads(candidate.decode("utf-8"))
+        except Exception:
+            continue
+
+    return None
+
+
 @app.get("/")
 async def root():
     """Gateway root endpoint.
@@ -145,6 +188,16 @@ async def proxy_api(full_path: str, request: Request):
         response_headers["set-cookie"] = set_cookie
 
     content_type = backend_response.headers.get("content-type", "application/json")
+
+    if "application/json" in content_type.lower():
+        decoded_payload = _decode_json_payload(backend_response.content, backend_response.headers)
+        if decoded_payload is not None:
+            return JSONResponse(
+                content=decoded_payload,
+                status_code=backend_response.status_code,
+                headers=response_headers,
+            )
+
     return Response(
         content=backend_response.content,
         status_code=backend_response.status_code,
