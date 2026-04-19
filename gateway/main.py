@@ -124,7 +124,7 @@ async def proxy_api(full_path: str, request: Request):
     outbound_headers = {
         key: value
         for key, value in request.headers.items()
-        if key.lower() not in {"host", "content-length"}
+        if key.lower() not in {"host", "content-length", "origin", "referer"}
     }
 
     timeout = httpx.Timeout(settings.request_timeout_seconds)
