@@ -7,24 +7,56 @@ import loadingIcon from "@/assets/showcase/loading.svg";
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 
-const Index = lazy(() => import("./pages/Index"));
-const ComponentDetail = lazy(() => import("./pages/ComponentDetails"));
-const ComponentCode = lazy(() => import("./pages/ComponentCode"));
-const Contact = lazy(() => import("./pages/Contact"));
-const About = lazy(() => import("./pages/About"));
-const Help = lazy(() => import("./pages/Help"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const AddComponentPage = lazy(() => import("./pages/AddComponentPage"));
-const DeveloperDashboard = lazy(() => import("./pages/DeveloperDashboard"));
-const UserDashboard = lazy(() => import("./pages/UserDashboard"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const Reviews = lazy(() => import("./pages/Reviews"));
-const Discussions = lazy(() => import("./pages/Discussions"));
-const SqlAdmin = lazy(() => import("./pages/SqlAdmin"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const CHUNK_ERROR_RELOAD_KEY = "mcsa:chunk-reload-attempted";
+
+function isChunkLoadError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("failed to fetch dynamically imported module")
+    || message.includes("failed to load module script")
+    || message.includes("loading chunk")
+  );
+}
+
+function lazyWithChunkRetry(importer) {
+  return lazy(async () => {
+    try {
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        window.sessionStorage.removeItem(CHUNK_ERROR_RELOAD_KEY);
+      }
+      return await importer();
+    } catch (error) {
+      if (typeof window !== "undefined" && window.sessionStorage && isChunkLoadError(error)) {
+        const hasRetried = window.sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY) === "1";
+        if (!hasRetried) {
+          window.sessionStorage.setItem(CHUNK_ERROR_RELOAD_KEY, "1");
+          window.location.reload();
+          return new Promise(() => {});
+        }
+      }
+      throw error;
+    }
+  });
+}
+
+const Index = lazyWithChunkRetry(() => import("./pages/Index"));
+const ComponentDetail = lazyWithChunkRetry(() => import("./pages/ComponentDetails"));
+const ComponentCode = lazyWithChunkRetry(() => import("./pages/ComponentCode"));
+const Contact = lazyWithChunkRetry(() => import("./pages/Contact"));
+const About = lazyWithChunkRetry(() => import("./pages/About"));
+const Help = lazyWithChunkRetry(() => import("./pages/Help"));
+const Login = lazyWithChunkRetry(() => import("./pages/Login"));
+const Register = lazyWithChunkRetry(() => import("./pages/Register"));
+const AddComponentPage = lazyWithChunkRetry(() => import("./pages/AddComponentPage"));
+const DeveloperDashboard = lazyWithChunkRetry(() => import("./pages/DeveloperDashboard"));
+const UserDashboard = lazyWithChunkRetry(() => import("./pages/UserDashboard"));
+const Favorites = lazyWithChunkRetry(() => import("./pages/Favorites"));
+const Reviews = lazyWithChunkRetry(() => import("./pages/Reviews"));
+const Discussions = lazyWithChunkRetry(() => import("./pages/Discussions"));
+const SqlAdmin = lazyWithChunkRetry(() => import("./pages/SqlAdmin"));
+const Privacy = lazyWithChunkRetry(() => import("./pages/Privacy"));
+const Terms = lazyWithChunkRetry(() => import("./pages/Terms"));
+const NotFound = lazyWithChunkRetry(() => import("./pages/NotFound"));
 
 function resolveRouterBasename() {
   if (typeof window === "undefined") {

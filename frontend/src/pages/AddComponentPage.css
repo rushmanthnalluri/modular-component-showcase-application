@@ -140,6 +140,50 @@
   box-shadow: var(--btn-shadow-hover);
 }
 
+html[data-theme="dark"] .add-component-card {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+html[data-theme="dark"] .add-component-card h1,
+html[data-theme="dark"] .add-component-card p,
+html[data-theme="dark"] .add-component-card label,
+html[data-theme="dark"] .optional-docs-panel summary {
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .add-component-card input,
+html[data-theme="dark"] .add-component-card select,
+html[data-theme="dark"] .add-component-card textarea {
+  border-color: hsl(var(--input));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+html[data-theme="dark"] .add-component-card input::placeholder,
+html[data-theme="dark"] .add-component-card textarea::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .field-help {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-theme="dark"] .optional-docs-panel {
+  border-color: hsl(var(--border));
+  background: hsl(var(--bg-main));
+}
+
+html[data-theme="dark"] .optional-docs-panel[open] {
+  background: hsl(var(--background));
+}
+
+html[data-theme="dark"] .add-component-card input[type="file"]::file-selector-button {
+  border: 1px solid hsl(var(--primary));
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
 @media (max-width: 560px) {
   .add-component-page {
     padding-top: 96px;
