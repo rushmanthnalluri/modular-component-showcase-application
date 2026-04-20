@@ -424,21 +424,6 @@ const Register = () => {
               />
             </div>
 
-            <div className="input-group">
-              <label htmlFor="register-avatar-url" className="sr-only">
-                Avatar URL
-              </label>
-              <input
-                id="register-avatar-url"
-                type="url"
-                name="avatarUrl"
-                value={data.avatarUrl}
-                onChange={handleChange}
-                placeholder="Avatar URL (optional, or upload below)"
-                autoComplete="url"
-              />
-            </div>
-
             <div className="input-group input-group-plain avatar-upload-group">
               <label htmlFor="register-avatar-file" className="file-upload-label">
                 Upload avatar image (optional)
