@@ -72,8 +72,8 @@ This project is especially useful for:
 |---|---|---|
 | Frontend | Public client application | https://rushmanthnalluri.github.io/modular-component-showcase-application/ |
 | Backend API | Express API service | https://modular-component-showcase-application.onrender.com/api |
-| Gateway | FastAPI proxy/gateway layer | `https://your-gateway-service.onrender.com` |
-| Database Layer | Neon PostgreSQL + MongoDB Atlas | Private managed services |
+| Gateway | FastAPI proxy/gateway layer | `https://modular-component-showcase-application-ve5e.onrender.com` |
+| Database Layer | Neon PostgreSQL + MongoDB Atlas | Privately managed services by Rushmanth Nalluri |
 
 > Render free services may spin down after inactivity, so the backend or gateway may take a short time to respond on first request.
 >
@@ -267,40 +267,6 @@ The frontend consumes API requests through a configurable base URL and can route
 - Vitest
 - Node test runner
 - Pytest
-
-## Screenshots
-
-Place application screenshots in `docs/screenshots/` to replace the placeholders below.
-
-### Homepage
-![Homepage](docs/screenshots/homepage.png)
-
-### Login Page
-![Login Page](docs/screenshots/login-page.png)
-
-### Register Page
-![Register Page](docs/screenshots/register-page.png)
-
-### Component Listing
-![Component Listing](docs/screenshots/component-listing.png)
-
-### Component Detail Page
-![Component Detail](docs/screenshots/component-detail.png)
-
-### Ratings and Discussions
-![Ratings and Discussions](docs/screenshots/reviews-discussions.png)
-
-### User Dashboard
-![User Dashboard](docs/screenshots/dashboard.png)
-
-### Mobile Responsive View
-![Mobile View](docs/screenshots/mobile-view.png)
-
-### pgAdmin Database View
-![pgAdmin](docs/screenshots/pgadmin-view.png)
-
-### Render Deployment Dashboard
-![Render Dashboard](docs/screenshots/render-dashboard.png)
 
 ## Configuration Notes
 
