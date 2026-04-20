@@ -24,10 +24,6 @@ function isValidAvatarReference(value) {
     return true;
   }
 
-  if (isValidUrl(value)) {
-    return true;
-  }
-
   return /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/.test(String(value || ""));
 }
 
@@ -123,7 +119,7 @@ export function createUserRouter({
       }
 
       if (avatarUrl !== undefined && !isValidAvatarReference(avatarUrl)) {
-        return res.status(400).json({ message: "Avatar must be a valid image URL or uploaded image." });
+        return res.status(400).json({ message: "Avatar must be an uploaded image." });
       }
 
       const emailOwner = await User.findOne({ email: nextEmail, _id: { $ne: user._id } }).select("_id");
