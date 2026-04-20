@@ -293,7 +293,7 @@
   justify-content: center;
   border-radius: var(--btn-radius);
   border: 1px solid hsl(var(--primary));
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 58%, hsl(var(--secondary)));
+  background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   padding: 0 var(--btn-inline-padding);
   font-size: var(--btn-font-size);
@@ -358,9 +358,7 @@
 
 html[data-theme="dark"] .component-link {
   border-color: hsl(var(--primary) / 0.95);
-  background:
-    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, 0.2), transparent 46%),
-    linear-gradient(132deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
 }

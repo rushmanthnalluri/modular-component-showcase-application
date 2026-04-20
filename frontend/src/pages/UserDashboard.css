@@ -1,0 +1,133 @@
+.user-dashboard-page {
+  padding-top: 30px;
+  padding-bottom: 30px;
+  min-height: calc(100vh - 160px);
+}
+
+.user-dashboard-header h1 {
+  margin: 0;
+}
+
+.user-dashboard-header p {
+  margin: 8px 0 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.user-dashboard-state {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 16px;
+  color: hsl(var(--muted-foreground));
+}
+
+.user-dashboard-form {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--card));
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.user-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.user-dashboard-field {
+  display: grid;
+  gap: 6px;
+}
+
+.user-dashboard-field label {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.user-dashboard-field input,
+.user-dashboard-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 10px;
+  font: inherit;
+}
+
+.user-dashboard-field input[type="file"] {
+  padding: 10px;
+}
+
+.user-dashboard-field input[type="file"]::file-selector-button {
+  border: 1px solid hsl(var(--primary));
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.user-dashboard-upload-label {
+  margin-top: 10px;
+}
+
+.user-dashboard-avatar-preview {
+  margin-top: 10px;
+}
+
+.user-dashboard-avatar-preview img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid hsl(var(--border));
+  display: block;
+}
+
+.user-dashboard-note {
+  display: block;
+  margin-top: 6px;
+  color: hsl(var(--muted-foreground));
+}
+
+.user-dashboard-field textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.user-dashboard-checkboxes {
+  display: grid;
+  gap: 8px;
+}
+
+.user-dashboard-checkboxes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: hsl(var(--foreground));
+}
+
+.user-dashboard-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-dashboard-actions button {
+  border: 1px solid hsl(var(--primary));
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.user-dashboard-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

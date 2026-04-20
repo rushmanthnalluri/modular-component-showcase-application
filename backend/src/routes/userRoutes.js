@@ -1,5 +1,36 @@
 import express from "express";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function text(value) {
+  return String(value ?? "").trim();
+}
+
+function isValidUrl(value) {
+  if (!value) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(String(value));
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidAvatarReference(value) {
+  if (!value) {
+    return true;
+  }
+
+  if (isValidUrl(value)) {
+    return true;
+  }
+
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/.test(String(value || ""));
+}
+
 export function createUserRouter({
   User,
   Component,
@@ -72,24 +103,49 @@ export function createUserRouter({
   // UPDATE user profile
   router.put("/me", requireAuth, requireCsrf, async (req, res) => {
     try {
-      const { bio, socialLinks, emailPreferences, avatarUrl } = req.body;
+      const { fullName, email, phone, bio, socialLinks, emailPreferences, avatarUrl } = req.body;
 
       const user = await User.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found." });
       }
 
+      const nextFullName = fullName !== undefined ? text(fullName) : user.fullName;
+      const nextEmail = email !== undefined ? text(email).toLowerCase() : user.email;
+      const nextPhone = phone !== undefined ? text(phone).replace(/\D/g, "") : user.phone;
+
+      if (!nextFullName) {
+        return res.status(400).json({ message: "Full name is required." });
+      }
+
+      if (!EMAIL_REGEX.test(nextEmail)) {
+        return res.status(400).json({ message: "A valid email address is required." });
+      }
+
+      if (avatarUrl !== undefined && !isValidAvatarReference(avatarUrl)) {
+        return res.status(400).json({ message: "Avatar must be a valid image URL or uploaded image." });
+      }
+
+      const emailOwner = await User.findOne({ email: nextEmail, _id: { $ne: user._id } }).select("_id");
+      if (emailOwner) {
+        return res.status(409).json({ message: "An account with this email already exists." });
+      }
+
+      user.fullName = nextFullName.slice(0, 120);
+      user.email = nextEmail;
+      user.phone = nextPhone.slice(0, 15);
+
       if (bio !== undefined) {
-        user.bio = String(bio || "").trim().slice(0, 500);
+        user.bio = text(bio).slice(0, 500);
       }
       if (avatarUrl !== undefined) {
-        user.avatarUrl = String(avatarUrl || "").trim();
+        user.avatarUrl = text(avatarUrl);
       }
       if (socialLinks) {
         user.socialLinks = {
-          twitter: String(socialLinks.twitter || "").trim(),
-          github: String(socialLinks.github || "").trim(),
-          portfolio: String(socialLinks.portfolio || "").trim(),
+          twitter: text(socialLinks.twitter),
+          github: text(socialLinks.github),
+          portfolio: text(socialLinks.portfolio),
         };
       }
       if (emailPreferences) {
@@ -108,10 +164,15 @@ export function createUserRouter({
           id: user.id,
           fullName: user.fullName,
           email: user.email,
+          phone: user.phone,
           bio: user.bio,
           avatarUrl: user.avatarUrl,
           socialLinks: user.socialLinks,
           emailPreferences: user.emailPreferences,
+          role: user.role,
+          isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+          favorites: Array.isArray(user.favorites) ? user.favorites : [],
+          stats: user.stats || {},
         },
       });
     } catch (error) {

@@ -52,7 +52,7 @@
 .theme-toggle,
 .btn-outline,
 .btn-dark {
-  border-radius: 999px;
+  border-radius: 0;
   text-decoration: none;
   padding: 0 var(--btn-inline-padding);
   font-size: var(--btn-font-size);
@@ -113,10 +113,14 @@
   box-shadow: var(--btn-shadow-hover);
 }
 
+.btn-register {
+  background: hsl(var(--primary));
+}
+
 .mobile-menu-btn {
   display: none;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: var(--btn-radius);
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.82);
   height: var(--btn-height);
   padding: 0 12px;

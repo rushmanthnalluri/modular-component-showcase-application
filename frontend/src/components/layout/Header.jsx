@@ -77,9 +77,6 @@ const Header = () => {
         </Link>
 
         <div className="desktop-actions">
-          <Link className="btn-outline" to="/favorites">
-            Favorites
-          </Link>
           <button
             type="button"
             className="theme-toggle"
@@ -96,6 +93,9 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
+              <Link className="btn-outline" to="/user/dashboard">
+                Profile
+              </Link>
               {canAddComponent ? (
                 <Link className="btn-outline" to="/developer/dashboard">
                   Developer Dashboard
@@ -125,7 +125,7 @@ const Header = () => {
               <Link className="btn-outline" to="/login">
                 Login
               </Link>
-              <Link className="btn-dark" to="/register">
+              <Link className="btn-dark btn-register" to="/register">
                 Register
               </Link>
             </>
@@ -147,9 +147,6 @@ const Header = () => {
       {isMenuOpen ? (
         <div className="mobile-nav-wrap" id="mobile-navigation">
           <nav className="layout-container mobile-nav" aria-label="Mobile navigation">
-            <Link to="/favorites" onClick={() => setIsMenuOpen(false)}>
-              Favorites
-            </Link>
             <button
               type="button"
               className="theme-toggle"
@@ -166,6 +163,9 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
+                <Link to="/user/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  Profile
+                </Link>
                 {canAddComponent ? (
                   <Link to="/developer/dashboard" onClick={() => setIsMenuOpen(false)}>
                     Developer Dashboard

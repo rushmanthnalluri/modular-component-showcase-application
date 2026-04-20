@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/use-toast";
 import Header from "@/components/layout/Header";
 import { authenticateUser, fetchRegisterCaptcha, forgotPassword } from "@/services/authAccess";
@@ -15,7 +15,6 @@ import "./Auth.css";
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   // Controlled inputs: React state is the single source of truth.
   const [data, setData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: false, password: false });
@@ -281,8 +280,7 @@ const Login = () => {
         duration: 4000,
       });
 
-      const redirectTo = location.state?.from?.pathname || "/";
-      navigate(redirectTo, { replace: true });
+      navigate("/user/dashboard", { replace: true });
     } catch (error) {
       toast({
         title: "Login failed",
