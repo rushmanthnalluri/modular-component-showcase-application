@@ -127,30 +127,31 @@
   font-size: 12px;
 }
 
-.demo-gradient-button {
+.demo-solid-button {
   border: none;
   border-radius: 10px;
   padding: 12px 24px;
   font-weight: 600;
   color: #ffffff;
+  background: #0d9488;
   cursor: pointer;
 }
 
-.demo-gradient-button:disabled {
+.demo-solid-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.demo-gradient-button--teal {
-  background: linear-gradient(90deg, #0d9488, #0891b2);
+.demo-solid-button--teal {
+  background: #0d9488;
 }
 
-.demo-gradient-button--sunset {
-  background: linear-gradient(90deg, #f97316, #ef4444);
+.demo-solid-button--sunset {
+  background: #f97316;
 }
 
-.demo-gradient-button--slate {
-  background: linear-gradient(90deg, #334155, #0f172a);
+.demo-solid-button--slate {
+  background: #334155;
 }
 
 .demo-glass-card {
@@ -811,7 +812,7 @@ html[data-theme="dark"] .demo-profile-status--away {
 .playground-shell .playground-control input[type="number"],
 .playground-shell .playground-control input[type="range"],
 .playground-shell .playground-checkbox-field,
-.playground-shell .demo-gradient-button,
+.playground-shell .demo-solid-button,
 .playground-shell .demo-glass-card,
 .playground-shell .demo-neon-input,
 .playground-shell .demo-nav button,

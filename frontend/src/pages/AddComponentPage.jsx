@@ -473,7 +473,7 @@ const AddComponentPage = () => {
                     value={formValues.reactImport}
                     onChange={handleChange}
                     rows={3}
-                    placeholder={'import GradientButton from "@/components/GradientButton";\n\n<GradientButton />'}
+                    placeholder={'import SolidButton from "@/components/SolidButton";\n\n<SolidButton />'}
                   />
                 </div>
 
@@ -485,7 +485,7 @@ const AddComponentPage = () => {
                     value={formValues.typescriptImport}
                     onChange={handleChange}
                     rows={3}
-                    placeholder={'import type { ComponentProps } from "react";\nimport GradientButton from "@/components/GradientButton";'}
+                    placeholder={'import type { ComponentProps } from "react";\nimport SolidButton from "@/components/SolidButton";'}
                   />
                 </div>
 
@@ -540,7 +540,7 @@ const AddComponentPage = () => {
                 value={formValues.usageExampleCode}
                 onChange={handleChange}
                 rows={6}
-                placeholder={"<Toolbar>\n  <GradientButton>Deploy</GradientButton>\n</Toolbar>"}
+                placeholder={"<Toolbar>\n  <SolidButton>Deploy</SolidButton>\n</Toolbar>"}
               />
             </details>
 

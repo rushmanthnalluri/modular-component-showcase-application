@@ -34,7 +34,7 @@
 
 .filter-btn.active {
   border-color: hsl(var(--primary));
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)) 62%, hsl(var(--secondary)));
+  background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   box-shadow: var(--btn-shadow);
 }
