@@ -141,6 +141,27 @@ function isValidEmail(value) {
     return EMAIL_REGEX.test(String(value || ""));
 }
 
+function isValidUrl(value) {
+    if (!value) {
+        return true;
+    }
+
+    try {
+        const parsed = new URL(String(value));
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
+
+function isValidAvatarReference(value) {
+    if (!value) {
+        return true;
+    }
+
+    return isValidUrl(value) || isValidImageDataUrl(value);
+}
+
 function createSlug(value) {
     return String(value || "")
         .toLowerCase()
@@ -162,6 +183,27 @@ export function validateRegistrationPayload(payload = {}) {
     const phone = normalizePhone(payload.phone);
     const password = String(payload.password || "");
     const role = payload.role === "developer" ? "developer" : "user";
+    const bio = text(payload.bio).slice(0, 500);
+    const avatarUrl = text(payload.avatarUrl);
+    const socialLinksInput = payload.socialLinks && typeof payload.socialLinks === "object" ? payload.socialLinks : {};
+    const socialLinks = {
+        github: text(socialLinksInput.github),
+        twitter: text(socialLinksInput.twitter),
+        portfolio: text(socialLinksInput.portfolio),
+    };
+    const emailPreferencesInput =
+        payload.emailPreferences && typeof payload.emailPreferences === "object" ? payload.emailPreferences : {};
+    const emailPreferences = {
+        newComponents:
+            emailPreferencesInput.newComponents === undefined
+                ? true
+                : Boolean(emailPreferencesInput.newComponents),
+        reviewComments:
+            emailPreferencesInput.reviewComments === undefined
+                ? true
+                : Boolean(emailPreferencesInput.reviewComments),
+        newsletters: Boolean(emailPreferencesInput.newsletters),
+    };
 
     if (!fullName || !email || !password) {
         return { ok: false, message: "Full name, email and password are required." };
@@ -183,6 +225,14 @@ export function validateRegistrationPayload(payload = {}) {
         return { ok: false, message: "Password must be between 6 and 128 characters." };
     }
 
+    if (!isValidAvatarReference(avatarUrl)) {
+        return { ok: false, message: "Avatar must be a valid image URL or uploaded image." };
+    }
+
+    if (!isValidUrl(socialLinks.github) || !isValidUrl(socialLinks.twitter) || !isValidUrl(socialLinks.portfolio)) {
+        return { ok: false, message: "Social links must be valid http/https URLs." };
+    }
+
     return {
         ok: true,
         data: {
@@ -191,6 +241,10 @@ export function validateRegistrationPayload(payload = {}) {
             phone,
             password,
             role,
+            bio,
+            avatarUrl,
+            socialLinks,
+            emailPreferences,
         },
     };
 }

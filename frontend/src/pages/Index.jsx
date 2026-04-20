@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/common/CategoryFilter";
 import ComponentCard from "@/components/common/ComponentCard";
 import Layout from "@/components/layout/Layout";
@@ -252,6 +252,11 @@ const Index = () => {
                   clean single-page React application.
                 </p>
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                <div className="hero-favorites-link-wrap">
+                  <Link className="hero-favorites-link" to="/favorites">
+                    Favorites
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

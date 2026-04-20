@@ -15,6 +15,8 @@ import successIcon from "@/assets/showcase/success.png";
 import "./Auth.css";
 
 const PHONE_DIGITS_REGEX = /^\d{10,15}$/;
+const MAX_AVATAR_FILE_BYTES = 1_500_000;
+const ALLOWED_AVATAR_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]);
 
 const Register = () => {
   const { toast } = useToast();
@@ -27,6 +29,18 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     role: "user",
+    bio: "",
+    avatarUrl: "",
+    socialLinks: {
+      github: "",
+      twitter: "",
+      portfolio: "",
+    },
+    emailPreferences: {
+      newComponents: true,
+      reviewComments: true,
+      newsletters: false,
+    },
   });
   const [errors, setErrors] = useState({
     fullName: false,
@@ -40,6 +54,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captcha, setCaptcha] = useState({ text: "", image: "" });
   const [captchaInput, setCaptchaInput] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
 
   const getCaptchaImageSrc = (rawImage) => {
     const value = String(rawImage || "").trim();
@@ -60,6 +75,48 @@ const Register = () => {
     });
   }, [toast]);
 
+  const handleAvatarFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!ALLOWED_AVATAR_MIME_TYPES.has(String(file.type || "").toLowerCase())) {
+      toast({
+        title: "Unsupported avatar format",
+        description: "Please upload PNG, JPG, WEBP, or GIF image files.",
+        duration: 4000,
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_FILE_BYTES) {
+      toast({
+        title: "Avatar image too large",
+        description: "Please upload an image smaller than 1.5 MB.",
+        duration: 4000,
+      });
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      setData((prev) => ({ ...prev, avatarUrl: dataUrl }));
+      setAvatarFileName(file.name);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Avatar upload failed",
+        description: "Could not read the selected image. Please try another file.",
+        duration: 4000,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const loadCaptcha = useCallback(async () => {
     const payload = await fetchRegisterCaptcha(6);
     setCaptcha({ text: payload.text, image: payload.image });
@@ -73,7 +130,32 @@ const Register = () => {
   }, [loadCaptcha, showCaptchaUnavailableToast]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
+
+    if (name.startsWith("socialLinks.")) {
+      const socialKey = name.split(".")[1];
+      setData((prev) => ({
+        ...prev,
+        socialLinks: {
+          ...prev.socialLinks,
+          [socialKey]: value,
+        },
+      }));
+      return;
+    }
+
+    if (name.startsWith("emailPreferences.")) {
+      const preferenceKey = name.split(".")[1];
+      setData((prev) => ({
+        ...prev,
+        emailPreferences: {
+          ...prev.emailPreferences,
+          [preferenceKey]: type === "checkbox" ? checked : Boolean(value),
+        },
+      }));
+      return;
+    }
+
     const nextValue = name === "phone" ? value.replace(/\D/g, "").slice(0, 15) : value;
 
     setData((prev) => ({ ...prev, [name]: nextValue }));
@@ -203,6 +285,10 @@ const Register = () => {
         phone: data.phone,
         password: data.password,
         role: data.role,
+        bio: data.bio,
+        avatarUrl: data.avatarUrl,
+        socialLinks: data.socialLinks,
+        emailPreferences: data.emailPreferences,
       });
 
       toast({
@@ -321,6 +407,136 @@ const Register = () => {
                 <option value="user">User</option>
                 <option value="developer">Developer</option>
               </select>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-bio" className="sr-only">
+                Bio
+              </label>
+              <input
+                id="register-bio"
+                type="text"
+                name="bio"
+                value={data.bio}
+                onChange={handleChange}
+                placeholder="Short bio (optional)"
+                maxLength={500}
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-avatar-url" className="sr-only">
+                Avatar URL
+              </label>
+              <input
+                id="register-avatar-url"
+                type="url"
+                name="avatarUrl"
+                value={data.avatarUrl}
+                onChange={handleChange}
+                placeholder="Avatar URL (optional, or upload below)"
+                autoComplete="url"
+              />
+            </div>
+
+            <div className="input-group input-group-plain avatar-upload-group">
+              <label htmlFor="register-avatar-file" className="file-upload-label">
+                Upload avatar image (optional)
+              </label>
+              <input
+                id="register-avatar-file"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                onChange={handleAvatarFileChange}
+              />
+              {avatarFileName ? <small className="avatar-file-note">Selected: {avatarFileName}</small> : null}
+              {data.avatarUrl && data.avatarUrl.startsWith("data:image") ? (
+                <img className="avatar-preview" src={data.avatarUrl} alt="Avatar preview" />
+              ) : null}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-github" className="sr-only">
+                GitHub URL
+              </label>
+              <input
+                id="register-github"
+                type="url"
+                name="socialLinks.github"
+                value={data.socialLinks.github}
+                onChange={handleChange}
+                placeholder="GitHub URL (optional)"
+                autoComplete="url"
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-twitter" className="sr-only">
+                Twitter URL
+              </label>
+              <input
+                id="register-twitter"
+                type="url"
+                name="socialLinks.twitter"
+                value={data.socialLinks.twitter}
+                onChange={handleChange}
+                placeholder="Twitter URL (optional)"
+                autoComplete="url"
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="register-portfolio" className="sr-only">
+                Portfolio URL
+              </label>
+              <input
+                id="register-portfolio"
+                type="url"
+                name="socialLinks.portfolio"
+                value={data.socialLinks.portfolio}
+                onChange={handleChange}
+                placeholder="Portfolio URL (optional)"
+                autoComplete="url"
+              />
+            </div>
+
+            <div className="input-group checkbox-group">
+              <label htmlFor="register-pref-new-components">
+                <input
+                  id="register-pref-new-components"
+                  type="checkbox"
+                  name="emailPreferences.newComponents"
+                  checked={data.emailPreferences.newComponents}
+                  onChange={handleChange}
+                />{" "}
+                Email me about new components
+              </label>
+            </div>
+
+            <div className="input-group checkbox-group">
+              <label htmlFor="register-pref-review-comments">
+                <input
+                  id="register-pref-review-comments"
+                  type="checkbox"
+                  name="emailPreferences.reviewComments"
+                  checked={data.emailPreferences.reviewComments}
+                  onChange={handleChange}
+                />{" "}
+                Email me about review comments
+              </label>
+            </div>
+
+            <div className="input-group checkbox-group">
+              <label htmlFor="register-pref-newsletters">
+                <input
+                  id="register-pref-newsletters"
+                  type="checkbox"
+                  name="emailPreferences.newsletters"
+                  checked={data.emailPreferences.newsletters}
+                  onChange={handleChange}
+                />{" "}
+                Subscribe to newsletter
+              </label>
             </div>
 
             <div className="input-group">

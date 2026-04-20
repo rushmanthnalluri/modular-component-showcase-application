@@ -23,26 +23,33 @@ import {
     ComponentDescription,
     ComponentEmbedding,
     UsageLog,
-} from "./models/appModels.js";
+    createMongoRouter,
+    getMongoLogs,
+    semanticSearch,
+    upsertMongoEmbedding,
+    connectMongoWithSrvFallback,
+    expandMongoSrvUri,
+    isMongoSrvUri,
+} from "./mongodb/index.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createCsrfMiddleware } from "./middleware/csrf.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
 import { createDiscussionsRouter } from "./routes/discussionsRoutes.js";
-import {
-    createMongoRouter,
-    getMongoLogs,
-    semanticSearch,
-    upsertMongoEmbedding,
-} from "./routes/mongoRoutes.js";
 import { createReviewsRouter } from "./routes/reviewsRoutes.js";
-import { createSqlRouter } from "./routes/sqlRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
-import { initializeSqlSchema } from "./sql/initSchema.js";
-import { hasSqlConnectionConfig, pingSql } from "./sql/db.js";
-import { syncSqlDiscussion, syncSqlRating, syncSqlReview, syncSqlUserAccount, syncSqlUserFavorites } from "./services/userSyncService.js";
-import { connectMongoWithSrvFallback, expandMongoSrvUri, isMongoSrvUri } from "./utils/mongoSrvFallback.js";
+import {
+    createSqlRouter,
+    initializeSqlSchema,
+    hasSqlConnectionConfig,
+    pingSql,
+    syncSqlDiscussion,
+    syncSqlRating,
+    syncSqlReview,
+    syncSqlUserAccount,
+    syncSqlUserFavorites,
+} from "./neondb/index.js";
 import logger, { withRequestContext } from "./utils/logger.js";
 
 const app = express();
@@ -627,22 +634,7 @@ async function connectToAtlas() {
         }
     }
 
-    if (isMongoSrvUri(mongoUri)) {
-        try {
-            const directUri = await expandMongoSrvUri(mongoUri);
-            const connectionResult = await connectMongoWithSrvFallback({
-                mongoUri: directUri,
-                connect: (uri, options) => mongoose.connect(uri, options),
-                connectOptions: mongoConnectOptions,
-            });
-
-            resolvedMongoUri = connectionResult.connectionUri;
-            return;
-        } catch (error) {
-            logger.warn(`Direct Atlas resolution failed, falling back to standard SRV connection: ${error.message}`);
-        }
-    }
-
+    // Skip pre-expansion - let connectMongoWithSrvFallback handle SRV expansion with fallback
     const connectionResult = await connectMongoWithSrvFallback({
         mongoUri,
         connect: (uri, options) => mongoose.connect(uri, options),

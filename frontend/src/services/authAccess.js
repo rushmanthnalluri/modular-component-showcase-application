@@ -20,11 +20,30 @@ function notifyAuthChange() {
   window.dispatchEvent(new Event("auth-state-changed"));
 }
 
+export function updateStoredAuthUser(nextUser) {
+  if (!nextUser) {
+    return;
+  }
+
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(nextUser));
+  notifyAuthChange();
+}
+
 export function getAuthUser() {
   return readStoredAuthUser();
 }
 
-export async function registerUser({ fullName, email, phone, password, role }) {
+export async function registerUser({
+  fullName,
+  email,
+  phone,
+  password,
+  role,
+  bio = "",
+  avatarUrl = "",
+  socialLinks = {},
+  emailPreferences = {},
+}) {
   await apiRequest("/auth/register", {
     method: "POST",
     body: JSON.stringify({
@@ -33,6 +52,10 @@ export async function registerUser({ fullName, email, phone, password, role }) {
       phone,
       password,
       role,
+      bio,
+      avatarUrl,
+      socialLinks,
+      emailPreferences,
     }),
   });
 }

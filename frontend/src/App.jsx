@@ -17,6 +17,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const AddComponentPage = lazy(() => import("./pages/AddComponentPage"));
 const DeveloperDashboard = lazy(() => import("./pages/DeveloperDashboard"));
+const UserDashboard = lazy(() => import("./pages/UserDashboard"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Reviews = lazy(() => import("./pages/Reviews"));
 const Discussions = lazy(() => import("./pages/Discussions"));
@@ -121,6 +122,14 @@ const App = () => {
                   <DeveloperRoute>
                     <DeveloperDashboard />
                   </DeveloperRoute>
+                </ProtectedRoute>
+              )}
+            />
+            <Route
+              path="/user/dashboard"
+              element={(
+                <ProtectedRoute>
+                  <UserDashboard />
                 </ProtectedRoute>
               )}
             />

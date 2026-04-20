@@ -74,7 +74,7 @@
   height: 40px;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: none;
+  /* Hide scrollbar in legacy IE/Edge engines. */
   -ms-overflow-style: none;
 }
 
@@ -93,7 +93,6 @@
   display: grid;
   gap: 6px;
   align-content: start;
-  min-height: auto;
 }
 
 .playground-control--checkbox span {
@@ -163,7 +162,7 @@
   box-shadow: none;
 }
 
- .demo-glass-card--elevated {
+.demo-glass-card--elevated {
   box-shadow: none;
 }
 
@@ -198,11 +197,11 @@
   box-shadow: none;
 }
 
- .demo-neon-input--success .demo-neon-input {
+.demo-neon-input--success .demo-neon-input {
   box-shadow: none;
 }
 
- .demo-neon-input--error .demo-neon-input {
+.demo-neon-input--error .demo-neon-input {
   box-shadow: none;
 }
 
@@ -801,4 +800,38 @@ html[data-theme="dark"] .demo-profile-status--away {
     align-items: flex-start;
     gap: 4px;
   }
+}
+
+/* Sharp border mode for playground UI */
+.playground-shell .playground-preview,
+.playground-shell .playground-controls,
+.playground-shell .playground-control textarea,
+.playground-shell .playground-control select,
+.playground-shell .playground-control input[type="text"],
+.playground-shell .playground-control input[type="number"],
+.playground-shell .playground-control input[type="range"],
+.playground-shell .playground-checkbox-field,
+.playground-shell .demo-gradient-button,
+.playground-shell .demo-glass-card,
+.playground-shell .demo-neon-input,
+.playground-shell .demo-nav button,
+.playground-shell .demo-toast,
+.playground-shell .demo-toast-icon,
+.playground-shell .demo-profile-card,
+.playground-shell .demo-profile-avatar,
+.playground-shell .demo-profile-status,
+.playground-shell .demo-modal-open,
+.playground-shell .demo-modal-panel,
+.playground-shell .demo-modal-actions button,
+.playground-shell .demo-accordion,
+.playground-shell .demo-tabs-list button,
+.playground-shell .demo-tabs-panel,
+.playground-shell .demo-table-scroll,
+.playground-shell .demo-chart,
+.playground-shell .demo-split-button,
+.playground-shell .demo-pricing-card,
+.playground-shell .demo-pricing-btn,
+.playground-shell .demo-floating-input-wrap input,
+.playground-shell .demo-breadcrumb-nav {
+  border-radius: 0;
 }

@@ -58,7 +58,17 @@ export function createAuthRouter({
                 return res.status(400).json({ message: validation.message });
             }
 
-            const { fullName, email, phone, password, role } = validation.data;
+            const {
+                fullName,
+                email,
+                phone,
+                password,
+                role,
+                bio,
+                avatarUrl,
+                socialLinks,
+                emailPreferences,
+            } = validation.data;
             const existingUser = await User.findOne({ email });
             if (existingUser) {
                 return res.status(409).json({ message: "An account with this email already exists." });
@@ -73,6 +83,10 @@ export function createAuthRouter({
                 passwordHash,
                 role,
                 isVerifiedDeveloper: role === "developer",
+                bio,
+                avatarUrl,
+                socialLinks,
+                emailPreferences,
             });
 
             await syncSqlUserAccount(user);
