@@ -245,22 +245,13 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-grid">
               <div className="user-dashboard-field">
-                <label htmlFor="user-avatar-url">Avatar URL</label>
-                <input
-                  id="user-avatar-url"
-                  type="url"
-                  name="avatarUrl"
-                  value={form.avatarUrl}
-                  onChange={handleChange}
-                  placeholder="https://example.com/avatar.png"
-                />
                 {form.avatarUrl ? (
                   <div className="user-dashboard-avatar-preview">
                     <img src={form.avatarUrl} alt="Current avatar preview" />
                   </div>
                 ) : null}
                 <label htmlFor="user-avatar-file" className="user-dashboard-upload-label">
-                  Or upload an image
+                  Upload avatar image
                 </label>
                 <input
                   id="user-avatar-file"
