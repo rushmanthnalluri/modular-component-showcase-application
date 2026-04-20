@@ -104,6 +104,28 @@
   max-width: 620px;
 }
 
+.hero-favorites-link-wrap {
+  margin-top: 12px;
+}
+
+.hero-favorites-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.hero-favorites-link:hover {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
 .category-route-note {
   margin: 0 0 12px;
   display: inline-flex;
@@ -208,6 +230,11 @@ html[data-theme="dark"] .empty-state {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.14);
 }
+
+html[data-theme="dark"] .hero-favorites-link {
+  background: rgba(15, 23, 42, 0.72);
+}
+
 html[data-theme="dark"] .empty-state strong {
   color: hsl(var(--foreground));
 }

@@ -2,9 +2,27 @@ import { Pool } from "pg";
 
 let pool;
 
+function normalizeSslMode(connectionString) {
+    if (!connectionString) {
+        return connectionString;
+    }
+
+    try {
+        const url = new URL(connectionString);
+        const sslMode = String(url.searchParams.get("sslmode") || "").trim().toLowerCase();
+        if (["prefer", "require", "verify-ca"].includes(sslMode)) {
+            url.searchParams.set("sslmode", "verify-full");
+            return url.toString();
+        }
+        return connectionString;
+    } catch {
+        return connectionString;
+    }
+}
+
 function resolveConnectionString() {
     if (process.env.DATABASE_URL) {
-        return process.env.DATABASE_URL;
+        return normalizeSslMode(process.env.DATABASE_URL);
     }
 
     const host = process.env.PGHOST;
@@ -17,7 +35,9 @@ function resolveConnectionString() {
         return "";
     }
 
-    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+    return normalizeSslMode(
+        `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`
+    );
 }
 
 function shouldUseSsl(connectionString) {
