@@ -159,7 +159,7 @@ function isValidAvatarReference(value) {
         return true;
     }
 
-    return isValidUrl(value) || isValidImageDataUrl(value);
+    return isValidImageDataUrl(value);
 }
 
 function createSlug(value) {
@@ -226,7 +226,7 @@ export function validateRegistrationPayload(payload = {}) {
     }
 
     if (!isValidAvatarReference(avatarUrl)) {
-        return { ok: false, message: "Avatar must be a valid image URL or uploaded image." };
+        return { ok: false, message: "Avatar must be an uploaded image." };
     }
 
     if (!isValidUrl(socialLinks.github) || !isValidUrl(socialLinks.twitter) || !isValidUrl(socialLinks.portfolio)) {
