@@ -10,7 +10,7 @@ import {
 import animatedNavbarThumb from "@/assets/showcase/animated-navbar.svg";
 
 
-import gradientButtonThumb from "@/assets/showcase/gradient-button.svg";
+import solidButtonThumb from "@/assets/showcase/gradient-button.svg";
 
 import neonInputThumb from "@/assets/showcase/neon-input.svg";
 
@@ -104,26 +104,26 @@ export default GlassCard;`,
   },
   {
     id: "gradient-button",
-    name: "Gradient Button",
-    description: "Animated gradient call-to-action button with hover scaling.",
+    name: "Solid Button",
+    description: "Animated solid call-to-action button with hover scaling.",
     category: "buttons",
-    tags: ["button", "gradient", "animated"],
-    thumbnail: gradientButtonThumb,
+    tags: ["button", "solid", "animated"],
+    thumbnail: solidButtonThumb,
     screenshot: undefined,
     code: {
       jsx: `import React, { Component } from "react";
-import "./GradientButton.css";
+import "./SolidButton.css";
 
-class GradientButton extends Component {
+class SolidButton extends Component {
   render() {
     const { children } = this.props;
 
-    return <button className="gradient-button">{children}</button>;
+    return <button className="solid-button">{children}</button>;
   }
 }
 
-export default GradientButton;`,
-      css: `.gradient-button {
+ export default SolidButton;`,
+      css: `.solid-button {
   border: none;
   border-radius: 10px;
   padding: 12px 32px;
@@ -131,12 +131,12 @@ export default GradientButton;`,
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
-  background: linear-gradient(90deg, #0d9488, #0891b2, #f97316);
+  background: #0d9488;
   box-shadow: none;
   transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
 }
 
-.gradient-button:hover {
+.solid-button:hover {
   transform: scale(1.05);
   filter: brightness(0.95);
 }

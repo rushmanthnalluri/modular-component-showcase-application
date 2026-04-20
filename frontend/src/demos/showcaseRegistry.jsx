@@ -6,7 +6,7 @@ const NAV_LINKS = ["Home", "Components", "Patterns", "Support"];
 
 const TABLE_ROWS = [
   { id: "c-101", name: "Glass Card", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 92 },
-  { id: "c-102", name: "Gradient Button", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 94 },
+  { id: "c-102", name: "Solid Button", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 94 },
   { id: "c-103", name: "Neon Input", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 88 },
   { id: "c-104", name: "Animated Navbar", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 90 },
   { id: "c-105", name: "Toast Notification", owner: "RUSHMANTH NALLURI", status: "Stable", adoption: 96 },
@@ -77,17 +77,17 @@ function createLineGeometry(points) {
   };
 }
 
-function GradientButtonDemo({ values }) {
+function SolidButtonDemo({ values }) {
   const toneClassMap = {
-    teal: "demo-gradient-button--teal",
-    sunset: "demo-gradient-button--sunset",
-    slate: "demo-gradient-button--slate",
+    teal: "demo-solid-button--teal",
+    sunset: "demo-solid-button--sunset",
+    slate: "demo-solid-button--slate",
   };
 
   return (
     <button
       type="button"
-      className={classNames("demo-gradient-button", toneClassMap[values.tone] || toneClassMap.teal)}
+      className={classNames("demo-solid-button", toneClassMap[values.tone] || toneClassMap.teal)}
       disabled={Boolean(values.disabled)}
     >
       {values.label || "Deploy Component"}
@@ -557,7 +557,7 @@ function BreadcrumbNavDemo({ values }) {
 }
 
 const SHOWCASE_DEMOS = {
-  "gradient-button": {
+  "solid-button": {
     summary: "Configure button content and visual state for production-ready interactions.",
     controls: [
       { id: "label", label: "Button Text", type: "text", defaultValue: "Deploy Component" },
@@ -574,7 +574,7 @@ const SHOWCASE_DEMOS = {
       },
       { id: "disabled", label: "Disable Action", type: "checkbox", defaultValue: false },
     ],
-    Component: GradientButtonDemo,
+    Component: SolidButtonDemo,
   },
   "glass-card": {
     summary: "Control content and elevation style for card design variants.",
