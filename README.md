@@ -72,7 +72,8 @@ This project is especially useful for:
 |---|---|---|
 | Frontend | Public client application | https://rushmanthnalluri.github.io/modular-component-showcase-application/ |
 | Backend API | Express API service | https://modular-component-showcase-application.onrender.com/api |
-| Gateway | FastAPI proxy/gateway layer | `https://modular-component-showcase-application-ve5e.onrender.com` |
+| Gateway | FastAPI proxy/gateway layer | `
+https://modular-component-showcase-application-ve5e.onrender.com |
 | Database Layer | Neon PostgreSQL + MongoDB Atlas | Privately managed services by Rushmanth Nalluri |
 
 > Render free services may spin down after inactivity, so the backend or gateway may take a short time to respond on first request.
