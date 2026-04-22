@@ -65,7 +65,7 @@ export function createAuthRouter({
                 password,
                 role,
                 bio,
-                avatarUrl,
+                avatarImage,
                 socialLinks,
                 emailPreferences,
             } = validation.data;
@@ -84,7 +84,7 @@ export function createAuthRouter({
                 role,
                 isVerifiedDeveloper: role === "developer",
                 bio,
-                avatarUrl,
+                avatarImage,
                 socialLinks,
                 emailPreferences,
             });
@@ -131,6 +131,7 @@ export function createAuthRouter({
                     phone: user.phone,
                     role: user.role,
                     isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+                    avatarImage: user.avatarImage || "",
                 },
             });
         } catch (error) {
@@ -148,7 +149,7 @@ export function createAuthRouter({
 
             const payload = verifyRefreshToken(refreshToken);
             const user = await User.findById(payload.userId).select(
-                "fullName email phone role isVerifiedDeveloper"
+                "fullName email phone role isVerifiedDeveloper avatarImage"
             );
 
             if (!user) {
@@ -168,6 +169,7 @@ export function createAuthRouter({
                     phone: user.phone,
                     role: user.role,
                     isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+                    avatarImage: user.avatarImage || "",
                 },
             });
         } catch {

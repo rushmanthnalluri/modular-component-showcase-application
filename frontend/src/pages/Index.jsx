@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/common/CategoryFilter";
 import ComponentCard from "@/components/common/ComponentCard";
@@ -15,7 +15,6 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { categoryId } = useParams();
-  const [searchQuery, setSearchQuery] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [semanticLoading, setSemanticLoading] = useState(false);
@@ -67,11 +66,9 @@ const Index = () => {
     }
   }, [categoryId, validCategoryIds, navigate, location.search]);
 
-  // Sync search query from URL search param to local state.
-  useEffect(() => {
+  const searchQuery = useMemo(() => {
     const searchParams = new URLSearchParams(location.search);
-    const queryFromUrl = searchParams.get("q") || "";
-    setSearchQuery(queryFromUrl);
+    return searchParams.get("q") || "";
   }, [location.search]);
 
   const handleCategoryChange = (nextCategory) => {
@@ -96,10 +93,9 @@ const Index = () => {
     setFavoriteIds(next);
   };
 
-  // Keep the URL `?q=` param in sync with local search state.
-  useEffect(() => {
+  const setSearchQuery = useCallback((nextQuery) => {
     const params = new URLSearchParams(location.search);
-    const normalizedQuery = searchQuery.trim();
+    const normalizedQuery = String(nextQuery || "").trim();
 
     if (normalizedQuery) {
       params.set("q", normalizedQuery);
@@ -117,7 +113,7 @@ const Index = () => {
         { replace: true }
       );
     }
-  }, [searchQuery, location.pathname, location.search, navigate]);
+  }, [location.pathname, location.search, navigate]);
 
   // Delegate deletion to the hook which does optimistic update + rollback on error.
   const handleDelete = async (id) => {

@@ -41,14 +41,20 @@ function getCookieValue(name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function isFormDataBody(value) {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
+
 async function callApi(method, url, body, options = {}) {
   const csrfToken =
     options.withCredentials === false ? null : (memoryCsrfToken || getCookieValue("csrf_token"));
   const headers = {
-    "Content-Type": "application/json",
     ...(options.headers || {}),
     ...(csrfToken && !isSafeReadonlyMethod(method) ? { "x-csrf-token": csrfToken } : {}),
   };
+  if (!isFormDataBody(body) && body !== undefined && !Object.keys(headers).some((key) => key.toLowerCase() === "content-type")) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const controller = new AbortController();
   const timeoutMs = Number(options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS);
@@ -114,13 +120,16 @@ async function ensureCsrfCookie(baseUrl) {
 export async function apiRequest(path, options = {}) {
   const method = String(options.method || "GET").toUpperCase();
   const baseUrl = resolveBaseUrl(path);
+  const body = options.body;
   const normalizedPath = String(path || "").startsWith("/api")
     ? String(path)
     : `${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}${String(path || "")}`;
   const headers = {
-    "Content-Type": "application/json",
     ...(options.headers || {}),
   };
+  if (!isFormDataBody(body) && body !== undefined && !Object.keys(headers).some((key) => key.toLowerCase() === "content-type")) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (!isSafeReadonlyMethod(method)) {
     await ensureCsrfCookie(`${baseUrl}${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}`);
@@ -129,17 +138,20 @@ export async function apiRequest(path, options = {}) {
   return callApi(
     method,
     `${baseUrl}${normalizedPath}`,
-    options.body,
+    body,
     { headers }
   );
 }
 
 export async function gatewayRequest(path, options = {}) {
   const method = String(options.method || "GET").toUpperCase();
+  const body = options.body;
   const headers = {
-    "Content-Type": "application/json",
     ...(options.headers || {}),
   };
+  if (!isFormDataBody(body) && body !== undefined && !Object.keys(headers).some((key) => key.toLowerCase() === "content-type")) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (!GATEWAY_BASE_URL) {
     throw new Error("Gateway base URL is not configured.");
@@ -148,7 +160,7 @@ export async function gatewayRequest(path, options = {}) {
   return callApi(
     method,
     `${GATEWAY_BASE_URL}${path}`,
-    options.body,
+    body,
     {
       headers,
       withCredentials: options.withCredentials ?? false,

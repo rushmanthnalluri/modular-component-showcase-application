@@ -33,10 +33,20 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ["react", "react-dom", "react-router-dom"],
-            ui: ["@radix-ui/react-toast", "lucide-react"],
-            syntax: ["react-syntax-highlighter"],
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return undefined;
+            }
+            if (id.includes("react-syntax-highlighter")) {
+              return "syntax";
+            }
+            if (id.includes("@radix-ui/react-toast") || id.includes("lucide-react")) {
+              return "ui";
+            }
+            if (id.includes("react-router-dom") || id.includes("react-dom") || id.includes("react")) {
+              return "react";
+            }
+            return undefined;
           },
         },
       },
@@ -56,3 +66,4 @@ export default defineConfig(() => {
     },
   };
 });
+

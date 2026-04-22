@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CodeBlock from "@/components/common/CodeBlock";
 import StarRating from "@/components/common/StarRating";
@@ -134,13 +134,11 @@ const ComponentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("jsx");
+  const [selectedTab, setSelectedTab] = useState("jsx");
   const [item, setItem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [previewSrc, setPreviewSrc] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [demoValues, setDemoValues] = useState({});
   const [ratingsSummary, setRatingsSummary] = useState({ average: 0, total: 0 });
   const [reviews, setReviews] = useState([]);
   const [discussions, setDiscussions] = useState([]);
@@ -175,10 +173,6 @@ const ComponentDetail = () => {
       isMounted = false;
     };
   }, [id]);
-
-  useEffect(() => {
-    setPreviewSrc(item?.screenshot || item?.thumbnail || "");
-  }, [item]);
 
   useEffect(() => {
     let active = true;
@@ -240,6 +234,12 @@ const ComponentDetail = () => {
   const demoControls = useMemo(() => demoDefinition?.controls ?? [], [demoDefinition]);
   const hasGeneratedTab = demoControls.length > 0;
   const hasCssCode = Boolean(item?.code?.css);
+  const demoValues = useMemo(() => {
+    if (!hasGeneratedTab) {
+      return {};
+    }
+    return readDemoValuesFromSearchParams(demoControls, searchParams);
+  }, [demoControls, hasGeneratedTab, searchParams]);
   const tabOrder = useMemo(() => {
     const tabs = ["jsx"];
     if (hasCssCode) {
@@ -250,53 +250,15 @@ const ComponentDetail = () => {
     }
     return tabs;
   }, [hasCssCode, hasGeneratedTab]);
-
-  useEffect(() => {
-    if (!hasGeneratedTab) {
-      setDemoValues({});
-      return;
+  const activeTab = useMemo(() => {
+    if (selectedTab === "generated" && !hasGeneratedTab) {
+      return "jsx";
     }
-
-    const parsedValues = readDemoValuesFromSearchParams(demoControls, searchParams);
-    setDemoValues((previous) => (areObjectsEqual(previous, parsedValues) ? previous : parsedValues));
-  }, [demoControls, hasGeneratedTab, searchParams]);
-
-  useEffect(() => {
-    if (!hasGeneratedTab || Object.keys(demoValues).length === 0) {
-      return;
+    if (selectedTab === "css" && !hasCssCode) {
+      return "jsx";
     }
-
-    const nextParams = new URLSearchParams(searchParams);
-    for (const key of [...nextParams.keys()]) {
-      if (key.startsWith("demo_")) {
-        nextParams.delete(key);
-      }
-    }
-
-    demoControls.forEach((control) => {
-      const serializedValue = serializeDemoControlValue(control, demoValues[control.id]);
-      const serializedDefault = serializeDemoControlValue(control, control.defaultValue);
-
-      if (serializedValue !== serializedDefault) {
-        nextParams.set(`demo_${control.id}`, serializedValue);
-      }
-    });
-
-    if (nextParams.toString() !== searchParams.toString()) {
-      setSearchParams(nextParams, { replace: true });
-    }
-  }, [demoControls, demoValues, hasGeneratedTab, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (activeTab === "generated" && !hasGeneratedTab) {
-      setActiveTab("jsx");
-      return;
-    }
-
-    if (activeTab === "css" && !hasCssCode) {
-      setActiveTab("jsx");
-    }
-  }, [activeTab, hasGeneratedTab, hasCssCode]);
+    return selectedTab;
+  }, [hasCssCode, hasGeneratedTab, selectedTab]);
 
   const generatedDemoCode = useMemo(() => {
     if (!item || !hasGeneratedTab) {
@@ -309,6 +271,40 @@ const ComponentDetail = () => {
   const previewModeLabel = hasGeneratedTab ? "Interactive Demo" : "Code Preview";
   const activeTabId = `component-tab-${activeTab}`;
   const activePanelId = `component-panel-${activeTab}`;
+  const previewSources = useMemo(
+    () => [item?.screenshot, item?.thumbnail].filter(Boolean),
+    [item?.screenshot, item?.thumbnail]
+  );
+
+  const handleDemoValuesChange = useCallback((nextValues) => {
+    if (!hasGeneratedTab) {
+      return;
+    }
+
+    if (areObjectsEqual(demoValues, nextValues)) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    for (const key of [...nextParams.keys()]) {
+      if (key.startsWith("demo_")) {
+        nextParams.delete(key);
+      }
+    }
+
+    demoControls.forEach((control) => {
+      const serializedValue = serializeDemoControlValue(control, nextValues[control.id]);
+      const serializedDefault = serializeDemoControlValue(control, control.defaultValue);
+
+      if (serializedValue !== serializedDefault) {
+        nextParams.set(`demo_${control.id}`, serializedValue);
+      }
+    });
+
+    if (nextParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [demoControls, demoValues, hasGeneratedTab, searchParams, setSearchParams]);
 
   const handleTabKeyDown = (event, currentTab) => {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
@@ -325,15 +321,7 @@ const ComponentDetail = () => {
       event.key === "ArrowRight"
         ? (currentIndex + 1) % tabOrder.length
         : (currentIndex - 1 + tabOrder.length) % tabOrder.length;
-    setActiveTab(tabOrder[nextIndex]);
-  };
-
-  const handlePreviewError = () => {
-    if (item?.thumbnail && previewSrc !== item.thumbnail) {
-      setPreviewSrc(item.thumbnail);
-      return;
-    }
-    setPreviewSrc("");
+    setSelectedTab(tabOrder[nextIndex]);
   };
 
   const handleDelete = async () => {
@@ -517,13 +505,13 @@ const ComponentDetail = () => {
             <div className={hasGeneratedTab ? "preview-body preview-body--playground" : "preview-body"}>
               <ResponsivePreview>
                 <ComponentPlayground
+                  key={item.id}
                   definition={demoDefinition}
                   controls={demoControls}
                   componentName={item.name}
-                  fallbackSrc={previewSrc}
-                  onFallbackError={handlePreviewError}
+                  fallbackSources={previewSources}
                   values={demoValues}
-                  onValuesChange={setDemoValues}
+                  onValuesChange={handleDemoValuesChange}
                 />
               </ResponsivePreview>
             </div>
@@ -531,10 +519,10 @@ const ComponentDetail = () => {
 
           <div className="code-pane">
             <div className="code-tabs" role="tablist" aria-label="Component source code tabs">
-              <button
-                type="button"
-                className={activeTab === "jsx" ? "tab-btn active" : "tab-btn"}
-                onClick={() => setActiveTab("jsx")}
+                <button
+                  type="button"
+                  className={activeTab === "jsx" ? "tab-btn active" : "tab-btn"}
+                  onClick={() => setSelectedTab("jsx")}
                 aria-label="Show JSX code tab"
                 role="tab"
                 id="component-tab-jsx"
@@ -549,7 +537,7 @@ const ComponentDetail = () => {
                 <button
                   type="button"
                   className={activeTab === "css" ? "tab-btn active" : "tab-btn"}
-                  onClick={() => setActiveTab("css")}
+                  onClick={() => setSelectedTab("css")}
                   aria-label="Show CSS code tab"
                   role="tab"
                   id="component-tab-css"
@@ -565,7 +553,7 @@ const ComponentDetail = () => {
                 <button
                   type="button"
                   className={activeTab === "generated" ? "tab-btn active" : "tab-btn"}
-                  onClick={() => setActiveTab("generated")}
+                  onClick={() => setSelectedTab("generated")}
                   aria-label="Show generated code tab"
                   role="tab"
                   id="component-tab-generated"

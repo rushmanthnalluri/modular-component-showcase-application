@@ -317,15 +317,10 @@ function DerivedTabsDemo({ values }) {
 
 function DataTableDemo({ values }) {
   const [sortConfig, setSortConfig] = useState({ key: "adoption", direction: "desc" });
-  const [selectedById, setSelectedById] = useState({});
+  const [selectionById, setSelectionById] = useState({});
   const threshold = clamp(Number(values.highlightThreshold || 80), 0, 100);
   const enableSelection = Boolean(values.enableSelection);
-
-  useEffect(() => {
-    if (!enableSelection) {
-      setSelectedById({});
-    }
-  }, [enableSelection]);
+  const selectedById = enableSelection ? selectionById : {};
 
   const rows = useMemo(() => {
     const copy = [...TABLE_ROWS];
@@ -359,7 +354,7 @@ function DataTableDemo({ values }) {
   };
 
   const toggleRowSelection = (rowId) => {
-    setSelectedById((previous) => ({
+    setSelectionById((previous) => ({
       ...previous,
       [rowId]: !previous[rowId],
     }));
@@ -430,11 +425,19 @@ function LiveLineChartDemo({ values }) {
   const pointCount = clamp(Number(values.pointCount || 8), 6, 16);
   const threshold = clamp(Number(values.threshold || 70), CHART_MIN, CHART_MAX);
   const autoUpdate = Boolean(values.autoUpdate);
-  const [points, setPoints] = useState(() => createSeedSeries(pointCount));
 
-  useEffect(() => {
-    setPoints(createSeedSeries(pointCount));
-  }, [pointCount]);
+  return (
+    <LiveLineChartViewport
+      key={pointCount}
+      pointCount={pointCount}
+      threshold={threshold}
+      autoUpdate={autoUpdate}
+    />
+  );
+}
+
+function LiveLineChartViewport({ pointCount, threshold, autoUpdate }) {
+  const [points, setPoints] = useState(() => createSeedSeries(pointCount));
 
   useEffect(() => {
     if (!autoUpdate) {

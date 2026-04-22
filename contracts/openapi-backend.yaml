@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: Modular Component Showcase Backend API
+  version: 1.0.0
+  description: Contract-first summary for core Express endpoints.
+servers:
+  - url: /api
+paths:
+  /health:
+    get:
+      summary: Backend health
+      responses:
+        '200':
+          description: Health payload
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login success
+  /components:
+    get:
+      summary: List components
+      responses:
+        '200': { description: Component list }
+    post:
+      summary: Create component
+      responses:
+        '201': { description: Created }
+  /vector/search/hybrid:
+    post:
+      summary: Hybrid lexical + vector search
+      responses:
+        '200': { description: Search results }
+  /vector/search/semantic:
+    post:
+      summary: Vector-only semantic search with configurable similarity metric
+      responses:
+        '200': { description: Search results }
+  /vector/upsert:
+    post:
+      summary: Idempotent embedding upsert
+      responses:
+        '201': { description: Embedding upserted }
+        '202': { description: Duplicate request still pending }
+        '409': { description: Idempotency key conflict }
+  /vector/providers/capabilities:
+    get:
+      summary: Vector provider and ANN capability discovery
+      responses:
+        '200': { description: Provider capability document }
+  /reconciliation/status:
+    get:
+      summary: Dry-run reconciliation report for Mongo to PostgreSQL favorites drift
+      responses:
+        '200': { description: Reconciliation status }
+  /reconciliation/favorites/repair:
+    post:
+      summary: Optional drift repair for favorite synchronization
+      responses:
+        '200': { description: Dry-run response }
+        '202': { description: Repair accepted }

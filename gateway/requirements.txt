@@ -4,6 +4,10 @@ python-dotenv==1.0.0
 httpx==0.25.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
+PyJWT==2.9.0
+SQLAlchemy==2.0.36
+motor==3.6.0
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-httpx==0.26.0
+PyYAML==6.0.2

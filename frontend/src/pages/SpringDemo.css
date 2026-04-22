@@ -1,0 +1,55 @@
+.spring-demo-page {
+  padding-block: 24px 56px;
+  display: grid;
+  gap: 16px;
+}
+
+.spring-demo-header h1 {
+  margin: 0;
+}
+
+.spring-demo-header p {
+  margin-top: 8px;
+  color: hsl(var(--muted-foreground));
+}
+
+.spring-demo-status {
+  font-weight: 600;
+}
+
+.spring-demo-error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.spring-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.spring-card {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.76);
+  padding: 12px;
+}
+
+.spring-card h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.spring-card pre {
+  margin: 0;
+  font-size: 0.8rem;
+  overflow: auto;
+}
+
+.spring-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+html[data-theme="dark"] .spring-card {
+  background: rgba(15, 23, 42, 0.68);
+}

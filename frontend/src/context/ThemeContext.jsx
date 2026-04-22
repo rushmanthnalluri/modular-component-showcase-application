@@ -13,6 +13,10 @@ function resolveInitialTheme() {
     return storedTheme;
   }
 
+  if (typeof window.matchMedia !== "function") {
+    return "light";
+  }
+
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";

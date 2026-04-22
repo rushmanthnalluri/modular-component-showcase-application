@@ -4,7 +4,7 @@
 
 ### A production-style full-stack platform for discovering, previewing, reviewing, and managing reusable UI components
 
-Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, and an optional **FastAPI gateway**, backed by **Neon PostgreSQL** and **MongoDB Atlas**, containerized with **Docker**, and deployment-ready for **Render** with **GitHub Actions CI/CD**.
+Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, **FastAPI gateway**, and **Spring Boot microservice**, backed by **Neon PostgreSQL** and **MongoDB Atlas**, containerized with **Docker**, and deployment-ready for **Render** with **GitHub Actions CI/CD**.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/ci.yml?branch=main&label=CI&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/ci.yml)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/deploy-pages.yml?branch=main&label=GitHub%20Pages&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/deploy-pages.yml)
@@ -148,6 +148,8 @@ Frontend (React + Vite)
     v
 Gateway (FastAPI, optional)
     |
+    +--> Spring Service (Spring Boot)
+    |
     v
 Backend (Node.js + Express)
     |
@@ -194,6 +196,7 @@ ModularComponentShowcaseApplication/
 |   |   `-- utils/
 |   `-- Dockerfile
 |-- gateway/
+|-- spring-service/
 |-- docs/
 |-- .github/
 |-- docker-compose.yml
@@ -209,6 +212,7 @@ ModularComponentShowcaseApplication/
 | `frontend/` | React + Vite client application, pages, reusable UI, preview components, tests, and styling |
 | `backend/` | Express API, auth middleware, controllers, data models, service logic, SQL helpers, tests, and seed scripts |
 | `gateway/` | FastAPI gateway, proxy routing, gateway services, health endpoints, and Python test coverage |
+| `spring-service/` | Spring Boot microservice with JWT auth, JPA CRUD APIs, role-based access, actuator health, and Swagger |
 | `docs/` | Architecture, deployment, environment, database, monitoring, and troubleshooting documentation |
 | `.github/` | CI/CD workflows for code quality validation and GitHub Pages deployment |
 
@@ -249,6 +253,13 @@ The frontend consumes API requests through a configurable base URL and can route
 - HTTP proxying for API requests
 - Environment-based routing configuration
 
+### Spring Service
+
+- Spring Boot 3 (Java 21)
+- Spring Data JPA + PostgreSQL
+- Spring Security + JWT
+- Actuator + OpenAPI (Swagger)
+
 ### Database
 
 - Neon PostgreSQL
@@ -277,6 +288,15 @@ Use the following references when setting up local or production configuration:
 - [.env.example](.env.example)
 - [docs/environment-guide.md](docs/environment-guide.md)
 - [render.yaml](render.yaml)
+
+## Enterprise Proof Pack
+
+- [docs/final-verification-report.md](docs/final-verification-report.md)
+- [docs/viva-ready-theory-to-code-mapping.md](docs/viva-ready-theory-to-code-mapping.md)
+- [docs/testing-and-quality-proof.md](docs/testing-and-quality-proof.md)
+- [docs/security-hardening-proof.md](docs/security-hardening-proof.md)
+- [docs/production-readiness-proof.md](docs/production-readiness-proof.md)
+- [docs/vector-search-verification.md](docs/vector-search-verification.md)
 
 ## Local Development Setup
 
@@ -325,7 +345,7 @@ uvicorn app.main:app --reload --port 8000
 
 ### 4. Run with Docker
 
-Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin, frontend, backend, and gateway:
+Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin, frontend, backend, gateway, and spring-service:
 
 ```bash
 docker compose up --build
@@ -338,6 +358,7 @@ Common service ports:
 | Frontend | http://localhost:8080 |
 | Backend | http://localhost:5000 |
 | Gateway | http://localhost:8000 |
+| Spring Service | http://localhost:8081 |
 | PostgreSQL | localhost:5432 |
 | MongoDB | localhost:27017 |
 | pgAdmin | http://localhost:5050 |
@@ -356,6 +377,13 @@ Run gateway tests:
 ```bash
 cd gateway
 pytest -q
+```
+
+Run Spring service tests:
+
+```bash
+cd spring-service
+mvn test
 ```
 
 ### 6. Run linting
@@ -507,6 +535,19 @@ SQL-backed catalog and relational data inspection endpoints.
 | PUT | `/api/sql/components/:componentId` | Update a SQL component |
 | DELETE | `/api/sql/components/:componentId` | Delete a SQL component |
 
+### Spring Service via Gateway
+
+The gateway exposes Spring-backed routes under `/springservice/*` and forwards to the Spring Boot service.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/springservice/health` | Spring service health proxy |
+| GET | `/springservice/users` | List users from Spring service |
+| GET | `/springservice/components` | List components from Spring service |
+| GET | `/springservice/reviews` | List reviews from Spring service |
+
+Direct Spring service endpoints (service port `8081`) are also available under `/spring/*`, including `/spring/users`, `/spring/components`, `/spring/reviews`, `/spring/ratings`, and `/spring/favorites`.
+
 ### Admin
 
 Operational and admin-only visibility endpoints.
@@ -539,7 +580,8 @@ The schema is initialized from [`backend/sql/postgres_schema.sql`](backend/sql/p
 - Frontend is deployed as a **static site** or web target depending on the delivery setup.
 - Backend is deployed as a **Node.js web service** with `/health` as the health check path.
 - Gateway is deployed as a separate **Python/FastAPI web service** when used in production.
-- `render.yaml` provides service definitions for frontend, backend, and gateway deployment.
+- Spring service is deployed as a dedicated **Spring Boot web service** with `/actuator/health` health checks.
+- `render.yaml` provides service definitions for frontend, backend, gateway, and spring-service deployment.
 
 ### Neon PostgreSQL
 
@@ -555,13 +597,13 @@ The schema is initialized from [`backend/sql/postgres_schema.sql`](backend/sql/p
 
 ### Docker
 
-- Docker Compose runs the full local stack with frontend, backend, gateway, PostgreSQL, MongoDB, and pgAdmin.
+- Docker Compose runs the full local stack with frontend, backend, gateway, spring-service, PostgreSQL, MongoDB, and pgAdmin.
 - Containerized development improves **environment consistency** and reduces onboarding friction.
 - Each service can be built and operated independently while still working as a coordinated stack.
 
 ### GitHub Actions CI/CD
 
-- CI validates frontend linting, backend tests, frontend unit tests, frontend builds, Docker Compose config, and gateway tests.
+- CI validates frontend linting, backend tests, frontend unit tests, frontend builds, Docker Compose config, gateway tests, and Spring Maven tests/package.
 - GitHub Pages deployment is automated for the frontend through a separate workflow.
 - This structure supports **continuous validation before deployment** and better release confidence.
 
@@ -696,4 +738,3 @@ SOFTWARE.
 - [docs/api-reference.md](docs/api-reference.md)
 - [docs/deployment-guide.md](docs/deployment-guide.md)
 - [docs/environment-guide.md](docs/environment-guide.md)
-

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { APP_INFO } from "@/data/app.constants";
-import { Linkedin, Mail, Phone } from "lucide-react";
+import { Link, Mail, Phone } from "lucide-react";
 import { useToast } from "@/use-toast";
 import { sendSupportTicketEmail } from "@/services/emailService";
 import "./Contact.css";
@@ -149,7 +149,7 @@ const Contact = () => {
               </div>
               <div className="contact-item">
                 <span className="contact-label">
-                  <Linkedin size={16} aria-hidden="true" />
+                  <Link size={16} aria-hidden="true" />
                   <span>LinkedIn</span>
                 </span>
                 <a
