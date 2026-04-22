@@ -8,6 +8,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Outlet, Routes, Route } from "react-router-dom";
 
 const CHUNK_ERROR_RELOAD_KEY = "mcsa:chunk-reload-attempted";
+const ALLOWED_BROWSER_PROTOCOLS = new Set(["http:", "https:"]);
 
 function isChunkLoadError(error) {
   const message = String(error?.message || "").toLowerCase();
@@ -64,7 +65,15 @@ function resolveRouterBasename() {
     return import.meta.env.BASE_URL || "/";
   }
 
-  const host = String(window.location.hostname || "").toLowerCase();
+  let host = String(window.location.hostname || "").toLowerCase();
+  try {
+    const parsed = new URL(String(window.location.href || ""));
+    if (ALLOWED_BROWSER_PROTOCOLS.has(parsed.protocol)) {
+      host = String(parsed.hostname || "").toLowerCase();
+    }
+  } catch {
+    host = String(window.location.hostname || "").toLowerCase();
+  }
 
   // Render and local environments should always use root-based routing.
   if (host.endsWith(".onrender.com") || host === "localhost" || host === "127.0.0.1") {

@@ -53,6 +53,14 @@ function makeUser(overrides = {}) {
     };
 }
 
+function requireCsrfTestOnlyBypass(_req, _res, next) {
+    // Test-only bypass used to isolate upload/profile behavior in unit tests.
+    if (process.env.NODE_ENV !== "test") {
+        return next(new Error("CSRF test bypass is only allowed in NODE_ENV=test"));
+    }
+    return next();
+}
+
 function buildApp() {
     const user = makeUser();
     const User = {
@@ -68,7 +76,8 @@ function buildApp() {
         req.user = { id: "user-obj-id", _id: "user-obj-id", role: "user" };
         next();
     };
-    const requireCsrf = (_req, _res, next) => next();
+    process.env.NODE_ENV = "test";
+    const requireCsrf = requireCsrfTestOnlyBypass;
     const syncSqlUserAccount = async () => { };
 
     const app = express();
@@ -180,7 +189,8 @@ test("PUT /api/users/me — invalid avatarUrl returns 400", async () => {
 test("PUT /api/users/me — unauthenticated returns 401", async () => {
     const User = { findById: () => Promise.resolve(makeUser()) };
     const requireAuth = (_req, res) => res.status(401).json({ message: "Authentication required." });
-    const requireCsrf = (_req, _res, next) => next();
+    process.env.NODE_ENV = "test";
+    const requireCsrf = requireCsrfTestOnlyBypass;
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "avatar-auth-"));
     process.env.AVATAR_UPLOAD_DIR = tmpDir;
 

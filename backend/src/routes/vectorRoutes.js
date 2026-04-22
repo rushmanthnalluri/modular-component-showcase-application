@@ -7,6 +7,14 @@ import { publishVectorEmbeddingUpserted } from "../producers/componentEventProdu
 export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, requireAuth, idempotencyService }) {
   const router = express.Router();
 
+  function toClientError(error, fallbackMessage) {
+    if (error?.statusCode === 400) {
+      return { status: 400, message: error.message || fallbackMessage };
+    }
+
+    return { status: 500, message: fallbackMessage };
+  }
+
   router.get("/providers/capabilities", (_req, res) => {
     return res.json({
       embeddings: getEmbeddingProviderCapabilities(),
@@ -20,11 +28,17 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
       return res.status(400).json({ message: "text is required" });
     }
 
-    const generated = await generateEmbedding({
-      text,
-      model: String(req.body?.model || "deterministic-v1"),
-      dimensions: Number(req.body?.dimensions || 128),
-    });
+    let generated;
+    try {
+      generated = await generateEmbedding({
+        text,
+        model: String(req.body?.model || "deterministic-v1"),
+        dimensions: Number(req.body?.dimensions || 128),
+      });
+    } catch (error) {
+      const response = toClientError(error, "Unable to generate embedding");
+      return res.status(response.status).json({ message: response.message });
+    }
 
     return res.json(generated);
   });
@@ -35,11 +49,17 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
       return res.status(400).json({ message: "query is required" });
     }
 
-    const generated = await generateEmbedding({
-      text: query,
-      model: String(req.body?.model || "deterministic-v1"),
-      dimensions: Number(req.body?.dimensions || 128),
-    });
+    let generated;
+    try {
+      generated = await generateEmbedding({
+        text: query,
+        model: String(req.body?.model || "deterministic-v1"),
+        dimensions: Number(req.body?.dimensions || 128),
+      });
+    } catch (error) {
+      const response = toClientError(error, "Unable to generate embedding");
+      return res.status(response.status).json({ message: response.message });
+    }
     const limit = Math.max(1, Math.min(50, Number(req.body?.limit) || 10));
     const metric = String(req.body?.metric || "cosine").trim().toLowerCase();
     const safeCategory = String(req.body?.category || "").trim().toLowerCase();
@@ -83,17 +103,23 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
       return res.status(400).json({ message: "query is required" });
     }
 
-    const result = await runHybridSearch({
-      query,
-      Component,
-      ComponentEmbedding,
-      limit: req.body?.limit,
-      alpha: req.body?.alpha,
-      metric: req.body?.metric,
-      category: req.body?.category,
-      tags: req.body?.tags,
-      minScore: req.body?.minScore,
-    });
+    let result;
+    try {
+      result = await runHybridSearch({
+        query,
+        Component,
+        ComponentEmbedding,
+        limit: req.body?.limit,
+        alpha: req.body?.alpha,
+        metric: req.body?.metric,
+        category: req.body?.category,
+        tags: req.body?.tags,
+        minScore: req.body?.minScore,
+      });
+    } catch (error) {
+      const response = toClientError(error, "Unable to run hybrid search");
+      return res.status(response.status).json({ message: response.message });
+    }
 
     if (UsageLog) {
       await UsageLog.create({

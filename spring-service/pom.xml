@@ -26,6 +26,7 @@
     <jacoco.version>0.8.14</jacoco.version>
     <bytebuddy.version>1.17.5</bytebuddy.version>
     <spotbugs.version>4.8.6.4</spotbugs.version>
+    <tomcat.version>10.1.54</tomcat.version>
     <jacoco.min.coverage>0.60</jacoco.min.coverage>
   </properties>
 

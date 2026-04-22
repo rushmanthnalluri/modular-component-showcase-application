@@ -17,32 +17,113 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        language: [javascript, python, java]
+        include:
+          - language: javascript
+            build-mode: none
+          - language: python
+            build-mode: none
+          - language: java
+            build-mode: manual
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/autobuild@v3
+          build-mode: ${{ matrix.build-mode }}
+      - name: Set up Java 21
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Make Maven Wrapper executable
+        if: matrix.language == 'java'
+        run: chmod +x spring-service/mvnw
+      - name: Build Java sources for CodeQL
+        if: matrix.language == 'java'
+        working-directory: spring-service
+        run: ./mvnw -q -DskipTests compile
       - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
 
   secret-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fetch-depth: 0
+      - name: Install Gitleaks
+        shell: bash
+        run: |
+          version="8.24.2"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+      - name: Resolve Gitleaks revision range
+        id: gitleaks_range
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+          else
+            base_sha="${{ github.event.before }}"
+          fi
+          head_sha="${{ github.sha }}"
+          empty_sha="0000000000000000000000000000000000000000"
+
+          if [[ -n "$base_sha" && "$base_sha" != "$empty_sha" ]] \
+            && git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1 \
+            && git rev-parse --verify "${head_sha}^{commit}" >/dev/null 2>&1; then
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+            echo "log_opts=--all ${base_sha}..${head_sha}" >> "$GITHUB_OUTPUT"
+          else
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run Gitleaks
+        id: gitleaks_scan
+        continue-on-error: true
+        shell: bash
+        run: |
+          report_path="${RUNNER_TEMP}/gitleaks.sarif"
+          if [[ "${{ steps.gitleaks_range.outputs.valid }}" == "true" ]]; then
+            echo "Scanning git history range: ${{ steps.gitleaks_range.outputs.log_opts }}"
+            gitleaks git --log-opts="${{ steps.gitleaks_range.outputs.log_opts }}" --report-format sarif --report-path "$report_path" --exit-code 1 .
+          else
+            echo "Falling back to a repository snapshot scan"
+            gitleaks dir . --report-format sarif --report-path "$report_path" --exit-code 1
+          fi
+          echo "report_path=$report_path" >> "$GITHUB_OUTPUT"
+      - name: Upload Gitleaks SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.gitleaks_scan.outputs.report_path }}
+      - name: Fail on detected secrets
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.gitleaks_scan.outcome }}" != "success" ]]; then
+            exit 1
+          fi
 
   dependency-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Backend audit
         working-directory: backend
         run: npm audit --audit-level=high
@@ -59,19 +140,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Trivy filesystem scan
+        id: trivy_fs_scan
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
-          format: table
+          format: sarif
+          output: ${{ runner.temp }}/trivy-fs.sarif
           severity: HIGH,CRITICAL
           exit-code: 1
           ignore-unfixed: true
+          skip-dirs: node_modules,frontend/coverage,frontend/dist,frontend/.vite,spring-service/target,backend/uploads,backend/coverage,gateway/.pytest_cache,gateway/__pycache__,.pytest_cache,.git,.github/modernize
+      - name: Upload Trivy filesystem SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ runner.temp }}/trivy-fs.sarif
+      - name: Fail on Trivy filesystem findings
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.trivy_fs_scan.outcome }}" != "success" ]]; then
+            exit 1
+          fi
 
   sbom:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -88,14 +189,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Build backend image
-        run: docker build -t modular-showcase-backend:scan ./backend
+        run: docker build --pull -f backend/Dockerfile -t modular-showcase-backend:scan backend
       - name: Trivy image scan
+        id: trivy_image_scan
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: modular-showcase-backend:scan
-          format: table
+          format: sarif
+          output: ${{ runner.temp }}/trivy-image.sarif
           severity: HIGH,CRITICAL
           exit-code: 1
           ignore-unfixed: true
+      - name: Upload Trivy image SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ runner.temp }}/trivy-image.sarif
+      - name: Fail on Trivy image findings
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.trivy_image_scan.outcome }}" != "success" ]]; then
+            exit 1
+          fi
           
