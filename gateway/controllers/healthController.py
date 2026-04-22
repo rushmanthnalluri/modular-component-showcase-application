@@ -1,5 +1,6 @@
 """Health controller for health checks and metrics."""
 from datetime import datetime, timezone
+import logging
 from time import perf_counter
 from pathlib import Path
 import sys
@@ -22,6 +23,10 @@ except ImportError:
     from utils.env import settings
 
 router = APIRouter(tags=["health"])
+logger = logging.getLogger(__name__)
+DEPENDENCY_UNAVAILABLE_MESSAGE = "Dependency unavailable"
+HEALTH_CHECK_FAILED_MESSAGE = "Health check failed"
+UNEXPECTED_INTERNAL_ERROR_MESSAGE = "Unexpected internal error"
 METRICS_STATE = {
     "started_at": perf_counter(),
     "requests_total": 0,
@@ -82,11 +87,15 @@ async def _check_service(name: str, base_url: str, path: str = "/health") -> dic
             }
     except Exception as exc:
         response_time_ms = max(0.0, (perf_counter() - started_at) * 1000)
+        logger.exception(
+            "Downstream health check failed",
+            extra={"service": name, "base_url": base_url, "path": path},
+        )
         return {
             "service": name,
             "status": "down",
             "response_time_ms": round(response_time_ms, 3),
-            "error_message": str(exc),
+            "error_message": DEPENDENCY_UNAVAILABLE_MESSAGE,
         }
 
 
@@ -122,6 +131,11 @@ async def health_check():
             async with backend_client as http_client:
                 backend_payload = await http_client.request_json("GET", "/health")
         except Exception:
+            logger.warning(
+                "Backend health payload unavailable",
+                extra={"service": "backend", "path": "/health"},
+                exc_info=True,
+            )
             backend_payload = {}
 
         mongo_status = "up" if bool(backend_payload.get("mongo")) else "down"
@@ -150,10 +164,11 @@ async def health_check():
             "services": service_statuses,
             "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("Gateway health check failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Health check failed: {str(e)}",
+            detail=HEALTH_CHECK_FAILED_MESSAGE,
         )
 
 
@@ -192,8 +207,9 @@ async def metrics(request: Request):
             **metrics_snapshot,
             "downstream_service_availability": dict(LAST_DOWNSTREAM_AVAILABILITY),
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("Gateway metrics fetch failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Metrics fetch failed: {str(e)}",
+            detail=UNEXPECTED_INTERNAL_ERROR_MESSAGE,
         )
