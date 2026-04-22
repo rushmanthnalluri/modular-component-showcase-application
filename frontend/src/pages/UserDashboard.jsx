@@ -98,8 +98,9 @@ const UserDashboard = () => {
     reader.onerror = () => {
       toast({
         title: "Avatar upload failed",
-        description: "Could not read the selected image.",
+        description: "Could not read the selected image. Please try another file.",
       });
+      event.target.value = "";
     };
     reader.readAsDataURL(file);
   };
@@ -161,7 +162,7 @@ const UserDashboard = () => {
     event.preventDefault();
     setIsSaving(true);
     try {
-      await updateCurrentUserProfile({
+      const updatedUser = await updateCurrentUserProfile({
         fullName: form.fullName,
         email: form.email,
         phone: form.phone,
@@ -171,6 +172,18 @@ const UserDashboard = () => {
         emailPreferences: form.emailPreferences,
       });
 
+      if (updatedUser) {
+        setForm((prev) => ({
+          ...prev,
+          fullName: String(updatedUser.fullName || ""),
+          email: String(updatedUser.email || ""),
+          phone: String(updatedUser.phone || ""),
+          bio: String(updatedUser.bio || ""),
+          avatarUrl: String(updatedUser.avatarUrl || ""),
+        }));
+      }
+
+      setAvatarFileName("");
       toast({
         title: "Profile updated",
         description: "Your profile was saved successfully.",
@@ -243,13 +256,15 @@ const UserDashboard = () => {
               />
             </div>
 
-            <div className="user-dashboard-grid">
-              <div className="user-dashboard-field">
-                {form.avatarUrl ? (
-                  <div className="user-dashboard-avatar-preview">
+            <div className="user-dashboard-profile-grid">
+              <div className="user-dashboard-field user-dashboard-avatar-field">
+                <div className="user-dashboard-avatar-preview" aria-live="polite">
+                  {form.avatarUrl ? (
                     <img src={form.avatarUrl} alt="Current avatar preview" />
-                  </div>
-                ) : null}
+                  ) : (
+                    <div className="user-dashboard-avatar-placeholder">{(form.fullName || "U").slice(0, 1).toUpperCase()}</div>
+                  )}
+                </div>
                 <label htmlFor="user-avatar-file" className="user-dashboard-upload-label">
                   Upload avatar image
                 </label>
@@ -261,39 +276,43 @@ const UserDashboard = () => {
                   className="user-dashboard-file"
                 />
                 {avatarFileName ? <small className="user-dashboard-note">Selected: {avatarFileName}</small> : null}
+                <small className="user-dashboard-note">Upload PNG, JPG, WEBP, or GIF up to 1.5 MB. A new image replaces the current profile photo.</small>
               </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-github">GitHub URL</label>
-                <input
-                  id="user-github"
-                  type="url"
-                  name="socialLinks.github"
-                  value={form.socialLinks.github}
-                  onChange={handleChange}
-                  placeholder="https://github.com/username"
-                />
-              </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-twitter">Twitter URL</label>
-                <input
-                  id="user-twitter"
-                  type="url"
-                  name="socialLinks.twitter"
-                  value={form.socialLinks.twitter}
-                  onChange={handleChange}
-                  placeholder="https://x.com/username"
-                />
-              </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-portfolio">Portfolio URL</label>
-                <input
-                  id="user-portfolio"
-                  type="url"
-                  name="socialLinks.portfolio"
-                  value={form.socialLinks.portfolio}
-                  onChange={handleChange}
-                  placeholder="https://portfolio.example.com"
-                />
+
+              <div className="user-dashboard-social-grid">
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-github">GitHub URL</label>
+                  <input
+                    id="user-github"
+                    type="url"
+                    name="socialLinks.github"
+                    value={form.socialLinks.github}
+                    onChange={handleChange}
+                    placeholder="https://github.com/username"
+                  />
+                </div>
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-twitter">Twitter URL</label>
+                  <input
+                    id="user-twitter"
+                    type="url"
+                    name="socialLinks.twitter"
+                    value={form.socialLinks.twitter}
+                    onChange={handleChange}
+                    placeholder="https://x.com/username"
+                  />
+                </div>
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-portfolio">Portfolio URL</label>
+                  <input
+                    id="user-portfolio"
+                    type="url"
+                    name="socialLinks.portfolio"
+                    value={form.socialLinks.portfolio}
+                    onChange={handleChange}
+                    placeholder="https://portfolio.example.com"
+                  />
+                </div>
               </div>
             </div>
 

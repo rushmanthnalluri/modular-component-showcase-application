@@ -279,7 +279,7 @@ app.use((_req, _res, next) => {
     metricsTracker.requestsTotal += 1;
     next();
 });
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "4mb" }));
 
 app.get("/", (_req, res) => {
     res.json({ message: "Modular Component Showcase API is running." });
