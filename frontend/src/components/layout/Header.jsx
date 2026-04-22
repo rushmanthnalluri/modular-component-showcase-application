@@ -88,9 +88,6 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
-              <Link className="btn-outline" to="/spring-demo">
-                Spring Demo
-              </Link>
               <Link className="btn-outline" to="/user/dashboard">
                 Profile
               </Link>
@@ -161,9 +158,6 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
-                <Link to="/spring-demo" onClick={() => setIsMenuOpen(false)}>
-                  Spring Demo
-                </Link>
                 <Link to="/user/dashboard" onClick={() => setIsMenuOpen(false)}>
                   Profile
                 </Link>
@@ -193,9 +187,6 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Link to="/spring-demo" onClick={() => setIsMenuOpen(false)}>
-                  Spring Demo
-                </Link>
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                   Login
                 </Link>
