@@ -1,5 +1,8 @@
 package com.modularshowcase.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public final class UserResponse {
 
         private final Long userId;
@@ -9,7 +12,15 @@ public final class UserResponse {
         private final String phone;
         private final String role;
 
-        public UserResponse(Long userId, String name, String fullName, String email, String phone, String role) {
+        @JsonCreator
+        public UserResponse(
+                        @JsonProperty("userId") Long userId,
+                        @JsonProperty("name") String name,
+                        @JsonProperty("fullName") String fullName,
+                        @JsonProperty("email") String email,
+                        @JsonProperty("phone") String phone,
+                        @JsonProperty("role") String role
+        ) {
                 this.userId = userId;
                 this.name = name;
                 this.fullName = fullName;
@@ -18,26 +29,32 @@ public final class UserResponse {
                 this.role = role;
         }
 
+        @JsonProperty("userId")
         public Long userId() {
                 return userId;
         }
 
+        @JsonProperty("name")
         public String name() {
                 return name;
         }
 
+        @JsonProperty("fullName")
         public String fullName() {
                 return fullName;
         }
 
+        @JsonProperty("email")
         public String email() {
                 return email;
         }
 
+        @JsonProperty("phone")
         public String phone() {
                 return phone;
         }
 
+        @JsonProperty("role")
         public String role() {
                 return role;
         }

@@ -1,5 +1,7 @@
 package com.modularshowcase.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -12,15 +14,21 @@ public final class AuthRequest {
         @NotBlank
         private final String role;
 
-        public AuthRequest(String email, String role) {
+        @JsonCreator
+        public AuthRequest(
+                        @JsonProperty("email") String email,
+                        @JsonProperty("role") String role
+        ) {
                 this.email = email;
                 this.role = role;
         }
 
+        @JsonProperty("email")
         public String email() {
                 return email;
         }
 
+        @JsonProperty("role")
         public String role() {
                 return role;
         }
