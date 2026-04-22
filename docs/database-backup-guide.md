@@ -39,3 +39,8 @@ mongorestore --uri "$MONGODB_URI" --drop backup/mongo/<folder>
 
 - Run a monthly restore drill in a non-production environment.
 - Verify schema + record counts after restore.
+
+## Rollback Guidance
+- PostgreSQL rollback-first option: restore latest validated dump into standby or temporary database, then switch traffic.
+- Mongo rollback-first option: restore dump to staging cluster, verify collection counts and search indexes, then promote.
+- Always re-run smoke checks after restore.

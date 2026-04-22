@@ -30,7 +30,7 @@ const Register = () => {
     confirmPassword: "",
     role: "user",
     bio: "",
-    avatarUrl: "",
+    avatarImage: "",
     socialLinks: {
       github: "",
       twitter: "",
@@ -104,7 +104,7 @@ const Register = () => {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = String(reader.result || "");
-      setData((prev) => ({ ...prev, avatarUrl: dataUrl }));
+      setData((prev) => ({ ...prev, avatarImage: dataUrl }));
       setAvatarFileName(file.name);
     };
     reader.onerror = () => {
@@ -124,9 +124,21 @@ const Register = () => {
   }, []);
 
   useEffect(() => {
-    loadCaptcha().catch(() => {
-      showCaptchaUnavailableToast();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+      loadCaptcha().catch(() => {
+        if (!cancelled) {
+          showCaptchaUnavailableToast();
+        }
+      });
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadCaptcha, showCaptchaUnavailableToast]);
 
   const handleChange = (event) => {
@@ -286,7 +298,7 @@ const Register = () => {
         password: data.password,
         role: data.role,
         bio: data.bio,
-        avatarUrl: data.avatarUrl,
+        avatarImage: data.avatarImage,
         socialLinks: data.socialLinks,
         emailPreferences: data.emailPreferences,
       });
@@ -435,8 +447,8 @@ const Register = () => {
                 onChange={handleAvatarFileChange}
               />
               {avatarFileName ? <small className="avatar-file-note">Selected: {avatarFileName}</small> : null}
-              {data.avatarUrl && data.avatarUrl.startsWith("data:image") ? (
-                <img className="avatar-preview" src={data.avatarUrl} alt="Avatar preview" />
+              {data.avatarImage && data.avatarImage.startsWith("data:image") ? (
+                <img className="avatar-preview" src={data.avatarImage} alt="Avatar preview" />
               ) : null}
             </div>
 

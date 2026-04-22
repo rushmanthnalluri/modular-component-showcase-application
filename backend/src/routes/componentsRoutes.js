@@ -1,6 +1,11 @@
 import express from "express";
 import crypto from "crypto";
 import { createComponentId, validateComponentPayload } from "../utils/validation.js";
+import {
+    publishComponentCreated,
+    publishComponentDeleted,
+    publishComponentUpdated,
+} from "../producers/componentEventProducer.js";
 
 export function createComponentsRouter({
     Component,
@@ -265,7 +270,7 @@ export function createComponentsRouter({
     router.get("/:id", async (req, res) => {
         try {
             const component = await Component.findOne({ id: req.params.id })
-                .populate("createdBy", "fullName email avatarUrl stats")
+                .populate("createdBy", "fullName email avatarImage stats")
                 .lean();
 
             if (!component) {
@@ -276,7 +281,7 @@ export function createComponentsRouter({
 
             const [reviews, dependencies] = await Promise.all([
                 Review.find({ componentId: component._id, status: "approved" })
-                    .populate("userId", "fullName avatarUrl")
+                    .populate("userId", "fullName avatarImage")
                     .sort({ createdAt: -1 })
                     .limit(20)
                     .lean(),
@@ -371,6 +376,13 @@ export function createComponentsRouter({
                 componentId: item._id,
                 action: "created",
                 changes: { name, category, tags },
+            });
+
+            publishComponentCreated({
+                componentId: item.id,
+                name: item.name,
+                category: item.category,
+                createdBy: String(req.user._id),
             });
 
             await notifyNewComponent(item, req.user._id);
@@ -471,6 +483,14 @@ export function createComponentsRouter({
                 reason: changelog,
             });
 
+            publishComponentUpdated({
+                componentId: component.id,
+                name: component.name,
+                category: component.category,
+                updatedBy: String(req.user._id),
+                changedFields: Object.keys(changes),
+            });
+
             return res.json(component);
         } catch (error) {
             console.error("Update component error:", error.message);
@@ -501,6 +521,12 @@ export function createComponentsRouter({
             });
 
             await Component.deleteOne({ id: req.params.id });
+            publishComponentDeleted({
+                componentId: component.id,
+                name: component.name,
+                category: component.category,
+                deletedBy: String(req.user._id),
+            });
             return res.json({ message: "Component deleted." });
         } catch (error) {
             console.error("Delete component error:", error.message);
@@ -614,7 +640,7 @@ export function createComponentsRouter({
             component.totalReviews = reviewCount;
             await component.save();
 
-            const populated = await review.populate("userId", "fullName avatarUrl");
+            const populated = await review.populate("userId", "fullName avatarImage");
             return res.status(201).json(populated);
         } catch (error) {
             console.error("Review error:", error.message);
@@ -642,7 +668,7 @@ export function createComponentsRouter({
 
             const skip = (page - 1) * limit;
             const reviews = await Review.find({ componentId: component._id, status: "approved" })
-                .populate("userId", "fullName avatarUrl email")
+                .populate("userId", "fullName avatarImage email")
                 .sort(sortOption)
                 .skip(skip)
                 .limit(parseInt(limit))
@@ -756,13 +782,13 @@ export function createComponentsRouter({
     // Discussion thread: list
     router.get("/:id/discussions", async (req, res) => {
         try {
-            const component = await Component.findOne({ id: req.params.id }).select("_id");
+            const component = await Component.findOne({ id: req.params.id }).select("_id id");
             if (!component) {
                 return res.status(404).json({ message: "Component not found." });
             }
 
             const threads = await Discussion.find({ componentId: component._id, status: "active" })
-                .populate("userId", "fullName avatarUrl")
+                .populate("userId", "fullName avatarImage")
                 .sort({ createdAt: -1 })
                 .lean();
 
@@ -798,7 +824,7 @@ export function createComponentsRouter({
             await syncSqlUserAccount(user);
             await syncSqlDiscussion(discussion, { user, componentMongoId: component.id });
 
-            const populated = await discussion.populate("userId", "fullName avatarUrl");
+            const populated = await discussion.populate("userId", "fullName avatarImage");
             return res.status(201).json(populated);
         } catch (error) {
             console.error("Error creating discussion:", error.message);

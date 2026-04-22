@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
         
         // User profile
         bio: { type: String, default: "", trim: true, maxlength: 500 },
-        avatarUrl: { type: String, default: "" },
+        avatarImage: { type: String, default: "" },
         socialLinks: {
             twitter: { type: String, default: "" },
             github: { type: String, default: "" },
@@ -255,6 +255,8 @@ const componentEmbeddingSchema = new mongoose.Schema(
         category: { type: String, default: "", trim: true },
         text: { type: String, default: "", trim: true },
         model: { type: String, default: "mock", trim: true },
+        provider: { type: String, default: "deterministic", trim: true },
+        embeddingHash: { type: String, default: "", trim: true },
         embedding: { type: [Number], required: true },
     },
     { timestamps: true, collection: "component_embeddings" }
@@ -262,6 +264,7 @@ const componentEmbeddingSchema = new mongoose.Schema(
 
 componentEmbeddingSchema.index({ componentName: 1 });
 componentEmbeddingSchema.index({ category: 1 });
+componentEmbeddingSchema.index({ embeddingHash: 1 });
 
 const usageLogSchema = new mongoose.Schema(
     {

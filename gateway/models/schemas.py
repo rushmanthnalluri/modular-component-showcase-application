@@ -150,6 +150,7 @@ class HealthCheckSchema(BaseModel):
                 "search_service": "up",
                 "sql_service": "up",
                 "component_service": "up",
+                "spring_service": "up",
                 "mongo": "up",
                 "postgres": "up",
                 "services": [
@@ -172,6 +173,7 @@ class HealthCheckSchema(BaseModel):
     search_service: str = Field(..., pattern="^(up|down)$")
     sql_service: str = Field(..., pattern="^(up|down)$")
     component_service: str = Field(..., pattern="^(up|down)$")
+    spring_service: str = Field(..., pattern="^(up|down)$")
     mongo: str = Field(..., pattern="^(up|down)$")
     postgres: str = Field(..., pattern="^(up|down)$")
     services: List[ServiceHealthSchema]
@@ -193,6 +195,7 @@ class MetricsSchema(BaseModel):
     )
 
     requests_total: int
-    requests_success: int
-    requests_error: int
+    request_count: int
+    error_count: int
     avg_response_time_ms: float
+    uptime_seconds: float

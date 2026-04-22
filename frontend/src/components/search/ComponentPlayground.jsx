@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 import "./component-playground.css";
 
@@ -18,20 +18,18 @@ const ComponentPlayground = ({
   definition,
   controls = [],
   componentName,
-  fallbackSrc,
-  onFallbackError,
+  fallbackSources = [],
   values: controlledValues,
   onValuesChange,
 }) => {
   const [internalValues, setInternalValues] = useState({});
+  const [fallbackIndex, setFallbackIndex] = useState(0);
   const values = controlledValues ?? internalValues;
-
-  useEffect(() => {
-    if (controlledValues) {
-      return;
-    }
-    setInternalValues({});
-  }, [controlledValues]);
+  const resolvedFallbackSources = useMemo(
+    () => fallbackSources.filter(Boolean),
+    [fallbackSources]
+  );
+  const fallbackSrc = resolvedFallbackSources[fallbackIndex] || "";
 
   if (!definition) {
     if (fallbackSrc) {
@@ -40,7 +38,9 @@ const ComponentPlayground = ({
           src={fallbackSrc}
           alt={`${componentName} screenshot`}
           className="preview-screenshot"
-          onError={onFallbackError}
+          onError={() => {
+            setFallbackIndex((previous) => previous + 1);
+          }}
         />
       );
     }

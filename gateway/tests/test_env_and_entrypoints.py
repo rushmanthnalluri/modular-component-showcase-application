@@ -17,6 +17,7 @@ def _reload_env_module(monkeypatch, **values):
         "SEARCH_SERVICE_URL",
         "SQL_SERVICE_URL",
         "COMPONENT_SERVICE_URL",
+        "SPRING_SERVICE_URL",
         "FRONTEND_URL",
         "GATEWAY_PORT",
         "GATEWAY_HOST",
@@ -41,6 +42,7 @@ def test_service_url_fallbacks_to_backend(monkeypatch):
     assert settings.search_service_base_url == "http://example-backend:5000"
     assert settings.sql_service_base_url == "http://example-backend:5000"
     assert settings.component_service_base_url == "http://example-backend:5000"
+    assert settings.spring_service_base_url == "http://example-backend:5000"
 
 
 def test_service_url_overrides_are_respected(monkeypatch):
@@ -51,6 +53,7 @@ def test_service_url_overrides_are_respected(monkeypatch):
         SEARCH_SERVICE_URL="http://search-service:5002",
         SQL_SERVICE_URL="http://sql-service:5003",
         COMPONENT_SERVICE_URL="http://component-service:5004",
+        SPRING_SERVICE_URL="http://spring-service:8081",
     )
     settings = env_module.settings
 
@@ -58,6 +61,7 @@ def test_service_url_overrides_are_respected(monkeypatch):
     assert settings.search_service_base_url == "http://search-service:5002"
     assert settings.sql_service_base_url == "http://sql-service:5003"
     assert settings.component_service_base_url == "http://component-service:5004"
+    assert settings.spring_service_base_url == "http://spring-service:8081"
 
 
 def test_gateway_entrypoints_expose_same_app():

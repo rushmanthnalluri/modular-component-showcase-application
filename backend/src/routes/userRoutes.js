@@ -1,4 +1,5 @@
 import express from "express";
+import { avatarUpload } from "../middleware/avatarUpload.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,12 +20,67 @@ function isValidUrl(value) {
   }
 }
 
-function isValidAvatarReference(value) {
+function isValidImageDataUrl(value) {
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/.test(String(value || ""));
+}
+
+function isStoredAvatarPath(value) {
+  return String(value || "").startsWith("/app/uploads/avatars/");
+}
+
+function isValidAvatarValue(value) {
   if (!value) {
     return true;
   }
 
-  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/.test(String(value || ""));
+  return isValidUrl(value) || isStoredAvatarPath(value) || isValidImageDataUrl(value);
+}
+
+function parseOptionalJsonObject(value, fieldName) {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return { ok: true, value };
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return { ok: true, value: {} };
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return { ok: true, value: parsed };
+      }
+    } catch {
+      return { ok: false, message: `${fieldName} must be a valid object.` };
+    }
+  }
+
+  return { ok: false, message: `${fieldName} must be a valid object.` };
+}
+
+function toUserPayload(user) {
+  const resolvedAvatar = String(user?.avatarImage || "");
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+    favorites: Array.isArray(user.favorites) ? user.favorites : [],
+    bio: user.bio || "",
+    avatarImage: resolvedAvatar,
+    avatarUrl: resolvedAvatar,
+    socialLinks: user.socialLinks || {},
+    stats: user.stats || {},
+    emailPreferences: user.emailPreferences || {},
+  };
 }
 
 export function createUserRouter({
@@ -78,28 +134,38 @@ export function createUserRouter({
 
   // GET current user profile
   router.get("/me", requireAuth, async (req, res) => {
-    return res.json({
-      user: {
-        id: req.user.id,
-        fullName: req.user.fullName,
-        email: req.user.email,
-        phone: req.user.phone,
-        role: req.user.role,
-        isVerifiedDeveloper: Boolean(req.user.isVerifiedDeveloper),
-        favorites: Array.isArray(req.user.favorites) ? req.user.favorites : [],
-        bio: req.user.bio || "",
-        avatarUrl: req.user.avatarUrl || "",
-        socialLinks: req.user.socialLinks || {},
-        stats: req.user.stats || {},
-        emailPreferences: req.user.emailPreferences || {},
-      },
-    });
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.json({ user: toUserPayload(user) });
   });
 
   // UPDATE user profile
-  router.put("/me", requireAuth, requireCsrf, async (req, res) => {
+  router.put("/me", requireAuth, requireCsrf, avatarUpload.single("avatar"), async (req, res) => {
     try {
-      const { fullName, email, phone, bio, socialLinks, emailPreferences, avatarUrl } = req.body;
+      const body = req.body && typeof req.body === "object" ? req.body : {};
+      const { fullName, email, phone, bio } = body;
+
+      const socialLinksParse = parseOptionalJsonObject(body.socialLinks, "socialLinks");
+      if (!socialLinksParse.ok) {
+        return res.status(400).json({ message: socialLinksParse.message });
+      }
+
+      const emailPreferencesParse = parseOptionalJsonObject(body.emailPreferences, "emailPreferences");
+      if (!emailPreferencesParse.ok) {
+        return res.status(400).json({ message: emailPreferencesParse.message });
+      }
+
+      let avatarValue;
+      if (req.file?.filename) {
+        avatarValue = `/app/uploads/avatars/${req.file.filename}`;
+      } else if (body.avatarUrl !== undefined) {
+        avatarValue = String(body.avatarUrl || "").trim();
+      } else if (body.avatarImage !== undefined) {
+        avatarValue = String(body.avatarImage || "").trim();
+      }
 
       const user = await User.findById(req.user.id);
       if (!user) {
@@ -118,8 +184,8 @@ export function createUserRouter({
         return res.status(400).json({ message: "A valid email address is required." });
       }
 
-      if (avatarUrl !== undefined && !isValidAvatarReference(avatarUrl)) {
-        return res.status(400).json({ message: "Avatar must be an uploaded image." });
+      if (avatarValue !== undefined && !isValidAvatarValue(avatarValue)) {
+        return res.status(400).json({ message: "Avatar must be a valid image URL or uploaded image." });
       }
 
       const emailOwner = await User.findOne({ email: nextEmail, _id: { $ne: user._id } }).select("_id");
@@ -134,17 +200,19 @@ export function createUserRouter({
       if (bio !== undefined) {
         user.bio = text(bio).slice(0, 500);
       }
-      if (avatarUrl !== undefined) {
-        user.avatarUrl = text(avatarUrl);
+      if (avatarValue !== undefined) {
+        user.avatarImage = avatarValue;
       }
-      if (socialLinks) {
+      if (socialLinksParse.value !== undefined) {
+        const socialLinks = socialLinksParse.value;
         user.socialLinks = {
           twitter: text(socialLinks.twitter),
           github: text(socialLinks.github),
           portfolio: text(socialLinks.portfolio),
         };
       }
-      if (emailPreferences) {
+      if (emailPreferencesParse.value !== undefined) {
+        const emailPreferences = emailPreferencesParse.value;
         user.emailPreferences = {
           newComponents: Boolean(emailPreferences.newComponents),
           reviewComments: Boolean(emailPreferences.reviewComments),
@@ -155,22 +223,7 @@ export function createUserRouter({
       await user.save();
       await syncSqlUserAccount(user);
 
-      return res.json({
-        user: {
-          id: user.id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          bio: user.bio,
-          avatarUrl: user.avatarUrl,
-          socialLinks: user.socialLinks,
-          emailPreferences: user.emailPreferences,
-          role: user.role,
-          isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
-          favorites: Array.isArray(user.favorites) ? user.favorites : [],
-          stats: user.stats || {},
-        },
-      });
+      return res.json({ user: toUserPayload(user) });
     } catch (error) {
       console.error("Update profile error:", error.message);
       return res.status(500).json({ message: "Unable to update profile." });

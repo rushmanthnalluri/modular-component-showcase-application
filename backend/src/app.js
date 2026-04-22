@@ -5,6 +5,8 @@ import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import fs from "node:fs";
+import path from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { rateLimit } from "express-rate-limit";
@@ -39,6 +41,8 @@ import { createEmailRouter } from "./routes/emailRoutes.js";
 import { createDiscussionsRouter } from "./routes/discussionsRoutes.js";
 import { createReviewsRouter } from "./routes/reviewsRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
+import { createVectorRouter } from "./routes/vectorRoutes.js";
+import { createReconciliationRouter } from "./routes/reconciliationRoutes.js";
 import {
     createSqlRouter,
     initializeSqlSchema,
@@ -51,6 +55,9 @@ import {
     syncSqlUserFavorites,
 } from "./neondb/index.js";
 import logger, { withRequestContext } from "./utils/logger.js";
+import { mapAvatarUploadError } from "./middleware/avatarUpload.js";
+import { idempotencyService } from "./services/idempotencyService.js";
+import { startAuditEventConsumer, stopAuditEventConsumer } from "./consumers/auditEventConsumer.js";
 
 const app = express();
 const apiRouter = express.Router();
@@ -74,6 +81,10 @@ const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 const PORT = Number(process.env.PORT || 5000);
 const HOST = process.env.HOST || "0.0.0.0";
 const mongoUri = process.env.NODE_ENV === "test" ? "" : process.env.MONGODB_URI;
+const avatarUploadDir = path.resolve(process.env.AVATAR_UPLOAD_DIR || path.join(process.cwd(), "uploads", "avatars"));
+
+process.env.AVATAR_UPLOAD_DIR = avatarUploadDir;
+fs.mkdirSync(avatarUploadDir, { recursive: true });
 
 const mongoConnectOptions = {
     serverSelectionTimeoutMS: 10000,
@@ -280,6 +291,7 @@ app.use((_req, _res, next) => {
     next();
 });
 app.use(express.json({ limit: "1mb" }));
+app.use("/app/uploads/avatars", express.static(avatarUploadDir));
 
 app.get("/", (_req, res) => {
     res.json({ message: "Modular Component Showcase API is running." });
@@ -410,6 +422,25 @@ apiRouter.use(
     })
 );
 
+apiRouter.use(
+    "/vector",
+    createVectorRouter({
+        Component,
+        ComponentEmbedding,
+        UsageLog,
+        requireAuth,
+        idempotencyService,
+    })
+);
+
+apiRouter.use(
+    "/reconciliation",
+    createReconciliationRouter({
+        User,
+        requireAuth,
+    })
+);
+
 apiRouter.use("/sql", createSqlRouter());
 apiRouter.use(
     "/reviews",
@@ -517,6 +548,15 @@ app.use("/api", apiRouter);
 app.use((err, _req, res, _next) => {
     if (String(err?.message || "").includes("CORS")) {
         return res.status(403).json({ message: "CORS blocked for this origin." });
+    }
+
+    if (err?.type === "entity.too.large") {
+        return res.status(413).json({ message: "Request payload too large." });
+    }
+
+    const avatarUploadError = mapAvatarUploadError(err);
+    if (avatarUploadError) {
+        return res.status(avatarUploadError.status).json({ message: avatarUploadError.message });
     }
 
     logger.error("unhandled_server_error", {
@@ -697,6 +737,7 @@ export async function connectWithFallback() {
 export async function startServer() {
     isShuttingDown = false;
     assertProductionConfig();
+    startAuditEventConsumer();
     await connectWithFallback();
 
     if (process.env.SQL_AUTO_MIGRATE !== "false") {
@@ -739,6 +780,7 @@ export async function startServer() {
 export async function shutdownServer() {
     isShuttingDown = true;
     clearReconnectTimer();
+    stopAuditEventConsumer();
 
     if (httpServer) {
         await new Promise((resolve, reject) => {

@@ -16,6 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:8.10
@@ -49,6 +50,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    restart: unless-stopped
 
   backend:
     build:
@@ -62,6 +64,7 @@ services:
       JWT_SECRET: development-secret
       FRONTEND_ORIGINS: http://localhost:5173,http://localhost:8080
       NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     ports:
       - "5000:5000"
     depends_on:
@@ -74,6 +77,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   gateway:
     build:
@@ -82,19 +86,24 @@ services:
     environment:
       PORT: 8000
       BACKEND_URL: http://backend:5000
+      SPRING_SERVICE_URL: http://spring-service:8081
       FRONTEND_URL: http://localhost:8080
       REQUEST_TIMEOUT_SECONDS: 20
       REQUEST_MAX_RETRIES: 2
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     ports:
       - "8000:8000"
     depends_on:
       backend:
+        condition: service_healthy
+      spring-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health >/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   mongo:
     image: mongo:7
@@ -103,6 +112,79 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    restart: unless-stopped
+
+  spring-service:
+    build:
+      context: ./spring-service
+    container_name: showcase-spring-service
+    environment:
+      PORT: 8081
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application
+      SPRING_JWT_SECRET: development-secret-development-secret-1234
+      SPRING_ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173,http://localhost:8000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.112.0
+    container_name: showcase-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: showcase-prometheus
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      backend:
+        condition: service_started
+      gateway:
+        condition: service_started
+      spring-service:
+        condition: service_started
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: showcase-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./observability/grafana-dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    container_name: showcase-jaeger
+    ports:
+      - "16686:16686"
+      - "14250:14250"
+    depends_on:
+      otel-collector:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   postgres_data:

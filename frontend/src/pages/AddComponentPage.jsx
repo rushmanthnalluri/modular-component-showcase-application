@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { categories } from "@/data/components.data";
@@ -121,16 +121,11 @@ const AddComponentPage = () => {
   const [formValues, setFormValues] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [fileNames, setFileNames] = useState({ thumbnail: "", screenshot: "" });
-  const [canAddComponent, setCanAddComponent] = useState(null);
   const [submitError, setSubmitError] = useState("");
+  const canAddComponent = useMemo(() => canAccessAddComponent(getAuthUser()), []);
   const { name, description, jsxCode, category } = formValues;
 
   const isValid = Boolean(name.trim() && description.trim() && jsxCode.trim() && category.trim());
-
-  useEffect(() => {
-    const authUser = getAuthUser();
-    setCanAddComponent(canAccessAddComponent(authUser));
-  }, []);
 
   const availableCategories = useMemo(
     () => categories.filter((categoryItem) => categoryItem.id !== "all"),
@@ -244,10 +239,6 @@ const AddComponentPage = () => {
       setSubmitError(error.message || "Unable to save component right now.");
     }
   };
-
-  if (canAddComponent === null) {
-    return null;
-  }
 
   if (!canAddComponent) {
     return <Navigate to="/" replace />;

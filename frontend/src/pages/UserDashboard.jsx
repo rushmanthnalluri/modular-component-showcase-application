@@ -6,20 +6,22 @@ import "./UserDashboard.css";
 
 const emptySocialLinks = { github: "", twitter: "", portfolio: "" };
 const emptyEmailPreferences = { newComponents: true, reviewComments: true, newsletters: false };
-const MAX_AVATAR_FILE_BYTES = 1_500_000;
-const ALLOWED_AVATAR_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]);
+const MAX_AVATAR_FILE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_AVATAR_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
 const UserDashboard = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
   const [avatarFileName, setAvatarFileName] = useState("");
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     phone: "",
     bio: "",
-    avatarUrl: "",
+    avatarImage: "",
     socialLinks: emptySocialLinks,
     emailPreferences: emptyEmailPreferences,
   });
@@ -37,7 +39,7 @@ const UserDashboard = () => {
         email: String(user.email || ""),
         phone: String(user.phone || ""),
         bio: String(user.bio || ""),
-        avatarUrl: String(user.avatarUrl || ""),
+        avatarImage: String(user.avatarUrl || user.avatarImage || ""),
         socialLinks: {
           github: String(user.socialLinks?.github || ""),
           twitter: String(user.socialLinks?.twitter || ""),
@@ -55,6 +57,8 @@ const UserDashboard = () => {
           newsletters: Boolean(user.emailPreferences?.newsletters),
         },
       });
+      setAvatarPreviewUrl("");
+      setAvatarFile(null);
       setAvatarFileName("");
     } catch (error) {
       toast({
@@ -75,7 +79,7 @@ const UserDashboard = () => {
     if (!ALLOWED_AVATAR_MIME_TYPES.has(String(file.type || "").toLowerCase())) {
       toast({
         title: "Unsupported avatar format",
-        description: "Please upload PNG, JPG, WEBP, or GIF image files.",
+        description: "Please upload JPG, PNG, or WEBP image files.",
       });
       event.target.value = "";
       return;
@@ -84,29 +88,37 @@ const UserDashboard = () => {
     if (file.size > MAX_AVATAR_FILE_BYTES) {
       toast({
         title: "Avatar image too large",
-        description: "Please upload an image smaller than 1.5 MB.",
+        description: "Please upload an image smaller than 5 MB.",
       });
       event.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((prev) => ({ ...prev, avatarUrl: String(reader.result || "") }));
-      setAvatarFileName(file.name);
-    };
-    reader.onerror = () => {
-      toast({
-        title: "Avatar upload failed",
-        description: "Could not read the selected image.",
-      });
-    };
-    reader.readAsDataURL(file);
+    setAvatarFile(file);
+    setAvatarFileName(file.name);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
   };
 
   useEffect(() => {
-    loadProfile();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void loadProfile();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadProfile]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -161,15 +173,32 @@ const UserDashboard = () => {
     event.preventDefault();
     setIsSaving(true);
     try {
-      await updateCurrentUserProfile({
+      const updatedUser = await updateCurrentUserProfile({
         fullName: form.fullName,
         email: form.email,
         phone: form.phone,
         bio: form.bio,
-        avatarUrl: form.avatarUrl,
+        avatarImage: form.avatarImage,
+        avatarUrl: form.avatarImage,
+        avatarFile,
         socialLinks: form.socialLinks,
         emailPreferences: form.emailPreferences,
       });
+
+      if (updatedUser) {
+        setForm((prev) => ({
+          ...prev,
+          fullName: String(updatedUser.fullName || ""),
+          email: String(updatedUser.email || ""),
+          phone: String(updatedUser.phone || ""),
+          bio: String(updatedUser.bio || ""),
+          avatarImage: String(updatedUser.avatarUrl || updatedUser.avatarImage || ""),
+        }));
+      }
+
+      setAvatarFile(null);
+      setAvatarFileName("");
+      setAvatarPreviewUrl("");
 
       toast({
         title: "Profile updated",
@@ -245,22 +274,33 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-grid">
               <div className="user-dashboard-field">
-                {form.avatarUrl ? (
-                  <div className="user-dashboard-avatar-preview">
-                    <img src={form.avatarUrl} alt="Current avatar preview" />
-                  </div>
-                ) : null}
+                <div className="user-dashboard-avatar-preview" aria-live="polite">
+                  {avatarPreviewUrl || form.avatarImage ? (
+                    <img src={avatarPreviewUrl || form.avatarImage} alt="Current avatar preview" />
+                  ) : (
+                    <div className="user-dashboard-avatar-placeholder">{(form.fullName || "U").slice(0, 1).toUpperCase()}</div>
+                  )}
+                </div>
                 <label htmlFor="user-avatar-file" className="user-dashboard-upload-label">
                   Upload avatar image
                 </label>
                 <input
                   id="user-avatar-file"
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
                   onChange={handleAvatarFileChange}
                   className="user-dashboard-file"
                 />
                 {avatarFileName ? <small className="user-dashboard-note">Selected: {avatarFileName}</small> : null}
+                <label htmlFor="user-avatar-url">Or use avatar URL</label>
+                <input
+                  id="user-avatar-url"
+                  type="url"
+                  name="avatarImage"
+                  value={form.avatarImage}
+                  onChange={handleChange}
+                  placeholder="https://example.com/avatar.png"
+                />
               </div>
               <div className="user-dashboard-field">
                 <label htmlFor="user-github">GitHub URL</label>
@@ -332,7 +372,7 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save Profile"}
+                {isSaving ? (avatarFile ? "Uploading avatar..." : "Saving...") : "Save Profile"}
               </button>
             </div>
           </form>

@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     search_service_url: str | None = None
     sql_service_url: str | None = None
     component_service_url: str | None = None
+    spring_service_url: str | None = None
     frontend_url: str = "http://localhost:8080"
     gateway_port: int = 8000
     gateway_host: str = "0.0.0.0"
@@ -38,6 +39,7 @@ class Settings(BaseSettings):
             "search_service_url": os.getenv("SEARCH_SERVICE_URL"),
             "sql_service_url": os.getenv("SQL_SERVICE_URL"),
             "component_service_url": os.getenv("COMPONENT_SERVICE_URL"),
+            "spring_service_url": os.getenv("SPRING_SERVICE_URL"),
             "frontend_url": os.getenv("FRONTEND_URL", "http://localhost:8080"),
             "gateway_port": int(os.getenv("GATEWAY_PORT", "8000")),
             "gateway_host": os.getenv("GATEWAY_HOST", "0.0.0.0"),
@@ -75,6 +77,10 @@ class Settings(BaseSettings):
     @property
     def component_service_base_url(self) -> str:
         return self.component_service_url or self.backend_url
+
+    @property
+    def spring_service_base_url(self) -> str:
+        return self.spring_service_url or self.backend_url
 
 
 # Global settings instance

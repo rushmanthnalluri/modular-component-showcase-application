@@ -56,6 +56,7 @@ const Discussions = lazyWithChunkRetry(() => import("./pages/Discussions"));
 const SqlAdmin = lazyWithChunkRetry(() => import("./pages/SqlAdmin"));
 const Privacy = lazyWithChunkRetry(() => import("./pages/Privacy"));
 const Terms = lazyWithChunkRetry(() => import("./pages/Terms"));
+const SpringDemo = lazyWithChunkRetry(() => import("./pages/SpringDemo"));
 const NotFound = lazyWithChunkRetry(() => import("./pages/NotFound"));
 
 function resolveRouterBasename() {
@@ -137,6 +138,7 @@ const App = () => {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/help" element={<Help />} />
+            <Route path="/spring-demo" element={<SpringDemo />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

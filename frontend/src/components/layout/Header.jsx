@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   canAccessAddComponent,
   logoutUser,
@@ -12,7 +12,6 @@ import "./header.css";
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUserRole, setAuthUserRole] = useState("");
@@ -55,10 +54,6 @@ const Header = () => {
   }, [isMenuOpen]);
 
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
     const updateScrollState = () => {
       setIsScrolled(window.scrollY > 8);
     };
@@ -93,6 +88,9 @@ const Header = () => {
           </button>
           {isAuthenticated ? (
             <>
+              <Link className="btn-outline" to="/spring-demo">
+                Spring Demo
+              </Link>
               <Link className="btn-outline" to="/user/dashboard">
                 Profile
               </Link>
@@ -163,6 +161,9 @@ const Header = () => {
             </button>
             {isAuthenticated ? (
               <>
+                <Link to="/spring-demo" onClick={() => setIsMenuOpen(false)}>
+                  Spring Demo
+                </Link>
                 <Link to="/user/dashboard" onClick={() => setIsMenuOpen(false)}>
                   Profile
                 </Link>
@@ -192,6 +193,9 @@ const Header = () => {
               </>
             ) : (
               <>
+                <Link to="/spring-demo" onClick={() => setIsMenuOpen(false)}>
+                  Spring Demo
+                </Link>
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                   Login
                 </Link>

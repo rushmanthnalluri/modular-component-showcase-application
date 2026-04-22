@@ -43,7 +43,7 @@ function mapCloudComponent(rawItem) {
           id: String(rawAuthor._id || ""),
           fullName: String(rawAuthor.fullName || ""),
           email: String(rawAuthor.email || ""),
-          avatarUrl: String(rawAuthor.avatarUrl || ""),
+          avatarImage: String(rawAuthor.avatarImage || rawAuthor.avatarUrl || ""),
         }
       : null,
     version: String(rawItem.version || "1.0.0"),

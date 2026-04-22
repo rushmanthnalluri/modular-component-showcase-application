@@ -18,9 +18,10 @@ function ToastTimer({ createdAt, duration, open, onExpire }) {
       return;
     }
     hasExpiredRef.current = false;
+    const effectiveCreatedAt = createdAt > 0 ? createdAt : Date.now();
 
     const updateRemaining = () => {
-      const elapsed = Date.now() - createdAt;
+      const elapsed = Date.now() - effectiveCreatedAt;
       const nextRemaining = Math.max(0, duration - elapsed);
       setRemainingMs(nextRemaining);
 
@@ -61,7 +62,7 @@ function Toaster() {
         description,
         action,
         duration = 4000,
-        createdAt = Date.now(),
+        createdAt = 0,
         showTimer = true,
         ...props
       }) {

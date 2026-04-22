@@ -54,9 +54,21 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    loadCaptcha().catch(() => {
-      showCaptchaUnavailableToast();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+      loadCaptcha().catch(() => {
+        if (!cancelled) {
+          showCaptchaUnavailableToast();
+        }
+      });
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadCaptcha, showCaptchaUnavailableToast]);
 
   useEffect(() => {
@@ -144,7 +156,7 @@ const Login = () => {
     }));
   };
 
-  const closeForgotPasswordPanel = (shouldFocusTrigger = false) => {
+  function closeForgotPasswordPanel(shouldFocusTrigger = false) {
     setShowForgotPasswordForm(false);
     setForgotData({ email: "", phone: "", newPassword: "" });
 
@@ -153,7 +165,7 @@ const Login = () => {
         forgotPasswordButtonRef.current?.focus();
       }, 0);
     }
-  };
+  }
 
   const handleForgotPasswordSubmit = async () => {
     const email = forgotData.email.trim();
