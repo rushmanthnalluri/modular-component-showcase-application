@@ -42,6 +42,6 @@ describe("Header navigation smoke", () => {
 
     const mobileNavigation = await screen.findByRole("navigation", { name: "Mobile navigation" });
     expect(mobileNavigation).toBeTruthy();
-    expect(within(mobileNavigation).getByRole("link", { name: "Spring Demo" })).toBeTruthy();
+    expect(within(mobileNavigation).getByRole("link", { name: "Profile" })).toBeTruthy();
   });
 });

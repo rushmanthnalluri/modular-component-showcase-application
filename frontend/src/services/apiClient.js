@@ -9,10 +9,15 @@ function normalizeBaseUrl(value) {
   return String(value || "").trim().replace(/\/+$/, "");
 }
 
+function stripApiSuffix(value) {
+  return normalizeBaseUrl(value).replace(/\/api$/i, "");
+}
+
 export const API_BASE_URL =
   normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
 export const GATEWAY_BASE_URL =
   normalizeBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
+  stripApiSuffix(import.meta.env.VITE_API_BASE_URL) ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
 export const USE_GATEWAY =
   String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";
@@ -144,6 +149,7 @@ export async function apiRequest(path, options = {}) {
 }
 
 export async function gatewayRequest(path, options = {}) {
+  const gatewayBaseUrl = GATEWAY_BASE_URL || stripApiSuffix(API_BASE_URL);
   const method = String(options.method || "GET").toUpperCase();
   const body = options.body;
   const headers = {
@@ -153,13 +159,13 @@ export async function gatewayRequest(path, options = {}) {
     headers["Content-Type"] = "application/json";
   }
 
-  if (!GATEWAY_BASE_URL) {
+  if (!gatewayBaseUrl) {
     throw new Error("Gateway base URL is not configured.");
   }
 
   return callApi(
     method,
-    `${GATEWAY_BASE_URL}${path}`,
+    `${gatewayBaseUrl}${path}`,
     body,
     {
       headers,
