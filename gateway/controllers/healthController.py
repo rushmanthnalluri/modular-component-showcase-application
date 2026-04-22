@@ -1,10 +1,11 @@
 """Health controller for health checks and metrics."""
-from datetime import datetime
+from datetime import datetime, timezone
 from time import perf_counter
 from pathlib import Path
 import sys
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
+from fastapi.responses import PlainTextResponse
 
 # Add parent directory to path for relative imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -33,6 +34,7 @@ LAST_DOWNSTREAM_AVAILABILITY = {
     "search_service": "unknown",
     "sql_service": "unknown",
     "component_service": "unknown",
+    "spring_service": "unknown",
 }
 
 
@@ -101,9 +103,10 @@ async def health_check():
         search_health = await _check_service("search", settings.search_service_base_url)
         sql_health = await _check_service("sql", settings.sql_service_base_url)
         component_health = await _check_service("component", settings.component_service_base_url)
+        spring_health = await _check_service("spring", settings.spring_service_base_url, "/spring/health")
 
         backend_status = backend_health["status"]
-        service_statuses = [backend_health, auth_health, search_health, sql_health, component_health]
+        service_statuses = [backend_health, auth_health, search_health, sql_health, component_health, spring_health]
         unhealthy_count = sum(1 for service in service_statuses if service["status"] != "up")
 
         if unhealthy_count == 0:
@@ -117,7 +120,7 @@ async def health_check():
         backend_payload = {}
         try:
             async with backend_client as http_client:
-                backend_payload = await http_client.get("/health")
+                backend_payload = await http_client.request_json("GET", "/health")
         except Exception:
             backend_payload = {}
 
@@ -130,6 +133,7 @@ async def health_check():
             "search_service": search_health["status"],
             "sql_service": sql_health["status"],
             "component_service": component_health["status"],
+            "spring_service": spring_health["status"],
         })
 
         return {
@@ -140,10 +144,11 @@ async def health_check():
             "search_service": search_health["status"],
             "sql_service": sql_health["status"],
             "component_service": component_health["status"],
+            "spring_service": spring_health["status"],
             "mongo": mongo_status,
             "postgres": postgres_status,
             "services": service_statuses,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
     except Exception as e:
         raise HTTPException(
@@ -152,8 +157,26 @@ async def health_check():
         )
 
 
+def _render_prometheus_metrics(metrics_snapshot: dict) -> str:
+    lines = [
+        "# HELP gateway_requests_total Total HTTP requests observed by the gateway.",
+        "# TYPE gateway_requests_total counter",
+        f"gateway_requests_total {metrics_snapshot['requests_total']}",
+        "# HELP gateway_errors_total Total HTTP 5xx responses observed by the gateway.",
+        "# TYPE gateway_errors_total counter",
+        f"gateway_errors_total {metrics_snapshot['error_count']}",
+        "# HELP gateway_avg_response_time_ms Average gateway response time in milliseconds.",
+        "# TYPE gateway_avg_response_time_ms gauge",
+        f"gateway_avg_response_time_ms {metrics_snapshot['avg_response_time_ms']}",
+        "# HELP gateway_uptime_seconds Gateway uptime in seconds.",
+        "# TYPE gateway_uptime_seconds gauge",
+        f"gateway_uptime_seconds {metrics_snapshot['uptime_seconds']}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 @router.get("/metrics")
-async def metrics():
+async def metrics(request: Request):
     """Return basic metrics.
     
     Returns:
@@ -161,6 +184,10 @@ async def metrics():
     """
     try:
         metrics_snapshot = snapshot_metrics(include_current_request=True)
+        format_hint = request.query_params.get("format", "").strip().lower()
+        accept_header = request.headers.get("accept", "").lower()
+        if format_hint == "prometheus" or "text/plain" in accept_header:
+            return PlainTextResponse(_render_prometheus_metrics(metrics_snapshot), media_type="text/plain; version=0.0.4")
         return {
             **metrics_snapshot,
             "downstream_service_availability": dict(LAST_DOWNSTREAM_AVAILABILITY),

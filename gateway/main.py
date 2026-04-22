@@ -25,8 +25,12 @@ try:
         healthController,
         sqlController,
         componentController,
+        springController,
     )
     from gateway.controllers.healthController import record_request_metric
+    from gateway.middleware.rate_limit import SlidingWindowRateLimiter
+    from gateway.middleware.tracing import TracePropagationMiddleware
+    from gateway.middleware.error_handler import unhandled_exception_handler as gateway_unhandled_exception_handler
 except ImportError:
     # Import with relative paths (when run in container)
     from utils.env import settings
@@ -36,8 +40,12 @@ except ImportError:
         healthController,
         sqlController,
         componentController,
+        springController,
     )
     from controllers.healthController import record_request_metric
+    from middleware.rate_limit import SlidingWindowRateLimiter
+    from middleware.tracing import TracePropagationMiddleware
+    from middleware.error_handler import unhandled_exception_handler as gateway_unhandled_exception_handler
 
 # Configure logging
 logging.basicConfig(level=settings.log_level.upper())
@@ -46,7 +54,7 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title="Modular Component Showcase Gateway",
-    description="API Gateway for component showcase backend services",
+    description="API Gateway for component showcase backend services with tracing, rate limiting, and downstream health aggregation",
     version="1.0.0",
     debug=settings.debug,
 )
@@ -63,11 +71,21 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_request: Request, exc: Exception):
-    logger.exception("Unhandled gateway exception")
-    return JSONResponse(
-        status_code=500,
-        content={"message": "Gateway request failed.", "detail": str(exc)},
-    )
+    return await gateway_unhandled_exception_handler(_request, exc)
+
+
+app.middleware("http")(TracePropagationMiddleware())
+app.middleware("http")(SlidingWindowRateLimiter(max_requests=500, window_seconds=60))
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("x-content-type-options", "nosniff")
+    response.headers.setdefault("x-frame-options", "DENY")
+    response.headers.setdefault("referrer-policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("x-gateway-name", "modular-component-showcase")
+    return response
 
 
 @app.middleware("http")
@@ -84,6 +102,7 @@ app.include_router(searchController.router)
 app.include_router(healthController.router)
 app.include_router(sqlController.router)
 app.include_router(componentController.router)
+app.include_router(springController.router)
 
 
 def _decode_json_payload(content: bytes, headers: dict) -> dict | list | None:
@@ -157,7 +176,21 @@ async def status():
     }
 
 
-@app.api_route("/api/{full_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+@app.get("/readyz")
+async def readyz():
+    return {"status": "ready"}
+
+
+@app.get("/livez")
+async def livez():
+    return {"status": "live"}
+
+
+@app.api_route(
+    "/api/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
 async def proxy_api(full_path: str, request: Request):
     """Forward all /api/* traffic to backend while preserving cookies and query params."""
     target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"
@@ -169,6 +202,8 @@ async def proxy_api(full_path: str, request: Request):
         for key, value in request.headers.items()
         if key.lower() not in {"host", "content-length", "origin", "referer"}
     }
+    outbound_headers.setdefault("x-correlation-id", getattr(request.state, "correlation_id", ""))
+    outbound_headers.setdefault("traceparent", getattr(request.state, "traceparent", ""))
     # Ask backend for uncompressed payloads so the proxy always relays decodable JSON/text bodies.
     outbound_headers["accept-encoding"] = "identity"
 

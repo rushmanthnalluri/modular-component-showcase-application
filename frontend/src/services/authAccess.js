@@ -40,7 +40,7 @@ export async function registerUser({
   password,
   role,
   bio = "",
-  avatarUrl = "",
+  avatarImage = "",
   socialLinks = {},
   emailPreferences = {},
 }) {
@@ -53,7 +53,7 @@ export async function registerUser({
       password,
       role,
       bio,
-      avatarUrl,
+      avatarImage,
       socialLinks,
       emailPreferences,
     }),

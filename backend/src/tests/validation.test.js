@@ -13,11 +13,13 @@ test("validateRegistrationPayload accepts valid developer registration", () => {
         phone: "9876543210",
         password: "Passw0rd!",
         role: "developer",
+        avatarImage: "data:image/png;base64,AAAA",
     });
 
     assert.equal(result.ok, true);
     assert.equal(result.data.role, "developer");
     assert.equal(result.data.email, "test.user@example.com");
+    assert.equal(result.data.avatarImage, "data:image/png;base64,AAAA");
 });
 
 test("validateRegistrationPayload rejects invalid phone", () => {

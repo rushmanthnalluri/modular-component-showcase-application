@@ -1,0 +1,47 @@
+openapi: 3.1.0
+info:
+  title: Modular Component Showcase Gateway API
+  version: 1.0.0
+  description: FastAPI gateway contract for ingress and proxy behavior.
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      summary: Aggregated health
+      responses:
+        '200': { description: Health response }
+  /metrics:
+    get:
+      summary: Gateway metrics
+      responses:
+        '200': { description: Metrics response }
+  /readyz:
+    get:
+      summary: Gateway readiness probe
+      responses:
+        '200': { description: Ready response }
+  /livez:
+    get:
+      summary: Gateway liveness probe
+      responses:
+        '200': { description: Live response }
+  /authservice/login:
+    post:
+      summary: Auth proxy login
+      responses:
+        '200': { description: Success }
+  /api/{full_path}:
+    parameters:
+      - name: full_path
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Generic proxy GET
+      responses:
+        '200': { description: Proxied response }
+    post:
+      summary: Generic proxy POST
+      responses:
+        '200': { description: Proxied response }

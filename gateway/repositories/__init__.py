@@ -1,0 +1,1 @@
+"""Gateway repository layer interfaces."""

@@ -46,6 +46,10 @@ services:
         generateValue: true
       - key: FRONTEND_ORIGINS
         sync: false
+      - key: JWT_ISSUER
+        value: modular-component-showcase
+      - key: JWT_AUDIENCE
+        value: modular-component-showcase-clients
       - key: ALLOW_MEMORY_FALLBACK
         value: false
       - key: SQL_AUTO_MIGRATE
@@ -54,6 +58,8 @@ services:
         value: true
       - key: PGSSL
         value: true
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
 
   - type: web
     name: modular-component-showcase-gateway
@@ -68,7 +74,41 @@ services:
         value: 8000
       - key: BACKEND_URL
         sync: false
+      - key: SPRING_SERVICE_URL
+        sync: false
       - key: SQL_SERVICE_URL
         sync: false
       - key: REQUEST_TIMEOUT_SECONDS
         value: 20
+      - key: REQUEST_MAX_RETRIES
+        value: 2
+      - key: JWT_ISSUER
+        value: modular-component-showcase
+      - key: JWT_AUDIENCE
+        value: modular-component-showcase-clients
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+
+  - type: web
+    name: modular-component-showcase-spring-service
+    runtime: docker
+    rootDir: spring-service
+    dockerContext: ./spring-service
+    dockerfilePath: ./spring-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: DATABASE_URL
+        sync: false
+      - key: SPRING_JWT_SECRET
+        generateValue: true
+      - key: SPRING_ALLOWED_ORIGINS
+        sync: false
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+        value: health,info,metrics,prometheus
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false

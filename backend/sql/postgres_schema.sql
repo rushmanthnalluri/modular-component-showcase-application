@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(32) NOT NULL DEFAULT 'user',
     is_verified_developer BOOLEAN NOT NULL DEFAULT false,
     bio TEXT NOT NULL DEFAULT '',
-    avatar_url TEXT NOT NULL DEFAULT '',
+    avatar_image TEXT NOT NULL DEFAULT '',
     social_links JSONB NOT NULL DEFAULT '{}'::jsonb,
     stats JSONB NOT NULL DEFAULT '{}'::jsonb,
     email_preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -95,6 +95,32 @@ CREATE TABLE IF NOT EXISTS ratings (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS service_outbox (
+    event_id UUID PRIMARY KEY,
+    event_type VARCHAR(160) NOT NULL,
+    event_source VARCHAR(160) NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    processed_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+    idempotency_key_id BIGSERIAL PRIMARY KEY,
+    scope VARCHAR(120) NOT NULL,
+    idempotency_key VARCHAR(255) NOT NULL,
+    request_fingerprint TEXT NOT NULL DEFAULT '',
+    status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    response_status_code INTEGER NOT NULL DEFAULT 202,
+    response_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10 minutes',
+    CONSTRAINT idempotency_keys_scope_key_unique UNIQUE (scope, idempotency_key)
+);
+
 CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_favorites_component ON user_favorites(component_mongo_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
@@ -103,6 +129,26 @@ CREATE INDEX IF NOT EXISTS idx_discussions_user_id ON discussions(user_id);
 CREATE INDEX IF NOT EXISTS idx_discussions_component ON discussions(component_mongo_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON ratings(user_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_component ON ratings(component_mongo_id);
+CREATE INDEX IF NOT EXISTS idx_outbox_status_created_at ON service_outbox(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_expires_at ON idempotency_keys(expires_at);
+
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
+EXCEPTION
+    WHEN undefined_file THEN
+        RAISE NOTICE 'pg_trgm extension is not available in this environment.';
+END;
+$$;
+
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS vector;
+EXCEPTION
+    WHEN undefined_file THEN
+        RAISE NOTICE 'pgvector extension is not available in this environment.';
+END;
+$$;
 
 -- PART 5: Sample data
 INSERT INTO users (name, email)

@@ -39,11 +39,21 @@ def test_status_endpoint(client):
     assert data["status"] == "operational"
 
 
+def test_readiness_and_liveness_routes_exist(client):
+    ready = client.get("/readyz")
+    live = client.get("/livez")
+    assert ready.status_code == 200
+    assert live.status_code == 200
+    assert ready.json()["status"] == "ready"
+    assert live.json()["status"] == "live"
+
+
 def test_cors_headers(client):
     """Test CORS headers are present."""
     response = client.get("/", headers={"Origin": "http://localhost:8080"})
     assert response.status_code == 200
     assert response.headers.get("access-control-allow-origin") == "http://localhost:8080"
+    assert response.headers.get("x-content-type-options") == "nosniff"
 
 
 def test_404_on_invalid_path(client):
@@ -93,3 +103,8 @@ def test_auth_register_alias_exists(client):
 def test_sql_users_alias_exists(client):
     response = client.get("/sqlservice/users")
     assert response.status_code in [200, 500, 422]
+
+
+def test_spring_routes_exist(client):
+    response = client.get("/springservice/health")
+    assert response.status_code in [200, 500]

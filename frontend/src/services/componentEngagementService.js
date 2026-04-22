@@ -196,7 +196,7 @@ export async function createComponentReview(componentId, payload) {
         updatedAt: now,
         userId: {
           fullName: getLocalAuthDisplayName(),
-          avatarUrl: "",
+          avatarImage: "",
         },
       };
 
@@ -281,7 +281,7 @@ export async function createComponentDiscussion(componentId, payload) {
         updatedAt: now,
         userId: {
           fullName: getLocalAuthDisplayName(),
-          avatarUrl: "",
+          avatarImage: "",
         },
       };
 

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: modular-showcase
+description: Helm chart for Modular Component Showcase
+version: 0.1.0
+appVersion: "1.0.0"

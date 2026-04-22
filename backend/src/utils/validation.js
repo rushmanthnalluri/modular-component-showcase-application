@@ -184,7 +184,7 @@ export function validateRegistrationPayload(payload = {}) {
     const password = String(payload.password || "");
     const role = payload.role === "developer" ? "developer" : "user";
     const bio = text(payload.bio).slice(0, 500);
-    const avatarUrl = text(payload.avatarUrl);
+    const avatarImage = text(payload.avatarImage);
     const socialLinksInput = payload.socialLinks && typeof payload.socialLinks === "object" ? payload.socialLinks : {};
     const socialLinks = {
         github: text(socialLinksInput.github),
@@ -225,8 +225,8 @@ export function validateRegistrationPayload(payload = {}) {
         return { ok: false, message: "Password must be between 6 and 128 characters." };
     }
 
-    if (!isValidAvatarReference(avatarUrl)) {
-        return { ok: false, message: "Avatar must be an uploaded image." };
+    if (!isValidImageDataUrl(avatarImage)) {
+        return { ok: false, message: "Avatar image must be an uploaded image." };
     }
 
     if (!isValidUrl(socialLinks.github) || !isValidUrl(socialLinks.twitter) || !isValidUrl(socialLinks.portfolio)) {
@@ -242,7 +242,7 @@ export function validateRegistrationPayload(payload = {}) {
             password,
             role,
             bio,
-            avatarUrl,
+            avatarImage,
             socialLinks,
             emailPreferences,
         },

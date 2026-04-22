@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info:
+  title: Modular Component Showcase Spring Service API
+  version: 0.1.0
+  description: Contract subset for Spring secured CRUD services.
+servers:
+  - url: /spring
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Spring service health
+      security: []
+      responses:
+        '200': { description: Health payload }
+  /auth/token:
+    post:
+      summary: Issue JWT token
+      security: []
+      responses:
+        '200': { description: Token response }
+  /users:
+    get:
+      summary: List users
+      responses:
+        '200': { description: Users }
+  /components:
+    get:
+      summary: List components
+      responses:
+        '200': { description: Components }
+  /components/search:
+    get:
+      summary: Search, paginate, and sort components
+      responses:
+        '200': { description: Paginated component search results }
