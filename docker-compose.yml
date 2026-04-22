@@ -73,7 +73,7 @@ services:
       mongo:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 15s
       timeout: 5s
       retries: 5

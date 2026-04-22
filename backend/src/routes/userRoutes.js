@@ -1,7 +1,7 @@
 import express from "express";
 import { avatarUpload } from "../middleware/avatarUpload.js";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 254;
 
 function text(value) {
   return String(value ?? "").trim();
@@ -20,8 +20,98 @@ function isValidUrl(value) {
   }
 }
 
+function isValidEmail(value) {
+  const candidate = String(value || "").trim();
+  if (!candidate || candidate.length > EMAIL_MAX_LENGTH) {
+    return false;
+  }
+
+  const atIndex = candidate.indexOf("@");
+  if (atIndex <= 0 || atIndex !== candidate.lastIndexOf("@") || atIndex === candidate.length - 1) {
+    return false;
+  }
+
+  const local = candidate.slice(0, atIndex);
+  const domain = candidate.slice(atIndex + 1);
+  if (!local || !domain || domain.startsWith(".") || domain.endsWith(".")) {
+    return false;
+  }
+
+  const dotIndex = domain.indexOf(".");
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) {
+    return false;
+  }
+
+  if (candidate.includes(" ") || candidate.includes("\t") || candidate.includes("\n") || candidate.includes("\r")) {
+    return false;
+  }
+
+  return true;
+}
+
+function isSafeMimeSubtype(value) {
+  const subtype = String(value || "");
+  if (!subtype || subtype.length > 40) {
+    return false;
+  }
+
+  for (let index = 0; index < subtype.length; index += 1) {
+    const code = subtype.charCodeAt(index);
+    const isLower = code >= 97 && code <= 122;
+    const isUpper = code >= 65 && code <= 90;
+    const isDigit = code >= 48 && code <= 57;
+    const isAllowedPunctuation = subtype[index] === "." || subtype[index] === "+" || subtype[index] === "-";
+
+    if (!isLower && !isUpper && !isDigit && !isAllowedPunctuation) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isSafeBase64Payload(value) {
+  const payload = String(value || "");
+  if (!payload) {
+    return false;
+  }
+
+  for (let index = 0; index < payload.length; index += 1) {
+    const code = payload.charCodeAt(index);
+    const isUpper = code >= 65 && code <= 90;
+    const isLower = code >= 97 && code <= 122;
+    const isDigit = code >= 48 && code <= 57;
+    const isAllowedPunctuation = payload[index] === "+" || payload[index] === "/" || payload[index] === "=";
+
+    if (!isUpper && !isLower && !isDigit && !isAllowedPunctuation) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function isValidImageDataUrl(value) {
-  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/.test(String(value || ""));
+  const candidate = String(value || "");
+  const prefix = "data:image/";
+  if (!candidate.startsWith(prefix)) {
+    return false;
+  }
+
+  const commaIndex = candidate.indexOf(",");
+  if (commaIndex <= prefix.length || commaIndex === candidate.length - 1) {
+    return false;
+  }
+
+  const metadata = candidate.slice(prefix.length, commaIndex);
+  const suffix = ";base64";
+  if (!metadata.endsWith(suffix)) {
+    return false;
+  }
+
+  const subtype = metadata.slice(0, -suffix.length);
+  const payload = candidate.slice(commaIndex + 1);
+  return isSafeMimeSubtype(subtype) && isSafeBase64Payload(payload);
 }
 
 function isStoredAvatarPath(value) {
@@ -180,7 +270,7 @@ export function createUserRouter({
         return res.status(400).json({ message: "Full name is required." });
       }
 
-      if (!EMAIL_REGEX.test(nextEmail)) {
+      if (!isValidEmail(nextEmail)) {
         return res.status(400).json({ message: "A valid email address is required." });
       }
 

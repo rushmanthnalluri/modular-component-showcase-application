@@ -46,6 +46,8 @@ gateway/__pycache__/
 .pytest_cache/
 gateway/.pytest_cache/
 target/
+frontend/coverage/
+backend/uploads/
 
 # Build & test artifacts
 *.out

@@ -1,6 +1,34 @@
 import crypto from "node:crypto";
 import { normalizeForSimilarity } from "./vectorSearchService.js";
 
+const MAX_TEXT_LENGTH = 5000;
+const MAX_ARRAY_ITEMS = 50;
+const MAX_BATCH_TOTAL_CHARS = 20000;
+const MAX_TOKEN_APPROX = 5000;
+const MAX_DIMENSIONS = 3072;
+
+function createValidationError(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
+}
+
+function approximateTokenCount(text) {
+  return Math.ceil(String(text || "").length / 4);
+}
+
+function assertTextWithinLimits(text, fieldName = "text") {
+  const content = String(text || "");
+  if (content.length > MAX_TEXT_LENGTH) {
+    throw createValidationError(`${fieldName} exceeds maximum length of ${MAX_TEXT_LENGTH} characters.`);
+  }
+
+  const tokenApprox = approximateTokenCount(content);
+  if (tokenApprox > MAX_TOKEN_APPROX) {
+    throw createValidationError(`${fieldName} exceeds maximum token approximation of ${MAX_TOKEN_APPROX}.`);
+  }
+}
+
 function normalizeVector(input) {
   if (!Array.isArray(input)) {
     return [];
@@ -29,6 +57,9 @@ export function getEmbeddingProviderCapabilities() {
     supportedProviders: ["deterministic", "openai"],
     defaultModel: String(process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small").trim(),
     maxDimensions: 3072,
+    maxTextLength: MAX_TEXT_LENGTH,
+    maxBatchItems: MAX_ARRAY_ITEMS,
+    maxBatchTotalChars: MAX_BATCH_TOTAL_CHARS,
     supportsBatch: true,
     supportsMetadataFilters: true,
   };
@@ -39,6 +70,9 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
   if (!payload) {
     return { model, embedding: [], provider: "none", metadata };
   }
+
+  assertTextWithinLimits(payload);
+  const safeDimensions = Math.max(1, Math.min(MAX_DIMENSIONS, Number(dimensions) || 128));
 
   const openAiApiKey = String(process.env.OPENAI_API_KEY || "").trim();
   const openAiModel = String(process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small").trim();
@@ -77,7 +111,7 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
     }
   }
 
-  const embedding = deterministicEmbedding(payload, dimensions);
+  const embedding = deterministicEmbedding(payload, safeDimensions);
   return {
     model,
     embedding,
@@ -89,6 +123,26 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
 }
 
 export async function generateEmbeddingsBatch({ inputs = [], model = "deterministic-v1", dimensions = 128 }) {
+  if (!Array.isArray(inputs)) {
+    throw createValidationError("inputs must be an array.");
+  }
+
+  if (inputs.length > MAX_ARRAY_ITEMS) {
+    throw createValidationError(`inputs exceeds maximum batch size of ${MAX_ARRAY_ITEMS}.`);
+  }
+
+  let totalChars = 0;
+  for (let index = 0; index < inputs.length; index += 1) {
+    const input = inputs[index];
+    const text = typeof input === "string" ? input : input?.text;
+    const normalizedText = String(text || "").trim();
+    assertTextWithinLimits(normalizedText, `inputs[${index}]`);
+    totalChars += normalizedText.length;
+    if (totalChars > MAX_BATCH_TOTAL_CHARS) {
+      throw createValidationError(`inputs exceed maximum total size of ${MAX_BATCH_TOTAL_CHARS} characters.`);
+    }
+  }
+
   const items = [];
   for (const input of inputs) {
     const text = typeof input === "string" ? input : input?.text;

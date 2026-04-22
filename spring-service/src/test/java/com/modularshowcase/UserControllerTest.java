@@ -32,6 +32,7 @@ class UserControllerTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @SuppressWarnings("unused")
     @MockitoBean
     private RequestMetricsRecorder requestMetricsRecorder;
 
