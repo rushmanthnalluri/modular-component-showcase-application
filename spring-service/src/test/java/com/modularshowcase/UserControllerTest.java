@@ -15,6 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.modularshowcase.controller.UserController;
 import com.modularshowcase.dto.UserResponse;
+import com.modularshowcase.metrics.RequestMetricsRecorder;
+import com.modularshowcase.security.JwtAuthenticationFilter;
 import com.modularshowcase.service.UserService;
 
 @WebMvcTest(UserController.class)
@@ -26,6 +28,12 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private RequestMetricsRecorder requestMetricsRecorder;
 
     @Test
     void listUsersReturnsPayload() throws Exception {

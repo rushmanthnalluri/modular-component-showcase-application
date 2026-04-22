@@ -61,8 +61,12 @@ export default defineConfig(() => {
       // Vitest configuration — runs component/unit tests in the frontend.
       environment: "jsdom",
       globals: true,
-      setupFiles: [],
+      setupFiles: ["./src/tests/setupTests.js"],
       include: ["src/**/*.test.{js,jsx}"],
+      coverage: {
+        provider: "v8",
+        reportsDirectory: "./coverage",
+      },
     },
   };
 });

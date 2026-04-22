@@ -20,6 +20,8 @@ import com.modularshowcase.controller.AuthController;
 import com.modularshowcase.dto.AuthRequest;
 import com.modularshowcase.dto.AuthResponse;
 import com.modularshowcase.dto.UserResponse;
+import com.modularshowcase.metrics.RequestMetricsRecorder;
+import com.modularshowcase.security.JwtAuthenticationFilter;
 import com.modularshowcase.service.AuthService;
 
 @WebMvcTest(AuthController.class)
@@ -34,6 +36,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private RequestMetricsRecorder requestMetricsRecorder;
 
     @Test
     @SuppressWarnings("null")
