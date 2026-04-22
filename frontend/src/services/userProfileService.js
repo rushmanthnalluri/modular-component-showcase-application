@@ -12,46 +12,21 @@ export async function updateCurrentUserProfile({
   phone,
   bio,
   avatarImage,
-  avatarUrl,
-  avatarFile,
   socialLinks,
   emailPreferences,
 }) {
-  let payload;
-
-  if (avatarFile) {
-    const formData = new FormData();
-    formData.append("fullName", String(fullName || ""));
-    formData.append("email", String(email || ""));
-    formData.append("phone", String(phone || ""));
-    formData.append("bio", String(bio || ""));
-    formData.append("avatar", avatarFile);
-    formData.append("socialLinks", JSON.stringify(socialLinks || {}));
-    formData.append("emailPreferences", JSON.stringify(emailPreferences || {}));
-
-    if (avatarUrl !== undefined) {
-      formData.append("avatarUrl", String(avatarUrl || ""));
-    }
-
-    payload = await apiRequest("/users/me", {
-      method: "PUT",
-      body: formData,
-    });
-  } else {
-    payload = await apiRequest("/users/me", {
-      method: "PUT",
-      body: JSON.stringify({
-        fullName,
-        email,
-        phone,
-        bio,
-        avatarImage,
-        avatarUrl,
-        socialLinks,
-        emailPreferences,
-      }),
-    });
-  }
+  const payload = await apiRequest("/users/me", {
+    method: "PUT",
+    body: JSON.stringify({
+      fullName,
+      email,
+      phone,
+      bio,
+      avatarImage,
+      socialLinks,
+      emailPreferences,
+    }),
+  });
 
   if (payload?.user) {
     updateStoredAuthUser(payload.user);

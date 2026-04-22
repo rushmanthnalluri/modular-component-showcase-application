@@ -1,20 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { getCurrentUserProfile, updateCurrentUserProfile } from "@/services/userProfileService";
+import { resolveAssetUrl } from "@/services/assetUrl";
 import { useToast } from "@/use-toast";
 import "./UserDashboard.css";
 
 const emptySocialLinks = { github: "", twitter: "", portfolio: "" };
 const emptyEmailPreferences = { newComponents: true, reviewComments: true, newsletters: false };
-const MAX_AVATAR_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_AVATAR_FILE_BYTES = 1_500_000;
 const ALLOWED_AVATAR_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
 const UserDashboard = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
   const [avatarFileName, setAvatarFileName] = useState("");
   const [form, setForm] = useState({
     fullName: "",
@@ -25,6 +24,8 @@ const UserDashboard = () => {
     socialLinks: emptySocialLinks,
     emailPreferences: emptyEmailPreferences,
   });
+
+  const currentAvatarSrc = resolveAssetUrl(form.avatarImage);
 
   const loadProfile = useCallback(async () => {
     setIsLoading(true);
@@ -57,8 +58,6 @@ const UserDashboard = () => {
           newsletters: Boolean(user.emailPreferences?.newsletters),
         },
       });
-      setAvatarPreviewUrl("");
-      setAvatarFile(null);
       setAvatarFileName("");
     } catch (error) {
       toast({
@@ -88,15 +87,29 @@ const UserDashboard = () => {
     if (file.size > MAX_AVATAR_FILE_BYTES) {
       toast({
         title: "Avatar image too large",
-        description: "Please upload an image smaller than 5 MB.",
+        description: "Please upload an image smaller than 1.5 MB.",
       });
       event.target.value = "";
       return;
     }
 
-    setAvatarFile(file);
-    setAvatarFileName(file.name);
-    setAvatarPreviewUrl(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      setForm((prev) => ({
+        ...prev,
+        avatarImage: dataUrl,
+      }));
+      setAvatarFileName(file.name);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Avatar upload failed",
+        description: "Could not read the selected image. Please try another file.",
+      });
+      event.target.value = "";
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -111,14 +124,6 @@ const UserDashboard = () => {
       cancelled = true;
     };
   }, [loadProfile]);
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreviewUrl) {
-        URL.revokeObjectURL(avatarPreviewUrl);
-      }
-    };
-  }, [avatarPreviewUrl]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -179,8 +184,6 @@ const UserDashboard = () => {
         phone: form.phone,
         bio: form.bio,
         avatarImage: form.avatarImage,
-        avatarUrl: form.avatarImage,
-        avatarFile,
         socialLinks: form.socialLinks,
         emailPreferences: form.emailPreferences,
       });
@@ -196,9 +199,7 @@ const UserDashboard = () => {
         }));
       }
 
-      setAvatarFile(null);
       setAvatarFileName("");
-      setAvatarPreviewUrl("");
 
       toast({
         title: "Profile updated",
@@ -272,11 +273,11 @@ const UserDashboard = () => {
               />
             </div>
 
-            <div className="user-dashboard-grid">
-              <div className="user-dashboard-field">
+            <div className="user-dashboard-profile-grid">
+              <div className="user-dashboard-field user-dashboard-avatar-field">
                 <div className="user-dashboard-avatar-preview" aria-live="polite">
-                  {avatarPreviewUrl || form.avatarImage ? (
-                    <img src={avatarPreviewUrl || form.avatarImage} alt="Current avatar preview" />
+                  {currentAvatarSrc ? (
+                    <img src={currentAvatarSrc} alt="Current avatar preview" />
                   ) : (
                     <div className="user-dashboard-avatar-placeholder">{(form.fullName || "U").slice(0, 1).toUpperCase()}</div>
                   )}
@@ -292,48 +293,43 @@ const UserDashboard = () => {
                   className="user-dashboard-file"
                 />
                 {avatarFileName ? <small className="user-dashboard-note">Selected: {avatarFileName}</small> : null}
-                <label htmlFor="user-avatar-url">Or use avatar URL</label>
-                <input
-                  id="user-avatar-url"
-                  type="url"
-                  name="avatarImage"
-                  value={form.avatarImage}
-                  onChange={handleChange}
-                  placeholder="https://example.com/avatar.png"
-                />
+                <small className="user-dashboard-note">Upload JPG, PNG, or WEBP up to 1.5 MB. A new image replaces the current profile photo.</small>
               </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-github">GitHub URL</label>
-                <input
-                  id="user-github"
-                  type="url"
-                  name="socialLinks.github"
-                  value={form.socialLinks.github}
-                  onChange={handleChange}
-                  placeholder="https://github.com/username"
-                />
-              </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-twitter">Twitter URL</label>
-                <input
-                  id="user-twitter"
-                  type="url"
-                  name="socialLinks.twitter"
-                  value={form.socialLinks.twitter}
-                  onChange={handleChange}
-                  placeholder="https://x.com/username"
-                />
-              </div>
-              <div className="user-dashboard-field">
-                <label htmlFor="user-portfolio">Portfolio URL</label>
-                <input
-                  id="user-portfolio"
-                  type="url"
-                  name="socialLinks.portfolio"
-                  value={form.socialLinks.portfolio}
-                  onChange={handleChange}
-                  placeholder="https://portfolio.example.com"
-                />
+
+              <div className="user-dashboard-social-grid">
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-github">GitHub URL</label>
+                  <input
+                    id="user-github"
+                    type="url"
+                    name="socialLinks.github"
+                    value={form.socialLinks.github}
+                    onChange={handleChange}
+                    placeholder="https://github.com/username"
+                  />
+                </div>
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-twitter">Twitter URL</label>
+                  <input
+                    id="user-twitter"
+                    type="url"
+                    name="socialLinks.twitter"
+                    value={form.socialLinks.twitter}
+                    onChange={handleChange}
+                    placeholder="https://x.com/username"
+                  />
+                </div>
+                <div className="user-dashboard-field">
+                  <label htmlFor="user-portfolio">Portfolio URL</label>
+                  <input
+                    id="user-portfolio"
+                    type="url"
+                    name="socialLinks.portfolio"
+                    value={form.socialLinks.portfolio}
+                    onChange={handleChange}
+                    placeholder="https://portfolio.example.com"
+                  />
+                </div>
               </div>
             </div>
 
@@ -372,7 +368,7 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? (avatarFile ? "Uploading avatar..." : "Saving...") : "Save Profile"}
+                {isSaving ? "Saving..." : "Save Profile"}
               </button>
             </div>
           </form>
