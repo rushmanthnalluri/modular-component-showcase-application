@@ -13,11 +13,41 @@ function stripApiSuffix(value) {
   return normalizeBaseUrl(value).replace(/\/api$/i, "");
 }
 
+function isLocalHostAlias(hostname) {
+  const normalized = String(hostname || "").toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1";
+}
+
+function alignLocalHostAlias(baseUrl) {
+  if (typeof window === "undefined") {
+    return normalizeBaseUrl(baseUrl);
+  }
+
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  if (!/^https?:\/\//i.test(normalizedBaseUrl)) {
+    return normalizedBaseUrl;
+  }
+
+  try {
+    const parsed = new URL(normalizedBaseUrl);
+    const runtimeHostname = String(window.location?.hostname || "");
+
+    if (isLocalHostAlias(parsed.hostname) && isLocalHostAlias(runtimeHostname) && parsed.hostname !== runtimeHostname) {
+      parsed.hostname = runtimeHostname;
+      return parsed.toString().replace(/\/+$/, "");
+    }
+  } catch {
+    return normalizedBaseUrl;
+  }
+
+  return normalizedBaseUrl;
+}
+
 export const API_BASE_URL =
-  normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
+  alignLocalHostAlias(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
 export const GATEWAY_BASE_URL =
-  normalizeBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
-  stripApiSuffix(import.meta.env.VITE_API_BASE_URL) ||
+  alignLocalHostAlias(import.meta.env.VITE_GATEWAY_URL) ||
+  alignLocalHostAlias(stripApiSuffix(import.meta.env.VITE_API_BASE_URL)) ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
 export const USE_GATEWAY =
   String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";
