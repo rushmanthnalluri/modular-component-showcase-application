@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 import jwt
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 
 
@@ -46,6 +46,19 @@ def _resolve_token(token: str | None, access_token_cookie: str | None, refresh_t
     )
 
 
+def _principal_from_token(token: str) -> SecurityPrincipal:
+    payload = jwt.decode(token, _jwt_secret(), **_jwt_decode_kwargs())
+    user_id = str(payload.get("userId") or payload.get("sub") or "")
+    email = str(payload.get("email") or "")
+    role = str(payload.get("role") or payload.get("authority") or "user").replace("ROLE_", "").lower()
+    scopes = payload.get("scopes") or payload.get("scope") or []
+    if isinstance(scopes, str):
+        scopes = [entry for entry in scopes.split(" ") if entry]
+    if not user_id:
+        raise ValueError("Missing user id in token")
+    return SecurityPrincipal(user_id=user_id, email=email, role=role, scopes=list(scopes))
+
+
 def get_current_principal(
     token: str | None = Depends(oauth2_scheme),
     access_token_cookie: str | None = Cookie(default=None, alias="accessToken"),
@@ -56,18 +69,24 @@ def get_current_principal(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
     try:
-        payload = jwt.decode(token, _jwt_secret(), **_jwt_decode_kwargs())
-        user_id = str(payload.get("userId") or payload.get("sub") or "")
-        email = str(payload.get("email") or "")
-        role = str(payload.get("role") or payload.get("authority") or "user").replace("ROLE_", "").lower()
-        scopes = payload.get("scopes") or payload.get("scope") or []
-        if isinstance(scopes, str):
-            scopes = [entry for entry in scopes.split(" ") if entry]
-        if not user_id:
-            raise ValueError("Missing user id in token")
-        return SecurityPrincipal(user_id=user_id, email=email, role=role, scopes=list(scopes))
+        return _principal_from_token(token)
     except Exception as exc:  # pragma: no cover - behavior tested at API boundary
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {exc}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
+
+
+def verify_request_jwt(request: Request) -> SecurityPrincipal:
+    token = _resolve_token(
+        request.headers.get("authorization", "").removeprefix("Bearer ").strip() or None,
+        request.cookies.get("accessToken") if hasattr(request, "cookies") else None,
+        request.cookies.get("refreshToken") if hasattr(request, "cookies") else None,
+    )
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+    try:
+        return _principal_from_token(token)
+    except Exception as exc:  # pragma: no cover - boundary behavior
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
 
 
 def require_roles(*roles: str) -> Callable[[SecurityPrincipal], SecurityPrincipal]:

@@ -1,11 +1,14 @@
 import express from "express";
 import crypto from "crypto";
 import { createComponentId, validateComponentPayload } from "../utils/validation.js";
+import { createValidatedBodyMiddleware } from "../middleware/requestValidation.js";
+import { createSafeRegex } from "../middleware/safeRegex.js";
 import {
     publishComponentCreated,
     publishComponentDeleted,
     publishComponentUpdated,
 } from "../producers/componentEventProducer.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export function createComponentsRouter({
     Component,
@@ -39,9 +42,27 @@ export function createComponentsRouter({
     ]);
     const COMPONENT_PUBLIC_ID_REGEX = /^[a-z0-9-]{3,160}$/;
 
+    function toPlainPayload(value) {
+        if (value && typeof value.toObject === "function") {
+            return value.toObject();
+        }
+        return value;
+    }
+
+    function successPayload(res, payload = {}, status = 200) {
+        const plainPayload = toPlainPayload(payload);
+        return sendSuccess(res, plainPayload, status);
+    }
+
+    function errorPayload(res, code, message, status = 500, details = null) {
+        return sendError(res, code, message, status, details);
+    }
+
     function escapeRegex(value) {
         return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
+
+    const validateCreateComponent = createValidatedBodyMiddleware(validateComponentPayload, { status: 422 });
 
     function toSafeInteger(value, { defaultValue, min, max }) {
         const parsed = Number.parseInt(String(value ?? ""), 10);
@@ -57,6 +78,36 @@ export function createComponentsRouter({
             return "";
         }
         return normalized;
+    }
+
+    function buildUpdateValidationPayload(component, body = {}) {
+        return {
+            name: body.name !== undefined ? body.name : component.name,
+            description: body.description !== undefined ? body.description : component.description,
+            descriptionMarkdown:
+                body.descriptionMarkdown !== undefined
+                    ? body.descriptionMarkdown
+                    : component.descriptionMarkdown,
+            category: body.category !== undefined ? body.category : component.category,
+            tags: body.tags !== undefined ? body.tags : component.tags,
+            jsxCode: body.jsxCode !== undefined ? body.jsxCode : component.code?.jsx,
+            cssCode: body.cssCode !== undefined ? body.cssCode : component.code?.css,
+            thumbnail: body.thumbnail !== undefined ? body.thumbnail : component.thumbnail,
+            screenshot: body.screenshot !== undefined ? body.screenshot : component.screenshot,
+            props: body.props !== undefined ? body.props : component.props,
+            usageExamples:
+                body.usageExamples !== undefined ? body.usageExamples : component.usageExamples,
+            bestPractices:
+                body.bestPractices !== undefined ? body.bestPractices : component.bestPractices,
+            commonPitfalls:
+                body.commonPitfalls !== undefined ? body.commonPitfalls : component.commonPitfalls,
+            dependencies:
+                body.dependencies !== undefined ? body.dependencies : component.dependencies,
+            relatedComponents:
+                body.relatedComponents !== undefined ? body.relatedComponents : component.relatedComponents,
+            importStatements:
+                body.importStatements !== undefined ? body.importStatements : component.importStatements,
+        };
     }
 
     // Helper to track view
@@ -107,6 +158,7 @@ export function createComponentsRouter({
                     console.error("Announcement queue flush failed:", error.message);
                 });
             }, 30000);
+            flushTimer.unref?.();
         }
     }
 
@@ -151,7 +203,10 @@ export function createComponentsRouter({
 
             // Search by name or description
             if (safeSearch) {
-                const safeSearchRegex = new RegExp(escapeRegex(safeSearch), "i");
+                const safeSearchRegex = createSafeRegex(safeSearch, { maxLength: 80 });
+                if (!safeSearchRegex) {
+                    return errorPayload(res, "VALIDATION_ERROR", "Search query is too long.", 400);
+                }
                 query.$or = [
                     { name: safeSearchRegex },
                     { description: safeSearchRegex },
@@ -202,7 +257,7 @@ export function createComponentsRouter({
 
             const total = await Component.countDocuments(query);
 
-            return res.json({
+            return res.json(successPayload({
                 items,
                 pagination: {
                     total,
@@ -210,10 +265,10 @@ export function createComponentsRouter({
                     limit: safeLimit,
                     pages: Math.ceil(total / safeLimit),
                 },
-            });
+            }));
         } catch (error) {
             console.error("Fetch components error:", error.message);
-            return res.status(500).json({ message: "Unable to fetch components." });
+            return res.status(500).json(errorPayload("Unable to fetch components."));
         }
     });
 
@@ -221,6 +276,7 @@ export function createComponentsRouter({
     router.get("/stats/most-viewed", async (req, res) => {
         try {
             const { limit = 10, timeframe = "all" } = req.query;
+            const safeLimit = toSafeInteger(limit, { defaultValue: 10, min: 1, max: 50 });
             let createdAfter = null;
 
             if (timeframe === "week") {
@@ -236,7 +292,7 @@ export function createComponentsRouter({
 
             const items = await Component.find(query)
                 .sort({ viewCount: -1 })
-                .limit(parseInt(limit))
+                .limit(safeLimit)
                 .lean();
 
             return res.json(items);
@@ -250,13 +306,15 @@ export function createComponentsRouter({
     router.get("/stats/top-rated", async (req, res) => {
         try {
             const { limit = 10, minReviews = 1 } = req.query;
+            const safeLimit = toSafeInteger(limit, { defaultValue: 10, min: 1, max: 50 });
+            const safeMinReviews = toSafeInteger(minReviews, { defaultValue: 1, min: 1, max: 1000 });
 
             const items = await Component.find({
                 isPublished: true,
-                totalReviews: { $gte: parseInt(minReviews) },
+                totalReviews: { $gte: safeMinReviews },
             })
                 .sort({ averageRating: -1 })
-                .limit(parseInt(limit))
+                .limit(safeLimit)
                 .lean();
 
             return res.json(items);
@@ -274,7 +332,7 @@ export function createComponentsRouter({
                 .lean();
 
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             await trackView(component._id, req.user?._id || null, req);
@@ -290,26 +348,21 @@ export function createComponentsRouter({
                     .lean(),
             ]);
 
-            return res.json({
+            return res.json(successPayload({
                 ...component,
                 reviews,
                 dependencies,
                 versionHistory: component.versions || [],
-            });
+            }));
         } catch (error) {
             console.error("Fetch component error:", error.message);
-            return res.status(500).json({ message: "Unable to fetch component." });
+            return res.status(500).json(errorPayload("Unable to fetch component."));
         }
     });
 
     // CREATE new component
-    router.post("/", writeLimiter, requireAuth, requireCsrf, requireDeveloper, async (req, res) => {
+    router.post("/", writeLimiter, requireAuth, requireCsrf, requireDeveloper, validateCreateComponent, async (req, res) => {
         try {
-            const validation = validateComponentPayload(req.body || {});
-            if (!validation.ok) {
-                return res.status(400).json({ message: validation.message });
-            }
-
             const {
                 name,
                 description,
@@ -327,7 +380,7 @@ export function createComponentsRouter({
                 dependencies,
                 relatedComponents,
                 importStatements,
-            } = validation.data;
+            } = req.validatedBody;
 
             const componentId = createComponentId(name);
 
@@ -387,10 +440,10 @@ export function createComponentsRouter({
 
             await notifyNewComponent(item, req.user._id);
 
-            return res.status(201).json(item);
+            return res.status(201).json(successPayload(item));
         } catch (error) {
             console.error("Create component error:", error.message, error.stack);
-            return res.status(500).json({ message: "Unable to save component right now." });
+            return res.status(500).json(errorPayload("Unable to save component right now."));
         }
     });
 
@@ -399,13 +452,18 @@ export function createComponentsRouter({
         try {
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const isOwner = String(component.createdBy) === String(req.user._id);
             const isAdmin = String(req.user.role).toLowerCase() === "admin";
             if (!isOwner && !isAdmin) {
-                return res.status(403).json({ message: "You can only edit your own components." });
+                return res.status(403).json(errorPayload("You can only edit your own components."));
+            }
+
+            const validation = validateComponentPayload(buildUpdateValidationPayload(component, req.body || {}));
+            if (!validation.ok) {
+                return errorPayload(res, "VALIDATION_ERROR", validation.message, 422, validation.details);
             }
 
             const {
@@ -418,7 +476,6 @@ export function createComponentsRouter({
                 cssCode,
                 thumbnail,
                 screenshot,
-                changelog,
                 props,
                 usageExamples,
                 bestPractices,
@@ -426,7 +483,8 @@ export function createComponentsRouter({
                 dependencies,
                 relatedComponents,
                 importStatements,
-            } = req.body;
+            } = validation.data;
+            const changelog = String(req.body?.changelog || "").trim();
 
             // Track changes for history
             const changes = {};
@@ -491,10 +549,10 @@ export function createComponentsRouter({
                 changedFields: Object.keys(changes),
             });
 
-            return res.json(component);
+            return res.json(successPayload(component));
         } catch (error) {
             console.error("Update component error:", error.message);
-            return res.status(500).json({ message: "Unable to update component." });
+            return res.status(500).json(errorPayload("Unable to update component."));
         }
     });
 
@@ -503,13 +561,13 @@ export function createComponentsRouter({
         try {
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const isOwner = String(component.createdBy) === String(req.user._id);
             const isAdmin = String(req.user.role).toLowerCase() === "admin";
             if (!isOwner && !isAdmin) {
-                return res.status(403).json({ message: "You can only delete your own components." });
+                return res.status(403).json(errorPayload("You can only delete your own components."));
             }
 
             // Track submission history
@@ -527,10 +585,10 @@ export function createComponentsRouter({
                 category: component.category,
                 deletedBy: String(req.user._id),
             });
-            return res.json({ message: "Component deleted." });
+            return res.json(successPayload({ message: "Component deleted." }));
         } catch (error) {
             console.error("Delete component error:", error.message);
-            return res.status(500).json({ message: "Unable to delete component." });
+            return res.status(500).json(errorPayload("Unable to delete component."));
         }
     });
 
@@ -538,13 +596,14 @@ export function createComponentsRouter({
     router.post("/:id/ratings", requireAuth, requireCsrf, async (req, res) => {
         try {
             const { rating } = req.body;
-            if (!rating || rating < 1 || rating > 5) {
-                return res.status(400).json({ message: "Rating must be between 1 and 5." });
+            const numericRating = Number(rating);
+            if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+                return errorPayload(res, "VALIDATION_ERROR", "Rating must be between 1 and 5.", 400, { rating: "must be between 1 and 5" });
             }
 
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             // Update or create rating
@@ -554,13 +613,13 @@ export function createComponentsRouter({
             });
 
             if (existingRating) {
-                existingRating.rating = rating;
+                existingRating.rating = numericRating;
                 await existingRating.save();
             } else {
                 await Rating.create({
                     componentId: component._id,
                     userId: req.user._id,
-                    rating,
+                    rating: numericRating,
                 });
             }
 
@@ -578,10 +637,10 @@ export function createComponentsRouter({
             component.averageRating = average;
             await component.save();
 
-            return res.json({ rating: average, totalRatings: ratings.length });
+            return res.json(successPayload({ rating: average, totalRatings: ratings.length }));
         } catch (error) {
             console.error("Rating error:", error.message);
-            return res.status(500).json({ message: "Unable to save rating." });
+            return res.status(500).json(errorPayload("Unable to save rating."));
         }
     });
 
@@ -590,7 +649,7 @@ export function createComponentsRouter({
         try {
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const ratings = await Rating.find({ componentId: component._id }).lean();
@@ -598,14 +657,14 @@ export function createComponentsRouter({
                 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
                 : 0;
 
-            return res.json({
+            return res.json(successPayload({
                 average,
                 total: ratings.length,
                 ratings: ratings.map(r => ({ userId: r.userId, rating: r.rating })),
-            });
+            }));
         } catch (error) {
             console.error("Error fetching ratings:", error.message);
-            return res.status(500).json({ message: "Unable to fetch ratings." });
+            return res.status(500).json(errorPayload("Unable to fetch ratings."));
         }
     });
 
@@ -613,21 +672,26 @@ export function createComponentsRouter({
     router.post("/:id/reviews", requireAuth, requireCsrf, async (req, res) => {
         try {
             const { rating, title, comment } = req.body;
-            if (!rating || !comment || rating < 1 || rating > 5) {
-                return res.status(400).json({ message: "Invalid review data." });
+            const numericRating = Number(rating);
+            const safeComment = String(comment || "").trim();
+            if (!Number.isFinite(numericRating) || !safeComment || numericRating < 1 || numericRating > 5) {
+                return errorPayload(res, "VALIDATION_ERROR", "Review requires a rating from 1 to 5 and a comment.", 400, {
+                    rating: "must be between 1 and 5",
+                    comment: "required",
+                });
             }
 
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const review = await Review.create({
                 componentId: component._id,
                 userId: req.user._id,
-                rating,
+                rating: numericRating,
                 title: title || "",
-                comment,
+                comment: safeComment,
                 isVerified: false,
             });
 
@@ -641,10 +705,10 @@ export function createComponentsRouter({
             await component.save();
 
             const populated = await review.populate("userId", "fullName avatarImage");
-            return res.status(201).json(populated);
+            return res.status(201).json(successPayload(populated));
         } catch (error) {
             console.error("Review error:", error.message);
-            return res.status(500).json({ message: "Unable to save review." });
+            return res.status(500).json(errorPayload("Unable to save review."));
         }
     });
 
@@ -654,7 +718,7 @@ export function createComponentsRouter({
             const { sort = "helpful", page = 1, limit = 10 } = req.query;
             const component = await Component.findOne({ id: req.params.id });
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             let sortOption = { createdAt: -1 };
@@ -676,7 +740,7 @@ export function createComponentsRouter({
 
             const total = await Review.countDocuments({ componentId: component._id, status: "approved" });
 
-            return res.json({
+            return res.json(successPayload({
                 reviews,
                 pagination: {
                     total,
@@ -684,10 +748,10 @@ export function createComponentsRouter({
                     limit: parseInt(limit),
                     pages: Math.ceil(total / limit),
                 },
-            });
+            }));
         } catch (error) {
             console.error("Error fetching reviews:", error.message);
-            return res.status(500).json({ message: "Unable to fetch reviews." });
+            return res.status(500).json(errorPayload("Unable to fetch reviews."));
         }
     });
 
@@ -784,7 +848,7 @@ export function createComponentsRouter({
         try {
             const component = await Component.findOne({ id: req.params.id }).select("_id id");
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const threads = await Discussion.find({ componentId: component._id, status: "active" })
@@ -792,10 +856,10 @@ export function createComponentsRouter({
                 .sort({ createdAt: -1 })
                 .lean();
 
-            return res.json({ discussions: threads });
+            return res.json(successPayload({ discussions: threads }));
         } catch (error) {
             console.error("Error fetching discussions:", error.message);
-            return res.status(500).json({ message: "Unable to fetch discussions." });
+            return res.status(500).json(errorPayload("Unable to fetch discussions."));
         }
     });
 
@@ -805,12 +869,12 @@ export function createComponentsRouter({
             const message = String(req.body?.message || "").trim();
             const parentId = req.body?.parentId || null;
             if (!message) {
-                return res.status(400).json({ message: "Message is required." });
+                return errorPayload(res, "VALIDATION_ERROR", "Message is required.", 400, { message: "required" });
             }
 
-            const component = await Component.findOne({ id: req.params.id }).select("_id");
+            const component = await Component.findOne({ id: req.params.id }).select("_id id");
             if (!component) {
-                return res.status(404).json({ message: "Component not found." });
+                return res.status(404).json(errorPayload("Component not found."));
             }
 
             const discussion = await Discussion.create({
@@ -825,10 +889,10 @@ export function createComponentsRouter({
             await syncSqlDiscussion(discussion, { user, componentMongoId: component.id });
 
             const populated = await discussion.populate("userId", "fullName avatarImage");
-            return res.status(201).json(populated);
+            return res.status(201).json(successPayload(populated));
         } catch (error) {
             console.error("Error creating discussion:", error.message);
-            return res.status(500).json({ message: "Unable to create discussion." });
+            return res.status(500).json(errorPayload("Unable to create discussion."));
         }
     });
 

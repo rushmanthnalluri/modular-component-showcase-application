@@ -7,6 +7,7 @@ import {
     updateComponent,
     deleteComponent,
 } from "../services/sqlCatalogService.js";
+import { createValidatedBodyMiddleware } from "../middleware/requestValidation.js";
 
 function toNumber(value) {
     const parsed = Number.parseInt(String(value), 10);
@@ -32,6 +33,41 @@ function normalizeSqlError(error) {
 
     return { status: 500, body: { message: "SQL operation failed." } };
 }
+
+function buildCreateComponentPayload(payload = {}) {
+    const name = String(payload?.name || "").trim();
+    const description = String(payload?.description || "").trim();
+    const categoryId = toNumber(payload?.categoryId ?? payload?.category_id);
+    const userId = toNumber(payload?.userId ?? payload?.user_id);
+
+    if (!name || !description || !categoryId || !userId) {
+        return { ok: false, message: "name, description, category_id and user_id are required." };
+    }
+
+    return { ok: true, data: { name, description, categoryId, userId } };
+}
+
+function buildUpdateComponentPayload(payload = {}) {
+    const name = payload?.name !== undefined ? String(payload.name).trim() : undefined;
+    const description = payload?.description !== undefined ? String(payload.description).trim() : undefined;
+    const categoryInput = payload?.categoryId ?? payload?.category_id;
+    const userInput = payload?.userId ?? payload?.user_id;
+    const categoryId = categoryInput !== undefined ? toNumber(categoryInput) : null;
+    const userId = userInput !== undefined ? toNumber(userInput) : null;
+
+    if (categoryInput !== undefined && !categoryId) {
+        return { ok: false, message: "category_id must be a valid number." };
+    }
+
+    if (userInput !== undefined && !userId) {
+        return { ok: false, message: "user_id must be a valid number." };
+    }
+
+    return { ok: true, data: { name, description, categoryId, userId } };
+}
+
+const validateCreateComponent = createValidatedBodyMiddleware(buildCreateComponentPayload, { status: 400 });
+const validateUpdateComponent = createValidatedBodyMiddleware(buildUpdateComponentPayload, { status: 400 });
 
 export function createSqlRouter(deps = {
     listUsers,
@@ -70,18 +106,9 @@ export function createSqlRouter(deps = {
         }
     });
 
-    router.post("/components", async (req, res) => {
+    router.post("/components", validateCreateComponent, async (req, res) => {
         try {
-            const name = String(req.body?.name || "").trim();
-            const description = String(req.body?.description || "").trim();
-            const categoryId = toNumber(req.body?.categoryId ?? req.body?.category_id);
-            const userId = toNumber(req.body?.userId ?? req.body?.user_id);
-
-            if (!name || !description || !categoryId || !userId) {
-                return res.status(400).json({ message: "name, description, category_id and user_id are required." });
-            }
-
-            const item = await deps.createComponent({ name, description, categoryId, userId });
+            const item = await deps.createComponent(req.validatedBody);
             return res.status(201).json({ item });
         } catch (error) {
             const mapped = normalizeSqlError(error);
@@ -89,21 +116,15 @@ export function createSqlRouter(deps = {
         }
     });
 
-    router.put("/components/:id", async (req, res) => {
+    router.put("/components/:id", validateUpdateComponent, async (req, res) => {
         try {
             const componentId = toNumber(req.params.id);
-            const name = req.body?.name;
-            const description = req.body?.description;
-            const categoryInput = req.body?.categoryId ?? req.body?.category_id;
-            const userInput = req.body?.userId ?? req.body?.user_id;
-            const categoryId = categoryInput !== undefined ? toNumber(categoryInput) : null;
-            const userId = userInput !== undefined ? toNumber(userInput) : null;
 
             if (!componentId) {
                 return res.status(400).json({ message: "Valid component id is required." });
             }
 
-            const item = await deps.updateComponent(componentId, { name, description, categoryId, userId });
+            const item = await deps.updateComponent(componentId, req.validatedBody);
             if (!item) {
                 return res.status(404).json({ message: "Component not found." });
             }

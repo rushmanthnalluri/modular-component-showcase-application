@@ -30,8 +30,6 @@ import {
     semanticSearch,
     upsertMongoEmbedding,
     connectMongoWithSrvFallback,
-    expandMongoSrvUri,
-    isMongoSrvUri,
 } from "./mongodb/index.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createCsrfMiddleware } from "./middleware/csrf.js";
@@ -56,6 +54,7 @@ import {
 } from "./neondb/index.js";
 import logger, { withRequestContext } from "./utils/logger.js";
 import { mapAvatarUploadError } from "./middleware/avatarUpload.js";
+import { buildError, buildSuccess, sendError } from "./utils/responseHelper.js";
 import { idempotencyService } from "./services/idempotencyService.js";
 import { startAuditEventConsumer, stopAuditEventConsumer } from "./consumers/auditEventConsumer.js";
 
@@ -80,7 +79,7 @@ const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
 const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 const PORT = Number(process.env.PORT || 5000);
 const HOST = process.env.HOST || "0.0.0.0";
-const mongoUri = process.env.NODE_ENV === "test" ? "" : process.env.MONGODB_URI;
+const mongoUri = process.env.NODE_ENV === "test" && !process.env.MONGODB_URI ? "" : process.env.MONGODB_URI;
 const avatarUploadDir = path.resolve(process.env.AVATAR_UPLOAD_DIR || path.join(process.cwd(), "uploads", "avatars"));
 
 process.env.AVATAR_UPLOAD_DIR = avatarUploadDir;
@@ -290,11 +289,37 @@ app.use((_req, _res, next) => {
     metricsTracker.requestsTotal += 1;
     next();
 });
-app.use(express.json({ limit: "4mb" }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "64kb", parameterLimit: 100 }));
 app.use("/app/uploads/avatars", express.static(avatarUploadDir));
+app.use("/uploads/avatars", express.static(avatarUploadDir));
+
+apiRouter.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = (payload) => {
+        if (payload && typeof payload === "object" && "success" in payload) {
+            return originalJson(payload);
+        }
+
+        if (res.statusCode >= 400) {
+            return originalJson(buildError(
+                res.statusCode === 400 ? "VALIDATION_ERROR" :
+                    res.statusCode === 401 ? "UNAUTHORIZED" :
+                    res.statusCode === 404 ? "NOT_FOUND" :
+                    res.statusCode === 422 ? "UNPROCESSABLE_ENTITY" :
+                    "INTERNAL_ERROR",
+                payload?.message || payload?.msg || "Request failed.",
+                payload?.details
+            ));
+        }
+
+        return originalJson(buildSuccess(payload));
+    };
+    next();
+});
 
 app.get("/", (_req, res) => {
-    res.json({ message: "Modular Component Showcase API is running." });
+    res.json(buildSuccess({ message: "Modular Component Showcase API is running." }));
 });
 
 app.get("/health", async (_req, res) => {
@@ -303,7 +328,7 @@ app.get("/health", async (_req, res) => {
         pingSql(),
     ]);
 
-    res.json({
+    res.json(buildSuccess({
         status: "ok",
         mongo,
         postgres,
@@ -311,7 +336,7 @@ app.get("/health", async (_req, res) => {
         uptimeSeconds: Math.max(0, (Date.now() - metricsTracker.startedAt) / 1000),
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || "unknown",
-    });
+    }));
 });
 
 app.get("/metrics", (_req, res) => {
@@ -337,14 +362,13 @@ app.get("/metrics", (_req, res) => {
     res.type("text/plain; version=0.0.4").send(`${lines.join("\n")}\n`);
 });
 
-app.use("/captcha", captchaRouter);
 apiRouter.use(cookieParser());
 apiRouter.use(ensureCsrfCookie);
 apiRouter.use(requireCsrf);
 apiRouter.use("/captcha", captchaRouter);
 
 apiRouter.get("/", (_req, res) => {
-    res.json({
+    res.json(buildSuccess({
         message: "Modular Component Showcase API",
         status: "running",
         endpoints: {
@@ -357,7 +381,7 @@ apiRouter.get("/", (_req, res) => {
             search: "POST /api/search",
             admin: "GET /api/admin/rate-limits (admin)",
         },
-    });
+    }));
 });
 
 apiRouter.use(
@@ -480,6 +504,7 @@ apiRouter.use(
 );
 
 apiRouter.post("/search", (req, res) => semanticSearch(req, res, mongoDeps));
+apiRouter.get("/search", (req, res) => semanticSearch(req, res, mongoDeps));
 apiRouter.post("/embeddings", (req, res) => upsertMongoEmbedding(req, res, mongoDeps));
 apiRouter.post("/embeddings/upsert", (req, res) => upsertMongoEmbedding(req, res, mongoDeps));
 apiRouter.get("/logs", (req, res) => getMongoLogs(req, res, mongoDeps));
@@ -547,23 +572,23 @@ app.use("/api", apiRouter);
 
 app.use((err, _req, res, _next) => {
     if (String(err?.message || "").includes("CORS")) {
-        return res.status(403).json({ message: "CORS blocked for this origin." });
+        return sendError(res, "FORBIDDEN", "CORS blocked for this origin.", 403);
     }
 
     if (err?.type === "entity.too.large") {
-        return res.status(413).json({ message: "Request payload too large." });
+        return sendError(res, "PAYLOAD_TOO_LARGE", "Request payload too large.", 413);
     }
 
     const avatarUploadError = mapAvatarUploadError(err);
     if (avatarUploadError) {
-        return res.status(avatarUploadError.status).json({ message: avatarUploadError.message });
+        return sendError(res, "VALIDATION_ERROR", avatarUploadError.message, avatarUploadError.status);
     }
 
     logger.error("unhandled_server_error", {
         error: err?.message || String(err),
         stack: err?.stack,
     });
-    return res.status(500).json({ message: "Server error." });
+    return sendError(res, "INTERNAL_ERROR", "Server error.", 500);
 });
 
 if (!process.env.JWT_SECRET) {
@@ -758,6 +783,8 @@ export async function startServer() {
                 cwd: process.cwd(),
                 env: process.env,
                 maxBuffer: 10 * 1024 * 1024,
+                timeout: 120_000,
+                killSignal: "SIGTERM",
             });
             logger.info("Showcase seed completed on startup.");
         } catch (error) {

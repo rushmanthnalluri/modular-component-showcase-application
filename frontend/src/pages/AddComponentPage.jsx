@@ -44,6 +44,17 @@ function parseLineList(value) {
     .filter(Boolean);
 }
 
+function parseTags(value) {
+  return Array.from(
+    new Set(
+      String(value || "")
+        .split(",")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean)
+    )
+  ).slice(0, 12);
+}
+
 function parsePropsText(value) {
   return String(value || "")
     .split(/\r?\n/)
@@ -96,7 +107,7 @@ function buildSubmissionPayload(values) {
     name: values.name,
     description: values.description,
     descriptionMarkdown: values.descriptionMarkdown,
-    tags: values.tags,
+    tags: parseTags(values.tags),
     jsxCode: values.jsxCode,
     cssCode: values.cssCode,
     category: values.category,
@@ -122,6 +133,7 @@ const AddComponentPage = () => {
   const [errors, setErrors] = useState({});
   const [fileNames, setFileNames] = useState({ thumbnail: "", screenshot: "" });
   const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const canAddComponent = useMemo(() => canAccessAddComponent(getAuthUser()), []);
   const { name, description, jsxCode, category } = formValues;
 
@@ -233,10 +245,13 @@ const AddComponentPage = () => {
     }
 
     try {
+      setIsSubmitting(true);
       await addCustomComponent(buildSubmissionPayload(formValues));
       navigate("/", { replace: true });
     } catch (error) {
       setSubmitError(error.message || "Unable to save component right now.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -535,8 +550,8 @@ const AddComponentPage = () => {
               />
             </details>
 
-            <button type="submit" className="add-component-submit" disabled={!isValid}>
-              Add Component
+            <button type="submit" className="add-component-submit" disabled={!isValid || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Add Component"}
             </button>
             {submitError ? <span className="field-error">{submitError}</span> : null}
           </form>

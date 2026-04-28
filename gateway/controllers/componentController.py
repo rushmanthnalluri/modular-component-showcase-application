@@ -1,5 +1,5 @@
 """Component controller for forwarding component requests."""
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 import sys
 from pathlib import Path
@@ -10,11 +10,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     from gateway.models.schemas import ComponentSchema
     from gateway.services.componentService import ComponentService
+    from gateway.dependencies.security import get_current_principal
 except ImportError:
     from models.schemas import ComponentSchema
     from services.componentService import ComponentService
+    from dependencies.security import get_current_principal
 
-router = APIRouter(prefix="/componentservice", tags=["components"])
+router = APIRouter(prefix="/componentservice", tags=["components"], dependencies=[Depends(get_current_principal)])
 
 
 @router.get("/components")
@@ -33,7 +35,7 @@ async def list_components(category: Optional[str] = Query(None, description="Cat
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"List components failed: {str(e)}",
+            detail="List components failed.",
         )
 
 
@@ -53,7 +55,7 @@ async def get_component(component_id: str):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Get component failed: {str(e)}",
+            detail="Get component failed.",
         )
 
 
@@ -73,7 +75,7 @@ async def create_component(payload: ComponentSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Create component failed: {str(e)}",
+            detail="Create component failed.",
         )
 
 
@@ -94,7 +96,7 @@ async def update_component(component_id: str, payload: ComponentSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Update component failed: {str(e)}",
+            detail="Update component failed.",
         )
 
 
@@ -114,5 +116,5 @@ async def delete_component(component_id: str):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Delete component failed: {str(e)}",
+            detail="Delete component failed.",
         )

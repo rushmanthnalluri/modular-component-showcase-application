@@ -93,7 +93,7 @@ export async function upsertMongoEmbedding(req, res, { ComponentEmbedding }) {
 }
 
 export async function semanticSearch(req, res, { ComponentEmbedding, Component, UsageLog }) {
-    const query = String(req.body?.query || "").trim();
+    const query = String(req.body?.query || req.query?.q || "").trim();
     if (!query) {
         return res.status(400).json({ message: "query is required." });
     }
@@ -102,13 +102,14 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
     const queryEmbedding = providedQueryEmbedding.length > 0
         ? providedQueryEmbedding
         : generateMockEmbedding(query);
-    const limit = Math.max(1, Math.min(25, Number.parseInt(String(req.body?.limit || 10), 10) || 10));
+    const limitSource = req.body?.limit ?? req.query?.limit ?? 10;
+    const limit = Math.max(1, Math.min(25, Number.parseInt(String(limitSource), 10) || 10));
 
     if (queryEmbedding.length === 0) {
         return res.status(400).json({ message: "query embedding generation failed." });
     }
 
-    const candidates = await ComponentEmbedding.find({}).limit(500).lean();
+    const candidates = await ComponentEmbedding.find({}).limit(200).lean();
 
     const items = candidates
         .map((item) => ({
@@ -124,7 +125,7 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
 
     const componentIds = items.map((item) => item.componentId).filter(Boolean);
     const components = componentIds.length > 0
-        ? await Component.find({ id: { $in: componentIds } }).lean()
+        ? await Component.find({ id: { $in: componentIds } }).limit(200).lean()
         : [];
     const componentMap = new Map(components.map((entry) => [entry.id, entry]));
 

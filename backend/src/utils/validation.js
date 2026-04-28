@@ -50,6 +50,8 @@ const LIMITS = {
     relatedCount: 12,
 };
 
+const MAX_URL_LENGTH = 2048;
+
 function text(value) {
     return String(value ?? "").trim();
 }
@@ -68,6 +70,18 @@ function isValidImageDataUrl(value) {
     }
 
     return IMAGE_DATA_URL_REGEX.test(value);
+}
+
+function isValidImageReference(value) {
+    return isValidImageDataUrl(value) || isValidUrl(value);
+}
+
+function fail(message, details = undefined) {
+    return {
+        ok: false,
+        message,
+        ...(details ? { details } : {}),
+    };
 }
 
 function normalizeStringList(input, maxItems) {
@@ -146,6 +160,10 @@ function isValidUrl(value) {
         return true;
     }
 
+    if (String(value).length > MAX_URL_LENGTH) {
+        return false;
+    }
+
     try {
         const parsed = new URL(String(value));
         return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -159,7 +177,7 @@ function isValidAvatarReference(value) {
         return true;
     }
 
-    return isValidImageDataUrl(value);
+    return isValidImageReference(value);
 }
 
 function createSlug(value) {
@@ -206,31 +224,35 @@ export function validateRegistrationPayload(payload = {}) {
     };
 
     if (!fullName || !email || !password) {
-        return { ok: false, message: "Full name, email and password are required." };
+        return fail("Full name, email and password are required.", {
+            ...(fullName ? {} : { fullName: "required" }),
+            ...(email ? {} : { email: "required" }),
+            ...(password ? {} : { password: "required" }),
+        });
     }
 
     if (!hasMaxLength(fullName, LIMITS.fullName)) {
-        return { ok: false, message: "Full name is too long." };
+        return fail("Full name is too long.", { fullName: `max ${LIMITS.fullName} characters` });
     }
 
     if (!hasMaxLength(email, LIMITS.email) || !isValidEmail(email)) {
-        return { ok: false, message: "A valid email address is required." };
+        return fail("A valid email address is required.", { email: "invalid email address" });
     }
 
     if (!isValidPhone(phone)) {
-        return { ok: false, message: "Phone number must be 10 to 15 digits." };
+        return fail("Phone number must be 10 to 15 digits.", { phone: "must contain 10 to 15 digits" });
     }
 
     if (password.length < 6 || password.length > LIMITS.password) {
-        return { ok: false, message: "Password must be between 6 and 128 characters." };
+        return fail("Password must be between 6 and 128 characters.", { password: "must be between 6 and 128 characters" });
     }
 
-    if (!isValidImageDataUrl(avatarImage)) {
-        return { ok: false, message: "Avatar image must be an uploaded image." };
+    if (!isValidAvatarReference(avatarImage)) {
+        return fail("Avatar image must be an uploaded image.", { avatarImage: "must be a valid image data URL or http/https URL" });
     }
 
     if (!isValidUrl(socialLinks.github) || !isValidUrl(socialLinks.twitter) || !isValidUrl(socialLinks.portfolio)) {
-        return { ok: false, message: "Social links must be valid http/https URLs." };
+        return fail("Social links must be valid http/https URLs.", { socialLinks: "must be valid http/https URLs" });
     }
 
     return {
@@ -254,15 +276,18 @@ export function validateLoginPayload(payload = {}) {
     const password = String(payload.password || "");
 
     if (!email || !password) {
-        return { ok: false, message: "Email and password are required." };
+        return fail("Email and password are required.", {
+            ...(email ? {} : { email: "required" }),
+            ...(password ? {} : { password: "required" }),
+        });
     }
 
     if (!hasMaxLength(email, LIMITS.email) || !isValidEmail(email)) {
-        return { ok: false, message: "A valid email address is required." };
+        return fail("A valid email address is required.", { email: "invalid email address" });
     }
 
     if (!hasMaxLength(password, LIMITS.password)) {
-        return { ok: false, message: "Password is too long." };
+        return fail("Password is too long.", { password: `max ${LIMITS.password} characters` });
     }
 
     return {
@@ -280,19 +305,23 @@ export function validateForgotPasswordPayload(payload = {}) {
     const newPassword = String(payload.newPassword || "");
 
     if (!email || !phone || !newPassword) {
-        return { ok: false, message: "Email, phone and new password are required." };
+        return fail("Email, phone and new password are required.", {
+            ...(email ? {} : { email: "required" }),
+            ...(phone ? {} : { phone: "required" }),
+            ...(newPassword ? {} : { newPassword: "required" }),
+        });
     }
 
     if (!hasMaxLength(email, LIMITS.email) || !isValidEmail(email)) {
-        return { ok: false, message: "A valid email address is required." };
+        return fail("A valid email address is required.", { email: "invalid email address" });
     }
 
     if (!isValidPhone(phone)) {
-        return { ok: false, message: "Phone number must be 10 to 15 digits." };
+        return fail("Phone number must be 10 to 15 digits.", { phone: "must contain 10 to 15 digits" });
     }
 
     if (newPassword.length < 6 || newPassword.length > LIMITS.password) {
-        return { ok: false, message: "Password must be between 6 and 128 characters." };
+        return fail("Password must be between 6 and 128 characters.", { newPassword: "must be between 6 and 128 characters" });
     }
 
     return {
@@ -308,7 +337,7 @@ export function validateForgotPasswordPayload(payload = {}) {
 export function validateSupportTicketPayload(payload = {}) {
     const honeypot = text(payload.website);
     if (honeypot) {
-        return { ok: false, message: "Unable to create support ticket." };
+        return fail("Unable to create support ticket.");
     }
 
     const name = text(payload.name);
@@ -318,30 +347,32 @@ export function validateSupportTicketPayload(payload = {}) {
     const normalizedCategory = category.toLowerCase();
 
     if (!name || !title || !category || !description) {
-        return {
-            ok: false,
-            message: "title, category, description and name are required",
-        };
+        return fail("title, category, description and name are required", {
+            ...(title ? {} : { title: "required" }),
+            ...(category ? {} : { category: "required" }),
+            ...(description ? {} : { description: "required" }),
+            ...(name ? {} : { name: "required" }),
+        });
     }
 
     if (!hasMaxLength(name, LIMITS.fullName)) {
-        return { ok: false, message: "Name is too long." };
+        return fail("Name is too long.", { name: `max ${LIMITS.fullName} characters` });
     }
 
     if (!hasMaxLength(title, LIMITS.ticketTitle)) {
-        return { ok: false, message: "Ticket title is too long." };
+        return fail("Ticket title is too long.", { title: `max ${LIMITS.ticketTitle} characters` });
     }
 
     if (!hasMaxLength(category, LIMITS.ticketCategory)) {
-        return { ok: false, message: "Ticket category is too long." };
+        return fail("Ticket category is too long.", { category: `max ${LIMITS.ticketCategory} characters` });
     }
 
     if (!ALLOWED_SUPPORT_CATEGORIES.has(normalizedCategory)) {
-        return { ok: false, message: "Unsupported support ticket category." };
+        return fail("Unsupported support ticket category.", { category: "unsupported" });
     }
 
     if (!hasMaxLength(description, LIMITS.ticketDescription)) {
-        return { ok: false, message: "Ticket description is too long." };
+        return fail("Ticket description is too long.", { description: `max ${LIMITS.ticketDescription} characters` });
     }
 
     return {
@@ -374,64 +405,68 @@ export function validateComponentPayload(payload = {}) {
     const importStatements = normalizeImportStatements(payload.importStatements);
 
     if (!name || !description || !category || !jsxCode) {
-        return {
-            ok: false,
-            message: "Name, description, category and JSX code are required.",
-        };
+        return fail("Name, description, category and JSX code are required.", {
+            ...(name ? {} : { name: "required" }),
+            ...(description ? {} : { description: "required" }),
+            ...(category ? {} : { category: "required" }),
+            ...(jsxCode ? {} : { jsxCode: "required" }),
+        });
     }
 
     if (!ALLOWED_COMPONENT_CATEGORIES.has(category)) {
-        return {
-            ok: false,
-            message: "Unsupported category. Allowed: buttons, cards, forms, navigation, feedback, data.",
-        };
+        return fail("Unsupported category. Allowed: buttons, cards, forms, navigation, feedback, data.", {
+            category: "unsupported",
+        });
     }
 
     if (!hasMaxLength(name, LIMITS.name)) {
-        return { ok: false, message: "Component name is too long." };
+        return fail("Component name is too long.", { name: `max ${LIMITS.name} characters` });
     }
 
     if (!hasMaxLength(description, LIMITS.description)) {
-        return { ok: false, message: "Component description is too long." };
+        return fail("Component description is too long.", { description: `max ${LIMITS.description} characters` });
     }
 
     if (descriptionMarkdown && !hasMaxLength(descriptionMarkdown, LIMITS.descriptionMarkdown)) {
-        return { ok: false, message: "Extended component notes are too long." };
+        return fail("Extended component notes are too long.", { descriptionMarkdown: `max ${LIMITS.descriptionMarkdown} characters` });
     }
 
     if (!hasMaxLength(jsxCode, LIMITS.jsxCode)) {
-        return { ok: false, message: "JSX code is too long." };
+        return fail("JSX code is too long.", { jsxCode: `max ${LIMITS.jsxCode} characters` });
     }
 
     if (cssCode && !hasMaxLength(cssCode, LIMITS.cssCode)) {
-        return { ok: false, message: "CSS code is too long." };
+        return fail("CSS code is too long.", { cssCode: `max ${LIMITS.cssCode} characters` });
     }
 
-    if (!isValidImageDataUrl(thumbnail)) {
-        return { ok: false, message: "Thumbnail must be a valid base64 image payload." };
+    if (!isValidImageReference(thumbnail)) {
+        return fail("Thumbnail must be a valid image data URL or http/https URL.", { thumbnail: "invalid image reference" });
     }
 
-    if (!isValidImageDataUrl(screenshot)) {
-        return { ok: false, message: "Screenshot must be a valid base64 image payload." };
+    if (!isValidImageReference(screenshot)) {
+        return fail("Screenshot must be a valid image data URL or http/https URL.", { screenshot: "invalid image reference" });
     }
 
     let tags = [];
     if (Array.isArray(tagsRaw)) {
-        tags = tagsRaw.map((t) => text(t)).filter(Boolean);
+        tags = tagsRaw.map((t) => text(t));
     } else if (typeof tagsRaw === "string") {
-        tags = tagsRaw
-            .split(",")
-            .map((t) => text(t))
-            .filter(Boolean);
+        return fail("Tags must be an array of non-empty strings.", { tags: "must be an array" });
+    } else if (tagsRaw !== undefined && tagsRaw !== null) {
+        return fail("Tags must be an array of non-empty strings.", { tags: "must be an array" });
+    }
+
+    if (tags.some((tag) => !tag)) {
+        return fail("Tags must be an array of non-empty strings.", { tags: "entries must be non-empty strings" });
     }
 
     tags = Array.from(new Set(tags.map((t) => t.toLowerCase()))).slice(0, 12);
     if (tags.some((t) => t.length > LIMITS.tag)) {
-        return { ok: false, message: "Each tag must be 24 characters or fewer." };
+        return fail("Each tag must be 24 characters or fewer.", { tags: `each tag max ${LIMITS.tag} characters` });
     }
     const tagsJoined = tags.join(",");
     if (tagsJoined.length > LIMITS.tagsTotal) {
-        return { ok: false, message: "Tags are too long." };
+        return fail("Tags are too long.", { tags: `combined max ${LIMITS.tagsTotal} characters` });
     }
 
     if (
@@ -443,23 +478,23 @@ export function validateComponentPayload(payload = {}) {
                 !hasMaxLength(entry.description, LIMITS.propDescription)
         )
     ) {
-        return { ok: false, message: "Props reference entries are too long." };
+        return fail("Props reference entries are too long.", { props: "one or more entries exceed length limits" });
     }
 
     if (bestPractices.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
-        return { ok: false, message: "Best practices entries are too long." };
+        return fail("Best practices entries are too long.", { bestPractices: `each entry max ${LIMITS.listEntry} characters` });
     }
 
     if (commonPitfalls.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
-        return { ok: false, message: "Common pitfalls entries are too long." };
+        return fail("Common pitfalls entries are too long.", { commonPitfalls: `each entry max ${LIMITS.listEntry} characters` });
     }
 
     if (dependencies.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
-        return { ok: false, message: "Dependency entries are too long." };
+        return fail("Dependency entries are too long.", { dependencies: `each entry max ${LIMITS.listEntry} characters` });
     }
 
     if (relatedComponents.some((entry) => !hasMaxLength(entry, LIMITS.listEntry))) {
-        return { ok: false, message: "Related component entries are too long." };
+        return fail("Related component entries are too long.", { relatedComponents: `each entry max ${LIMITS.listEntry} characters` });
     }
 
     if (
@@ -470,7 +505,7 @@ export function validateComponentPayload(payload = {}) {
                 !hasMaxLength(entry.code, LIMITS.usageExampleCode)
         )
     ) {
-        return { ok: false, message: "Usage example entries are too long." };
+        return fail("Usage example entries are too long.", { usageExamples: "one or more entries exceed length limits" });
     }
 
     if (
@@ -478,7 +513,7 @@ export function validateComponentPayload(payload = {}) {
             (entry) => !hasMaxLength(String(entry || ""), LIMITS.importStatement)
         )
     ) {
-        return { ok: false, message: "Import guidance is too long." };
+        return fail("Import guidance is too long.", { importStatements: `each entry max ${LIMITS.importStatement} characters` });
     }
 
     return {

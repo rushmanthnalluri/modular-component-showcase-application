@@ -31,6 +31,7 @@ try:
     from gateway.middleware.rate_limit import SlidingWindowRateLimiter
     from gateway.middleware.tracing import TracePropagationMiddleware
     from gateway.middleware.error_handler import unhandled_exception_handler as gateway_unhandled_exception_handler
+    from gateway.dependencies.security import verify_request_jwt
 except ImportError:
     # Import with relative paths (when run in container)
     from utils.env import settings
@@ -46,6 +47,7 @@ except ImportError:
     from middleware.rate_limit import SlidingWindowRateLimiter
     from middleware.tracing import TracePropagationMiddleware
     from middleware.error_handler import unhandled_exception_handler as gateway_unhandled_exception_handler
+    from dependencies.security import verify_request_jwt
 
 # Configure logging
 logging.basicConfig(level=settings.log_level.upper())
@@ -76,6 +78,19 @@ async def unhandled_exception_handler(_request: Request, exc: Exception):
 
 app.middleware("http")(TracePropagationMiddleware())
 app.middleware("http")(SlidingWindowRateLimiter(max_requests=500, window_seconds=60))
+
+
+@app.middleware("http")
+async def limit_request_body_size(request: Request, call_next):
+    max_content_length = 1_000_000
+    content_length = request.headers.get("content-length")
+    if content_length and content_length.isdigit() and int(content_length) > max_content_length:
+        return JSONResponse(
+            status_code=413,
+            content={"success": False, "message": "Request payload too large.", "code": "PAYLOAD_TOO_LARGE"},
+        )
+
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -145,6 +160,62 @@ def _decode_json_payload(content: bytes, headers: dict) -> dict | list | None:
     return None
 
 
+def _get_set_cookie_headers(headers) -> list[str]:
+    """Return all Set-Cookie headers from real httpx headers or simple test fakes."""
+    if hasattr(headers, "get_list"):
+        return headers.get_list("set-cookie")
+
+    value = headers.get("set-cookie") if hasattr(headers, "get") else None
+    if not value:
+        return []
+
+    if isinstance(value, list):
+        return [str(item) for item in value]
+
+    return [str(value)]
+
+
+def _error_code_for_status(status_code: int) -> str:
+    if status_code == 400:
+        return "VALIDATION_ERROR"
+    if status_code == 401:
+        return "UNAUTHORIZED"
+    if status_code == 404:
+        return "NOT_FOUND"
+    if status_code == 422:
+        return "UNPROCESSABLE_ENTITY"
+    if status_code >= 500:
+        return "INTERNAL_ERROR"
+    return "REQUEST_ERROR"
+
+
+def _normalize_json_payload(payload, status_code: int):
+    if isinstance(payload, dict) and "success" in payload:
+        return payload
+
+    if status_code < 400:
+        if isinstance(payload, dict):
+            return {"success": True, "data": payload, **payload}
+        return {"success": True, "data": payload}
+
+    message = "Request failed."
+    details = None
+    if isinstance(payload, dict):
+        message = str(payload.get("message") or payload.get("msg") or payload.get("error") or message)
+        details = payload.get("details")
+
+    return {
+        "success": False,
+        "error": {
+            "code": _error_code_for_status(status_code),
+            "message": message,
+            **({"details": details} if details is not None else {}),
+        },
+        "code": _error_code_for_status(status_code),
+        "message": message,
+    }
+
+
 @app.get("/")
 async def root():
     """Gateway root endpoint.
@@ -193,52 +264,109 @@ async def livez():
 )
 async def proxy_api(full_path: str, request: Request):
     """Forward all /api/* traffic to backend while preserving cookies and query params."""
+    protected_prefixes = ("auth/", "auth", "health", "readyz", "livez", "captcha")
+    if not any(str(full_path or "").lower().startswith(prefix) for prefix in protected_prefixes):
+        verify_request_jwt(request)
+
     target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"
     body = await request.body()
     query_params = dict(request.query_params)
+
+    correlation_id = getattr(request.state, "correlation_id", "")
+    traceparent = getattr(request.state, "traceparent", "")
 
     outbound_headers = {
         key: value
         for key, value in request.headers.items()
         if key.lower() not in {"host", "content-length", "origin", "referer"}
     }
-    outbound_headers.setdefault("x-correlation-id", getattr(request.state, "correlation_id", ""))
-    outbound_headers.setdefault("traceparent", getattr(request.state, "traceparent", ""))
+    outbound_headers.setdefault("x-correlation-id", correlation_id)
+    outbound_headers.setdefault("x-request-id", correlation_id)
+    outbound_headers.setdefault("traceparent", traceparent)
     # Ask backend for uncompressed payloads so the proxy always relays decodable JSON/text bodies.
     outbound_headers["accept-encoding"] = "identity"
 
-    timeout = httpx.Timeout(settings.request_timeout_seconds)
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-        backend_response = await client.request(
-            method=request.method,
-            url=target_url,
-            headers=outbound_headers,
-            params=query_params,
-            content=body if body else None,
+    started_at = time.perf_counter()
+    logger.info(f"Proxying {request.method} {request.url.path} -> {target_url} [ID: {correlation_id}]")
+
+    try:
+        timeout = httpx.Timeout(
+            settings.request_timeout_seconds,
+            connect=min(5.0, float(settings.request_timeout_seconds)),
+            read=float(settings.request_timeout_seconds),
+            write=float(settings.request_timeout_seconds),
+            pool=float(settings.request_timeout_seconds),
+        )
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            backend_response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=outbound_headers,
+                params=query_params,
+                content=body if body else None,
+            )
+    except httpx.TimeoutException:
+        logger.error(f"Upstream timeout for {target_url} [ID: {correlation_id}]")
+        return JSONResponse(
+            status_code=504,
+            headers={"x-request-id": correlation_id, "x-correlation-id": correlation_id},
+            content={
+                "success": False,
+                "error": {"code": "GATEWAY_TIMEOUT", "message": "The upstream service took too long to respond."},
+                "code": "GATEWAY_TIMEOUT",
+                "message": "The upstream service took too long to respond.",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Proxy error for {target_url} [ID: {correlation_id}]: {str(e)}")
+        return JSONResponse(
+            status_code=502,
+            headers={"x-request-id": correlation_id, "x-correlation-id": correlation_id},
+            content={
+                "success": False,
+                "error": {"code": "BAD_GATEWAY", "message": "The upstream service is unavailable."},
+                "code": "BAD_GATEWAY",
+                "message": "The upstream service is unavailable.",
+            },
         )
 
-    response_headers = {}
-    set_cookie = backend_response.headers.get("set-cookie")
-    if set_cookie:
-        response_headers["set-cookie"] = set_cookie
+    duration_ms = (time.perf_counter() - started_at) * 1000
+    logger.info(f"Upstream {target_url} returned {backend_response.status_code} in {duration_ms:.2f}ms")
 
+    set_cookie_headers = _get_set_cookie_headers(backend_response.headers)
     content_type = backend_response.headers.get("content-type", "application/json")
+
+    # Add all upstream headers to outbound response (except a few sensitive ones)
+    ignored_headers = {"content-length", "content-encoding", "transfer-encoding", "connection", "keep-alive", "set-cookie"}
+    outbound_response_headers = {
+        key: value 
+        for key, value in backend_response.headers.items() 
+        if key.lower() not in ignored_headers
+    }
 
     if "application/json" in content_type.lower():
         decoded_payload = _decode_json_payload(backend_response.content, backend_response.headers)
         if decoded_payload is not None:
-            return JSONResponse(
+            decoded_payload = _normalize_json_payload(decoded_payload, backend_response.status_code)
+
+            response = JSONResponse(
                 content=decoded_payload,
                 status_code=backend_response.status_code,
-                headers=response_headers,
+                headers=outbound_response_headers
             )
+            for cookie_header in set_cookie_headers:
+                response.headers.append("set-cookie", cookie_header)
+            return response
 
-    return Response(
+    response = Response(
         content=backend_response.content,
         status_code=backend_response.status_code,
         media_type=content_type,
-        headers=response_headers,
+        headers=outbound_response_headers
     )
+    for cookie_header in set_cookie_headers:
+        response.headers.append("set-cookie", cookie_header)
+    return response
 
 
 if __name__ == "__main__":

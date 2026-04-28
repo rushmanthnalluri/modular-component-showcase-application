@@ -1,5 +1,6 @@
 import { apiRequest } from "@/services/apiClient";
 import { getAllComponents } from "@/services/componentsStore";
+import { getAuthUser } from "@/services/authAccess";
 import {
   mapBackendIdsToLocal,
   preloadComponentLookup,
@@ -37,6 +38,10 @@ async function mapFavoritesToLocalIds(ids = []) {
 }
 
 export async function getFavoriteIds() {
+  if (!getAuthUser()) {
+    return readLocal();
+  }
+
   try {
     const payload = await apiRequest("/users/me/favorites", { method: "GET" });
     if (payload && Array.isArray(payload.favorites)) {
@@ -52,6 +57,12 @@ export async function getFavoriteIds() {
 }
 
 export async function getFavoriteComponents() {
+  if (!getAuthUser()) {
+    const favoriteIds = readLocal();
+    const components = await getAllComponents();
+    return components.filter((component) => favoriteIds.includes(String(component.id)));
+  }
+
   try {
     const payload = await apiRequest("/users/me/favorites/components", { method: "GET" });
     if (payload && Array.isArray(payload.components)) {
@@ -69,6 +80,13 @@ export async function getFavoriteComponents() {
 export async function toggleFavorite(componentId) {
   const id = String(componentId || "").trim();
   if (!id) return readLocal();
+  if (!getAuthUser()) {
+    const existing = readLocal();
+    const next = existing.includes(id) ? existing.filter((x) => x !== id) : [...existing, id];
+    writeLocal(next);
+    return next;
+  }
+
   const backendId = await resolveBackendComponentId(id, { allowRefresh: true });
 
   try {

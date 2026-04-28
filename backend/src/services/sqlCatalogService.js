@@ -29,6 +29,24 @@ function mapComponent(row) {
     };
 }
 
+function clampLimit(value, fallback = 25) {
+    const parsed = Number.parseInt(String(value ?? fallback), 10);
+    if (!Number.isFinite(parsed)) {
+        return fallback;
+    }
+
+    return Math.min(100, Math.max(1, parsed));
+}
+
+function clampPage(value, fallback = 1) {
+    const parsed = Number.parseInt(String(value ?? fallback), 10);
+    if (!Number.isFinite(parsed)) {
+        return fallback;
+    }
+
+    return Math.max(1, parsed);
+}
+
 export async function listUsers() {
     const { rows } = await sqlQuery(
         `SELECT user_id AS id, name, email, role, created_at
@@ -111,7 +129,20 @@ export async function deleteCategory(categoryId) {
     return rowCount > 0;
 }
 
-export async function listComponents() {
+export async function listComponents({ search = "", page = 1, limit = 25 } = {}) {
+    const safeLimit = clampLimit(limit);
+    const safePage = clampPage(page);
+    const offset = (safePage - 1) * safeLimit;
+    const searchTerm = String(search || "").trim();
+    const params = [];
+    const whereClause = searchTerm
+        ? (() => {
+            params.push(`%${searchTerm}%`);
+            return `WHERE c.name ILIKE $${params.length} OR c.description ILIKE $${params.length}`;
+        })()
+        : "";
+
+    params.push(safeLimit, offset);
     const { rows } = await sqlQuery(
         `SELECT c.component_id AS id,
                 c.name,
@@ -120,9 +151,30 @@ export async function listComponents() {
                 c.user_id,
                 c.created_at
          FROM components c
-         ORDER BY c.component_id ASC`
+         ${whereClause}
+         ORDER BY c.component_id ASC
+         LIMIT $${params.length - 1}
+         OFFSET $${params.length}`,
+        params
     );
-    return rows.map(mapComponent);
+
+    const totalRows = await sqlQuery(
+        `SELECT COUNT(*)::int AS total
+         FROM components c
+         ${whereClause}`,
+        searchTerm ? [params[0]] : []
+    );
+    const total = Number(totalRows.rows[0]?.total || 0);
+
+    return {
+        items: rows.map(mapComponent),
+        pagination: {
+            total,
+            page: safePage,
+            limit: safeLimit,
+            pages: Math.ceil(total / safeLimit),
+        },
+    };
 }
 
 export async function getComponentById(componentId) {

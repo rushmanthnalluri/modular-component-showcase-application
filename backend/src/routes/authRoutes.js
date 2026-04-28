@@ -1,11 +1,15 @@
 import express from "express";
 import bcrypt from "bcryptjs";
+import path from "node:path";
 import {
     normalizePhone,
     validateForgotPasswordPayload,
     validateLoginPayload,
     validateRegistrationPayload,
 } from "../utils/validation.js";
+import { createValidatedBodyMiddleware } from "../middleware/requestValidation.js";
+import { resolvePublicUrl, resolveRequestOrigin } from "../utils/url.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 export function createAuthRouter({
     User,
@@ -22,6 +26,37 @@ export function createAuthRouter({
     syncSqlUserAccount = async () => {},
 }) {
     const router = express.Router();
+
+    function successPayload(res, payload = {}, status = 200) {
+        return sendSuccess(res, payload, status);
+    }
+
+    function errorPayload(res, code, message, status = 500, details = null) {
+        return sendError(res, code, message, status, details);
+    }
+
+    const validateRegistrationBody = createValidatedBodyMiddleware(validateRegistrationPayload);
+    const validateLoginBody = createValidatedBodyMiddleware(validateLoginPayload);
+    const validateForgotPasswordBody = createValidatedBodyMiddleware(validateForgotPasswordPayload);
+
+    function requestBaseUrl(req) {
+        return resolveRequestOrigin(req);
+    }
+
+    function resolveAvatarReference(value, req) {
+        const avatar = String(value || "").trim();
+        if (!avatar || avatar.startsWith("data:image") || /^https?:\/\//i.test(avatar)) {
+            return avatar;
+        }
+
+        if (avatar.startsWith("/app/uploads/avatars/") || avatar.startsWith("/uploads/avatars/")) {
+            const baseUrl = requestBaseUrl(req);
+            const publicPath = `/uploads/avatars/${path.basename(avatar)}`;
+            return baseUrl ? resolvePublicUrl(publicPath, baseUrl) : publicPath;
+        }
+
+        return avatar;
+    }
 
     function looksLikeBcryptHash(value) {
         return /^\$2[aby]\$\d{2}\$/.test(String(value || ""));
@@ -48,16 +83,12 @@ export function createAuthRouter({
     }
 
     router.get("/csrf", (req, res) => {
-        return res.json({ csrfToken: readCsrfToken(req) });
+        const csrfToken = readCsrfToken(req);
+        return successPayload(res, { csrfToken });
     });
 
-    router.post("/register", requireCsrf, async (req, res) => {
+    router.post("/register", requireCsrf, validateRegistrationBody, async (req, res) => {
         try {
-            const validation = validateRegistrationPayload(req.body || {});
-            if (!validation.ok) {
-                return res.status(400).json({ message: validation.message });
-            }
-
             const {
                 fullName,
                 email,
@@ -68,10 +99,10 @@ export function createAuthRouter({
                 avatarImage,
                 socialLinks,
                 emailPreferences,
-            } = validation.data;
+            } = req.validatedBody;
             const existingUser = await User.findOne({ email });
             if (existingUser) {
-                return res.status(409).json({ message: "An account with this email already exists." });
+                return errorPayload(res, "CONFLICT", "An account with this email already exists.", 409);
             }
 
             const passwordHash = await bcrypt.hash(password, 10);
@@ -91,29 +122,24 @@ export function createAuthRouter({
 
             await syncSqlUserAccount(user);
 
-            return res.status(201).json({ message: "Registration successful." });
+            return successPayload(res, { message: "Registration successful." }, 201);
         } catch (error) {
             logger.error("Register error", { error: error.message, stack: error.stack });
-            return res.status(500).json({ message: "Unable to register right now." });
+            return errorPayload(res, "SERVER_ERROR", "Unable to register right now.", 500);
         }
     });
 
-    router.post("/login", requireCsrf, async (req, res) => {
+    router.post("/login", requireCsrf, validateLoginBody, async (req, res) => {
         try {
-            const validation = validateLoginPayload(req.body || {});
-            if (!validation.ok) {
-                return res.status(400).json({ message: validation.message });
-            }
-
-            const { email, password } = validation.data;
+            const { email, password } = req.validatedBody;
             const user = await User.findOne({ email });
             if (!user) {
-                return res.status(401).json({ message: "Invalid email or password." });
+                return errorPayload(res, "UNAUTHORIZED", "Invalid email or password.", 401);
             }
 
             const isValidPassword = await verifyPassword(user, password);
             if (!isValidPassword) {
-                return res.status(401).json({ message: "Invalid email or password." });
+                return errorPayload(res, "UNAUTHORIZED", "Invalid email or password.", 401);
             }
 
             await syncSqlUserAccount(user);
@@ -122,7 +148,7 @@ export function createAuthRouter({
             const refreshToken = createRefreshToken(user.id);
             issueAuthCookies(req, res, { accessToken, refreshToken });
 
-            return res.json({
+            return successPayload(res, {
                 token: accessToken,
                 user: {
                     id: user.id,
@@ -131,12 +157,12 @@ export function createAuthRouter({
                     phone: user.phone,
                     role: user.role,
                     isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
-                    avatarImage: user.avatarImage || "",
+                    avatarImage: resolveAvatarReference(user.avatarImage || "", req),
                 },
             });
         } catch (error) {
             logger.error("Login error", { error: error.message, stack: error.stack });
-            return res.status(500).json({ message: "Unable to login right now." });
+            return errorPayload(res, "SERVER_ERROR", "Unable to login right now.", 500);
         }
     });
 
@@ -144,7 +170,7 @@ export function createAuthRouter({
         try {
             const refreshToken = readRefreshToken(req);
             if (!refreshToken) {
-                return res.status(401).json({ message: "Refresh token is required." });
+                return errorPayload(res, "UNAUTHORIZED", "Refresh token is required.", 401);
             }
 
             const payload = verifyRefreshToken(refreshToken);
@@ -153,14 +179,14 @@ export function createAuthRouter({
             );
 
             if (!user) {
-                return res.status(401).json({ message: "Invalid refresh token." });
+                return errorPayload(res, "UNAUTHORIZED", "Invalid refresh token.", 401);
             }
 
             const newAccessToken = createAccessToken(user.id);
             const newRefreshToken = createRefreshToken(user.id);
             issueAuthCookies(req, res, { accessToken: newAccessToken, refreshToken: newRefreshToken });
 
-            return res.json({
+            return successPayload(res, {
                 token: newAccessToken,
                 user: {
                     id: user.id,
@@ -169,35 +195,30 @@ export function createAuthRouter({
                     phone: user.phone,
                     role: user.role,
                     isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
-                    avatarImage: user.avatarImage || "",
+                    avatarImage: resolveAvatarReference(user.avatarImage || "", req),
                 },
             });
         } catch {
-            return res.status(401).json({ message: "Invalid refresh token." });
+            return errorPayload(res, "UNAUTHORIZED", "Invalid refresh token.", 401);
         }
     });
 
     router.post("/logout", requireCsrf, (req, res) => {
         clearAuthCookies(req, res);
-        return res.json({ message: "Logged out." });
+        return successPayload(res, { message: "Logged out." });
     });
 
-    router.post("/forgot-password", requireCsrf, async (req, res) => {
+    router.post("/forgot-password", requireCsrf, validateForgotPasswordBody, async (req, res) => {
         try {
-            const validation = validateForgotPasswordPayload(req.body || {});
-            if (!validation.ok) {
-                return res.status(400).json({ message: validation.message });
-            }
-
-            const { email, phone, newPassword } = validation.data;
+            const { email, phone, newPassword } = req.validatedBody;
             const user = await User.findOne({ email });
             if (!user) {
-                return res.status(404).json({ message: "Account not found." });
+                return errorPayload(res, "NOT_FOUND", "Account not found.", 404);
             }
 
             const savedPhone = normalizePhone(user.phone);
             if (savedPhone !== phone) {
-                return res.status(400).json({ message: "Phone number does not match this account." });
+                return errorPayload(res, "VALIDATION_ERROR", "Phone number does not match this account.", 400);
             }
 
             user.passwordHash = await bcrypt.hash(newPassword, 10);
@@ -211,10 +232,10 @@ export function createAuthRouter({
 
             await syncSqlUserAccount(user);
 
-            return res.json({ message: "Password reset successful. Please login with your new password." });
+            return successPayload(res, { message: "Password reset successful. Please login with your new password." });
         } catch (error) {
             logger.error("Forgot password error", { error: error.message, stack: error.stack });
-            return res.status(500).json({ message: "Unable to reset password right now." });
+            return errorPayload(res, "SERVER_ERROR", "Unable to reset password right now.", 500);
         }
     });
 

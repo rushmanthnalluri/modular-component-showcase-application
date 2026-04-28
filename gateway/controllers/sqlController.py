@@ -1,5 +1,5 @@
 """SQL controller for forwarding SQL catalog operations."""
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 import sys
 from pathlib import Path
@@ -10,11 +10,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     from gateway.models.schemas import SQLComponentSchema
     from gateway.services.sqlService import SQLService
+    from gateway.dependencies.security import get_current_principal
 except ImportError:
     from models.schemas import SQLComponentSchema
     from services.sqlService import SQLService
+    from dependencies.security import get_current_principal
 
-router = APIRouter(prefix="/sqlservice", tags=["sql"])
+router = APIRouter(prefix="/sqlservice", tags=["sql"], dependencies=[Depends(get_current_principal)])
 
 
 @router.get("/components")
@@ -43,7 +45,7 @@ async def list_components(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"List components failed: {str(e)}",
+            detail="List components failed.",
         )
 
 
@@ -55,7 +57,7 @@ async def list_users():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"List users failed: {str(e)}",
+            detail="List users failed.",
         )
 
 
@@ -67,7 +69,7 @@ async def list_categories():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"List categories failed: {str(e)}",
+            detail="List categories failed.",
         )
 
 
@@ -87,7 +89,7 @@ async def create_component(payload: SQLComponentSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Create component failed: {str(e)}",
+            detail="Create component failed.",
         )
 
 
@@ -108,7 +110,7 @@ async def update_component(component_id: int, payload: SQLComponentSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Update component failed: {str(e)}",
+            detail="Update component failed.",
         )
 
 
@@ -128,5 +130,5 @@ async def delete_component(component_id: int):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Delete component failed: {str(e)}",
+            detail="Delete component failed.",
         )

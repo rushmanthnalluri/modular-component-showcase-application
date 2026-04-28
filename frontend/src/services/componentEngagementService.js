@@ -342,9 +342,8 @@ export async function semanticComponentSearch(query, limit = 10) {
     return [];
   }
 
-  const payload = await apiRequest("/search", {
-    method: "POST",
-    body: JSON.stringify({ query, limit }),
+  const payload = await apiRequest(`/search?q=${encodeURIComponent(query)}&limit=${encodeURIComponent(limit)}`, {
+    method: "GET",
   });
 
   return Array.isArray(payload) ? payload : [];

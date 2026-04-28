@@ -37,6 +37,9 @@ class _FakeAsyncClient:
         assert "/api/health" in url
         assert headers is not None
         assert headers.get("accept-encoding") == "identity"
+        assert headers.get("authorization") == "Bearer fake-token"
+        assert headers.get("content-type") == "application/json"
+        assert headers.get("x-request-id") == "req-123"
         assert "origin" not in {key.lower() for key in headers.keys()}
         return _FakeAsyncResponse(
             status_code=200,
@@ -54,8 +57,14 @@ def test_proxy_api_forwards_and_preserves_set_cookie(monkeypatch):
     monkeypatch.setattr(gateway_main.httpx, "AsyncClient", _FakeAsyncClient)
 
     client = TestClient(app)
-    response = client.get("/api/health")
+    response = client.post(
+        "/api/health",
+        headers={"authorization": "Bearer fake-token", "content-type": "application/json", "x-request-id": "req-123"},
+        json={"probe": True},
+    )
 
     assert response.status_code == 200
     assert response.json()["ok"] is True
+    assert response.json()["success"] is True
     assert "set-cookie" in response.headers
+    assert response.headers.get("x-request-id") == "req-123"

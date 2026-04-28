@@ -17,9 +17,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={
             "message": "Gateway request failed.",
-            "detail": str(exc),
             "correlationId": correlation_id,
-            "path": request.url.path,
-            "method": request.method,
         },
     )
