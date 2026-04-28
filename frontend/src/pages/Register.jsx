@@ -52,6 +52,7 @@ const Register = () => {
   });
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [captcha, setCaptcha] = useState({ text: "", image: "" });
   const [captchaInput, setCaptchaInput] = useState("");
   const [avatarFileName, setAvatarFileName] = useState("");
@@ -291,6 +292,7 @@ const Register = () => {
     }
 
     try {
+      setIsSubmitting(true);
       await registerUser({
         fullName: data.fullName,
         email: data.email,
@@ -328,6 +330,8 @@ const Register = () => {
       await loadCaptcha().catch(() => {
         showCaptchaUnavailableToast();
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -624,8 +628,9 @@ const Register = () => {
               type="submit"
               className="auth-submit"
               aria-label="Submit registration form"
+              disabled={isSubmitting}
             >
-              Register
+              {isSubmitting ? "Registering..." : "Register"}
             </button>
           </form>
 

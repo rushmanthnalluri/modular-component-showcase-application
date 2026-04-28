@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { withTimeout } from "../middleware/asyncTimeout.js";
 
 function generateText(length) {
   const text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -79,8 +80,8 @@ export async function sendEmail(toEmail, ticket = null) {
 
   try {
     // Fast-fail if the SMTP server cannot be reached.
-    await transporter.verify();
-    await transporter.sendMail(mailOptions);
+    await withTimeout(() => transporter.verify(), 15_000, "SMTP verification timed out.");
+    await withTimeout(() => transporter.sendMail(mailOptions), 20_000, "SMTP send timed out.");
     return { code: 200, msg: "Support ticket created", ticketId };
   } catch (err) {
     console.error("Support ticket email failed:", err?.message || err);
@@ -121,8 +122,8 @@ export async function sendAnnouncementEmail({ toEmail, subject, markdown, html }
   const fromAddress = String(process.env.SMTP_FROM || smtpUser).trim() || "no-reply@modularshowcase.local";
 
   try {
-    await transporter.verify();
-    await transporter.sendMail({
+    await withTimeout(() => transporter.verify(), 15_000, "SMTP verification timed out.");
+    await withTimeout(() => transporter.sendMail({
       from: fromAddress,
       to: toEmail,
       subject: String(subject || "Modular Showcase Update"),
@@ -130,7 +131,7 @@ export async function sendAnnouncementEmail({ toEmail, subject, markdown, html }
       html:
         html ||
         `<p>${escapeHtml(String(markdown || "A new update is available."))}</p>`,
-    });
+    }), 20_000, "SMTP send timed out.");
 
     return { code: 200, msg: "Announcement sent." };
   } catch (err) {

@@ -1,5 +1,5 @@
 """Spring controller for forwarding Spring service requests."""
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 import sys
 from pathlib import Path
 
@@ -8,42 +8,44 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from gateway.services.springService import SpringService
+    from gateway.dependencies.security import get_current_principal
 except ImportError:
     from services.springService import SpringService
+    from dependencies.security import get_current_principal
 
 router = APIRouter(prefix="/springservice", tags=["spring"])
 
 
 @router.get("/users")
-async def spring_users():
+async def spring_users(_principal=Depends(get_current_principal)):
     try:
         return await SpringService.get_users()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Spring users fetch failed: {str(e)}",
+            detail="Spring users fetch failed.",
         )
 
 
 @router.get("/components")
-async def spring_components():
+async def spring_components(_principal=Depends(get_current_principal)):
     try:
         return await SpringService.get_components()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Spring components fetch failed: {str(e)}",
+            detail="Spring components fetch failed.",
         )
 
 
 @router.get("/reviews")
-async def spring_reviews():
+async def spring_reviews(_principal=Depends(get_current_principal)):
     try:
         return await SpringService.get_reviews()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Spring reviews fetch failed: {str(e)}",
+            detail="Spring reviews fetch failed.",
         )
 
 
@@ -54,5 +56,5 @@ async def spring_health():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Spring health check failed: {str(e)}",
+            detail="Spring health check failed.",
         )

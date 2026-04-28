@@ -99,10 +99,12 @@ test("top-level mongo routes return reviews, discussions, logs, and compact sear
         Component: {
             findOne: async () => ({ _id: "component-object-id" }),
             find: () => ({
-                lean: async () => [
-                    { id: "cmp-1", name: "Animated Button" },
-                    { id: "cmp-2", name: "Data Table" },
-                ],
+                limit: () => ({
+                    lean: async () => [
+                        { id: "cmp-1", name: "Animated Button" },
+                        { id: "cmp-2", name: "Data Table" },
+                    ],
+                }),
             }),
         },
         UsageLog: {

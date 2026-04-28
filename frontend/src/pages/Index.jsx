@@ -19,6 +19,10 @@ const Index = () => {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticIds, setSemanticIds] = useState([]);
+  const [uiPrompt, setUiPrompt] = useState("A compact onboarding form with validation and success feedback");
+  const [uiMatches, setUiMatches] = useState([]);
+  const [uiMatchesLoading, setUiMatchesLoading] = useState(false);
+  const [uiMatchesStatus, setUiMatchesStatus] = useState("Describe a UI to get semantic component matches.");
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
@@ -91,6 +95,33 @@ const Index = () => {
   const handleToggleFavorite = async (componentId) => {
     const next = await toggleFavorite(componentId);
     setFavoriteIds(next);
+  };
+
+  const handleUiMatchSubmit = async (event) => {
+    event.preventDefault();
+    const trimmedPrompt = uiPrompt.trim();
+    if (!trimmedPrompt) {
+      setUiMatches([]);
+      setUiMatchesStatus("Enter a short UI description to search the component catalog.");
+      return;
+    }
+
+    setUiMatchesLoading(true);
+    setUiMatchesStatus("Finding semantically similar components...");
+    try {
+      const items = await semanticComponentSearch(trimmedPrompt, 5);
+      setUiMatches(items);
+      setUiMatchesStatus(
+        items.length > 0
+          ? `Matched ${items.length} components using vector search over component metadata.`
+          : "No strong matches yet. Try adding more detail, like layout, state, or interaction goals."
+      );
+    } catch {
+      setUiMatches([]);
+      setUiMatchesStatus("The recommendation service is temporarily unavailable.");
+    } finally {
+      setUiMatchesLoading(false);
+    }
   };
 
   const setSearchQuery = useCallback((nextQuery) => {
@@ -253,6 +284,58 @@ const Index = () => {
                     Favorites
                   </Link>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="innovation-section" aria-labelledby="innovation-heading">
+          <div className="layout-container">
+            <div className="innovation-panel">
+              <div className="innovation-copy">
+                <span className="innovation-kicker">Innovation feature</span>
+                <h2 id="innovation-heading">Describe UI, get matching components</h2>
+                <p>
+                  Describe the interface you want in plain language and the system
+                  returns semantically related components from the vector index.
+                </p>
+                <form className="innovation-form" onSubmit={handleUiMatchSubmit}>
+                  <label className="sr-only" htmlFor="innovation-prompt">
+                    Describe the UI you want
+                  </label>
+                  <textarea
+                    id="innovation-prompt"
+                    className="innovation-textarea"
+                    value={uiPrompt}
+                    onChange={(event) => setUiPrompt(event.target.value)}
+                    placeholder="A compact onboarding flow with validation, helper text, and a success state"
+                    rows={4}
+                  />
+                  <div className="innovation-actions">
+                    <button className="innovation-button" type="submit" disabled={uiMatchesLoading}>
+                      {uiMatchesLoading ? "Searching..." : "Find matches"}
+                    </button>
+                    <span className="innovation-status">{uiMatchesStatus}</span>
+                  </div>
+                </form>
+              </div>
+
+              <div className="innovation-results" aria-live="polite">
+                {uiMatches.length > 0 ? (
+                  uiMatches.map((match) => (
+                    <article key={`${match.componentId}-${match.componentName}`} className="innovation-result-card">
+                      <div className="innovation-result-header">
+                        <strong>{match.componentName}</strong>
+                        <span>{match.category}</span>
+                      </div>
+                      <p>Semantic score {Number(match.score || 0).toFixed(3)}</p>
+                    </article>
+                  ))
+                ) : (
+                  <div className="innovation-results-empty">
+                    Try prompts like “auth form with email validation” or “data table with filters and empty state”.
+                  </div>
+                )}
               </div>
             </div>
           </div>

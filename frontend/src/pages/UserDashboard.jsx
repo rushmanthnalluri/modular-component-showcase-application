@@ -13,6 +13,7 @@ const UserDashboard = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [avatarFileName, setAvatarFileName] = useState("");
   const [form, setForm] = useState({
     fullName: "",
@@ -55,6 +56,7 @@ const UserDashboard = () => {
           newsletters: Boolean(user.emailPreferences?.newsletters),
         },
       });
+      setAvatarFile(null);
       setAvatarFileName("");
     } catch (error) {
       toast({
@@ -93,6 +95,7 @@ const UserDashboard = () => {
     const reader = new FileReader();
     reader.onload = () => {
       setForm((prev) => ({ ...prev, avatarImage: String(reader.result || "") }));
+      setAvatarFile(file);
       setAvatarFileName(file.name);
     };
     reader.onerror = () => {
@@ -178,6 +181,7 @@ const UserDashboard = () => {
         bio: form.bio,
         avatarImage: form.avatarImage,
         avatarUrl: form.avatarImage,
+        avatarFile,
         socialLinks: form.socialLinks,
         emailPreferences: form.emailPreferences,
       });
@@ -193,6 +197,7 @@ const UserDashboard = () => {
         }));
       }
 
+      setAvatarFile(null);
       setAvatarFileName("");
       toast({
         title: "Profile updated",

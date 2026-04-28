@@ -1,5 +1,5 @@
 """Search controller for forwarding search requests."""
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 import sys
 from pathlib import Path
 
@@ -9,15 +9,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     from gateway.models.schemas import SearchSchema
     from gateway.services.searchService import SearchService
+    from gateway.dependencies.security import get_current_principal
 except ImportError:
     from models.schemas import SearchSchema
     from services.searchService import SearchService
+    from dependencies.security import get_current_principal
 
 router = APIRouter(prefix="/searchservice", tags=["search"])
 
 
 @router.post("/search")
-async def search(payload: SearchSchema):
+async def search(payload: SearchSchema, _principal=Depends(get_current_principal)):
     """Perform semantic search.
     
     Args:
@@ -35,12 +37,12 @@ async def search(payload: SearchSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Search failed: {str(e)}",
+            detail="Search failed.",
         )
 
 
 @router.get("/history")
-async def get_search_history():
+async def get_search_history(_principal=Depends(get_current_principal)):
     """Get search history from logs.
     
     Returns:
@@ -52,7 +54,7 @@ async def get_search_history():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"History fetch failed: {str(e)}",
+            detail="History fetch failed.",
         )
 
 
@@ -69,5 +71,5 @@ async def search_health():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Health check failed: {str(e)}",
+            detail="Health check failed.",
         )

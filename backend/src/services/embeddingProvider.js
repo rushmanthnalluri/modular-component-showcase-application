@@ -6,6 +6,7 @@ const MAX_ARRAY_ITEMS = 50;
 const MAX_BATCH_TOTAL_CHARS = 20000;
 const MAX_TOKEN_APPROX = 5000;
 const MAX_DIMENSIONS = 3072;
+const OPENAI_REQUEST_TIMEOUT_MS = Number.parseInt(process.env.OPENAI_REQUEST_TIMEOUT_MS || "10000", 10);
 
 function createValidationError(message) {
   const error = new Error(message);
@@ -80,6 +81,9 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
   // Optional external provider support; deterministic fallback preserves local repeatability.
   if (openAiApiKey) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), Math.max(1000, OPENAI_REQUEST_TIMEOUT_MS));
+      timeoutId.unref?.();
       const response = await fetch("https://api.openai.com/v1/embeddings", {
         method: "POST",
         headers: {
@@ -90,7 +94,9 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
           model: openAiModel,
           input: payload,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const body = await response.json();

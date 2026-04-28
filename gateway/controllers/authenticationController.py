@@ -32,7 +32,7 @@ async def signup(payload: SignupSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Signup failed: {str(e)}",
+            detail="Signup failed.",
         )
 
 
@@ -57,7 +57,7 @@ async def signin(payload: SigninSchema):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Signin failed: {str(e)}",
+            detail="Signin failed.",
         )
 
 
@@ -75,7 +75,7 @@ async def refresh(payload: dict | None = None):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Refresh failed: {str(e)}",
+            detail="Refresh failed.",
         )
 
 
@@ -92,7 +92,7 @@ async def logout():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Logout failed: {str(e)}",
+            detail="Logout failed.",
         )
 
 
@@ -109,5 +109,5 @@ async def get_csrf():
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"CSRF fetch failed: {str(e)}",
+            detail="CSRF fetch failed.",
         )

@@ -66,7 +66,7 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
 
     const candidates = await ComponentEmbedding.find({})
       .select("componentId componentName category text model embedding")
-      .limit(500)
+      .limit(200)
       .lean();
 
     const filtered = candidates.filter((item) => {

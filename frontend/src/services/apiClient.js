@@ -10,7 +10,22 @@ function normalizeBaseUrl(value) {
 }
 
 function stripApiSuffix(value) {
-  return normalizeBaseUrl(value).replace(/\/api$/i, "");
+  const normalizedBaseUrl = normalizeBaseUrl(value);
+  if (!normalizedBaseUrl) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(normalizedBaseUrl);
+    const pathParts = parsed.pathname.split("/").filter(Boolean);
+    if ((pathParts[pathParts.length - 1] || "").toLowerCase() === "api") {
+      pathParts.pop();
+    }
+    parsed.pathname = pathParts.length ? `/${pathParts.join("/")}` : "/";
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return normalizedBaseUrl.endsWith("/api") ? normalizedBaseUrl.slice(0, -4) : normalizedBaseUrl;
+  }
 }
 
 function isLocalHostAlias(hostname) {
@@ -69,6 +84,33 @@ function isSafeReadonlyMethod(method) {
   return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
 }
 
+function normalizePathname(path = "") {
+  return `/${String(path || "").replace(/^\/+/, "")}`;
+}
+
+function toAbsoluteFetchUrl(baseUrl, path = "") {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  const normalizedPath = normalizePathname(path);
+
+  if (!normalizedBaseUrl) {
+    return normalizedPath;
+  }
+
+  const absoluteBaseUrl = /^https?:\/\//i.test(normalizedBaseUrl)
+    ? normalizedBaseUrl
+    : typeof window !== "undefined"
+      ? `${window.location.origin}${normalizedBaseUrl.startsWith("/") ? "" : "/"}${normalizedBaseUrl}`
+      : normalizedBaseUrl;
+
+  try {
+    return new URL(normalizedPath, absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : `${absoluteBaseUrl}/`)
+      .toString()
+      .replace(/\/+$/, "");
+  } catch {
+    return `${normalizedBaseUrl}${normalizedPath}`;
+  }
+}
+
 function getCookieValue(name) {
   const match = document.cookie.match(
     new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)")
@@ -117,7 +159,7 @@ async function callApi(method, url, body, options = {}) {
     let message = `Request failed with status ${response.status}`;
     try {
       const data = await response.json();
-      message = data?.message || data?.msg || message;
+      message = data?.error?.message || data?.message || data?.msg || message;
     } catch {
       // Ignore JSON parse errors for non-JSON error responses.
     }
@@ -128,7 +170,17 @@ async function callApi(method, url, body, options = {}) {
     return {};
   }
 
-  return response.json();
+  const payload = await response.json();
+  if (payload?.success === true && payload?.data !== undefined) {
+    if (Array.isArray(payload.data) || payload.data === null || typeof payload.data !== "object") {
+      return payload.data;
+    }
+    return {
+      ...payload.data,
+      __envelope: payload,
+    };
+  }
+  return payload;
 }
 
 async function ensureCsrfCookie(baseUrl) {
@@ -141,7 +193,7 @@ async function ensureCsrfCookie(baseUrl) {
   }
 
   if (!csrfBootstrapPromise) {
-    csrfBootstrapPromise = callApi("GET", `${baseUrl}/auth/csrf`);
+    csrfBootstrapPromise = callApi("GET", toAbsoluteFetchUrl(baseUrl, "/auth/csrf"));
   }
 
   try {
@@ -172,7 +224,7 @@ export async function apiRequest(path, options = {}) {
 
   return callApi(
     method,
-    `${baseUrl}${normalizedPath}`,
+    toAbsoluteFetchUrl(baseUrl, normalizedPath),
     body,
     { headers }
   );
@@ -195,7 +247,7 @@ export async function gatewayRequest(path, options = {}) {
 
   return callApi(
     method,
-    `${gatewayBaseUrl}${path}`,
+    toAbsoluteFetchUrl(gatewayBaseUrl, path),
     body,
     {
       headers,

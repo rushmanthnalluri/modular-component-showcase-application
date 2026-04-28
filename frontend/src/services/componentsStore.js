@@ -88,6 +88,17 @@ function isVerifierArtifact(item) {
   return name.startsWith(VERIFIER_NAME_PREFIX) || description.includes(VERIFIER_DESCRIPTION_MARKER);
 }
 
+function normalizeTagsInput(value) {
+  const rawTags = Array.isArray(value)
+    ? value
+    : String(value || "")
+        .split(",");
+
+  return Array.from(
+    new Set(rawTags.map((entry) => String(entry || "").trim().toLowerCase()).filter(Boolean))
+  );
+}
+
 async function getCloudComponents() {
   const payload = await apiRequest("/components", {
     method: "GET",
@@ -170,7 +181,7 @@ export async function addCustomComponent({
   const trimmedThumbnail = thumbnail.trim();
   const trimmedScreenshot = screenshot.trim();
   const trimmedCategory = category.trim();
-  const trimmedTags = String(tags || "").trim();
+  const normalizedTags = normalizeTagsInput(tags).slice(0, 12);
 
   const payload = await apiRequest("/components", {
     method: "POST",
@@ -179,7 +190,7 @@ export async function addCustomComponent({
       description: trimmedDescription,
       descriptionMarkdown: trimmedDescriptionMarkdown,
       category: trimmedCategory,
-      tags: trimmedTags,
+      tags: normalizedTags,
       jsxCode: jsxCode.trim(),
       cssCode: cssCode.trim(),
       thumbnail: trimmedThumbnail,
@@ -238,6 +249,15 @@ export async function deleteComponent(id) {
   await apiRequest(`/components/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function updateComponent(id, updates) {
+  const payload = await apiRequest(`/components/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(updates),
+  });
+
+  return mapCloudComponent(payload?.data || payload);
 }
 
 export async function getMyComponents({ page = 1, limit = 20 } = {}) {

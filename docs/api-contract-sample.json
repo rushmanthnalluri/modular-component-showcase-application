@@ -1,0 +1,42 @@
+{
+  "successExample": {
+    "success": true,
+    "data": {
+      "id": "excellent-button-mk8f31",
+      "name": "Excellent Button",
+      "category": "buttons",
+      "tags": ["primary", "excellent"],
+      "thumbnail": "https://example.com/thumb.png"
+    },
+    "id": "excellent-button-mk8f31",
+    "name": "Excellent Button",
+    "category": "buttons",
+    "tags": ["primary", "excellent"],
+    "thumbnail": "https://example.com/thumb.png"
+  },
+  "validationErrorExample": {
+    "success": false,
+    "error": {
+      "code": "VALIDATION_ERROR",
+      "message": "Tags must be an array of non-empty strings.",
+      "details": {
+        "tags": "must be an array"
+      }
+    },
+    "code": "VALIDATION_ERROR",
+    "message": "Tags must be an array of non-empty strings."
+  },
+  "avatarUploadExample": {
+    "success": true,
+    "data": {
+      "user": {
+        "avatarUrl": "http://localhost:5000/uploads/avatars/1714300000000-abcd1234.png",
+        "avatarPath": "/uploads/avatars/1714300000000-abcd1234.png"
+      }
+    },
+    "user": {
+      "avatarUrl": "http://localhost:5000/uploads/avatars/1714300000000-abcd1234.png",
+      "avatarPath": "/uploads/avatars/1714300000000-abcd1234.png"
+    }
+  }
+}

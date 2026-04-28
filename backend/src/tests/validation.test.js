@@ -63,6 +63,43 @@ test("validateComponentPayload enforces category allowlist", () => {
     assert.equal(validDataCategory.ok, true);
 });
 
+test("validateComponentPayload enforces structured tag arrays", () => {
+    const stringTags = validateComponentPayload({
+        name: "Tag Sample",
+        description: "Invalid string tags",
+        category: "buttons",
+        tags: "alpha,beta",
+        jsxCode: "export default function A(){ return <button>A</button>; }",
+    });
+    assert.equal(stringTags.ok, false);
+    assert.equal(stringTags.details.tags, "must be an array");
+
+    const emptyTag = validateComponentPayload({
+        name: "Tag Sample",
+        description: "Invalid empty tag",
+        category: "buttons",
+        tags: ["alpha", " "],
+        jsxCode: "export default function A(){ return <button>A</button>; }",
+    });
+    assert.equal(emptyTag.ok, false);
+    assert.equal(emptyTag.details.tags, "entries must be non-empty strings");
+});
+
+test("validateComponentPayload accepts image URLs and data URLs", () => {
+    const result = validateComponentPayload({
+        name: "Image Sample",
+        description: "Valid image references",
+        category: "cards",
+        tags: ["image"],
+        jsxCode: "export default function A(){ return <div>A</div>; }",
+        thumbnail: "https://example.com/thumb.png",
+        screenshot: "data:image/png;base64,AAAA",
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.data.thumbnail, "https://example.com/thumb.png");
+});
+
 test("validateSupportTicketPayload rejects honeypot field and accepts valid payload", () => {
     const honeypot = validateSupportTicketPayload({
         name: "Test User",

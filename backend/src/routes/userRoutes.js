@@ -1,5 +1,9 @@
 import express from "express";
+import fs from "node:fs";
+import path from "node:path";
 import { avatarUpload } from "../middleware/avatarUpload.js";
+import { resolvePublicUrl, resolveRequestOrigin } from "../utils/url.js";
+import { sendSuccess, sendError } from "../utils/responseHelper.js";
 
 const EMAIL_MAX_LENGTH = 254;
 
@@ -115,7 +119,8 @@ function isValidImageDataUrl(value) {
 }
 
 function isStoredAvatarPath(value) {
-  return String(value || "").startsWith("/app/uploads/avatars/");
+  const avatar = String(value || "");
+  return avatar.startsWith("/app/uploads/avatars/") || avatar.startsWith("/uploads/avatars/");
 }
 
 function isValidAvatarValue(value) {
@@ -124,6 +129,51 @@ function isValidAvatarValue(value) {
   }
 
   return isValidUrl(value) || isStoredAvatarPath(value) || isValidImageDataUrl(value);
+}
+
+function requestBaseUrl(req) {
+  return resolveRequestOrigin(req);
+}
+
+function resolveAvatarReference(value, req) {
+  const avatar = String(value || "").trim();
+  if (!avatar || isValidImageDataUrl(avatar) || isValidUrl(avatar)) {
+    return avatar;
+  }
+
+  if (isStoredAvatarPath(avatar)) {
+    const baseUrl = requestBaseUrl(req);
+    const publicPath = `/uploads/avatars/${path.basename(avatar)}`;
+    return baseUrl ? resolvePublicUrl(publicPath, baseUrl) : publicPath;
+  }
+
+  return avatar;
+}
+
+function toAvatarPath(value) {
+  if (!isStoredAvatarPath(value)) {
+    return "";
+  }
+
+  return `/uploads/avatars/${path.basename(String(value))}`;
+}
+
+function storedAvatarToFilePath(value) {
+  if (!isStoredAvatarPath(value)) {
+    return "";
+  }
+
+  const baseDir = path.resolve(process.env.AVATAR_UPLOAD_DIR || path.join(process.cwd(), "uploads", "avatars"));
+  const filePath = path.resolve(baseDir, path.basename(String(value)));
+  return filePath.startsWith(baseDir) ? filePath : "";
+}
+
+function successPayload(res, payload = {}, status = 200) {
+    return sendSuccess(res, payload, status);
+}
+
+function errorPayload(res, code, message, status = 500, details = null) {
+    return sendError(res, code, message, status, details);
 }
 
 function parseOptionalJsonObject(value, fieldName) {
@@ -154,8 +204,9 @@ function parseOptionalJsonObject(value, fieldName) {
   return { ok: false, message: `${fieldName} must be a valid object.` };
 }
 
-function toUserPayload(user) {
-  const resolvedAvatar = String(user?.avatarImage || "");
+function toUserPayload(user, req) {
+  const storedAvatar = String(user?.avatarImage || "");
+  const resolvedAvatar = resolveAvatarReference(storedAvatar, req);
   return {
     id: user.id,
     fullName: user.fullName,
@@ -167,6 +218,7 @@ function toUserPayload(user) {
     bio: user.bio || "",
     avatarImage: resolvedAvatar,
     avatarUrl: resolvedAvatar,
+    avatarPath: toAvatarPath(storedAvatar),
     socialLinks: user.socialLinks || {},
     stats: user.stats || {},
     emailPreferences: user.emailPreferences || {},
@@ -224,12 +276,17 @@ export function createUserRouter({
 
   // GET current user profile
   router.get("/me", requireAuth, async (req, res) => {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+          return errorPayload(res, "NOT_FOUND", "User not found.", 404);
+        }
 
-    return res.json({ user: toUserPayload(user) });
+        const userPayload = toUserPayload(user, req);
+        return successPayload(res, { user: userPayload });
+    } catch (error) {
+        return errorPayload(res, "SERVER_ERROR", "Unable to fetch profile.", 500);
+    }
   });
 
   // UPDATE user profile
@@ -240,17 +297,17 @@ export function createUserRouter({
 
       const socialLinksParse = parseOptionalJsonObject(body.socialLinks, "socialLinks");
       if (!socialLinksParse.ok) {
-        return res.status(400).json({ message: socialLinksParse.message });
+        return errorPayload(res, "VALIDATION_ERROR", socialLinksParse.message, 400, { socialLinks: "must be a JSON object" });
       }
 
       const emailPreferencesParse = parseOptionalJsonObject(body.emailPreferences, "emailPreferences");
       if (!emailPreferencesParse.ok) {
-        return res.status(400).json({ message: emailPreferencesParse.message });
+        return errorPayload(res, "VALIDATION_ERROR", emailPreferencesParse.message, 400, { emailPreferences: "must be a JSON object" });
       }
 
       let avatarValue;
       if (req.file?.filename) {
-        avatarValue = `/app/uploads/avatars/${req.file.filename}`;
+        avatarValue = `/uploads/avatars/${req.file.filename}`;
       } else if (body.avatarUrl !== undefined) {
         avatarValue = String(body.avatarUrl || "").trim();
       } else if (body.avatarImage !== undefined) {
@@ -259,7 +316,7 @@ export function createUserRouter({
 
       const user = await User.findById(req.user.id);
       if (!user) {
-        return res.status(404).json({ message: "User not found." });
+        return errorPayload(res, "NOT_FOUND", "User not found.", 404);
       }
 
       const nextFullName = fullName !== undefined ? text(fullName) : user.fullName;
@@ -267,20 +324,32 @@ export function createUserRouter({
       const nextPhone = phone !== undefined ? text(phone).replace(/\D/g, "") : user.phone;
 
       if (!nextFullName) {
-        return res.status(400).json({ message: "Full name is required." });
+        return errorPayload(res, "VALIDATION_ERROR", "Full name is required.", 400, { fullName: "required" });
       }
 
       if (!isValidEmail(nextEmail)) {
-        return res.status(400).json({ message: "A valid email address is required." });
+        return errorPayload(res, "VALIDATION_ERROR", "A valid email address is required.", 400, { email: "invalid email address" });
       }
 
       if (avatarValue !== undefined && !isValidAvatarValue(avatarValue)) {
-        return res.status(400).json({ message: "Avatar must be a valid image URL or uploaded image." });
+        return errorPayload(res, "VALIDATION_ERROR", "Avatar must be a valid image URL or uploaded image.", 400, { avatar: "must be a valid image URL or uploaded image" });
       }
 
       const emailOwner = await User.findOne({ email: nextEmail, _id: { $ne: user._id } }).select("_id");
       if (emailOwner) {
-        return res.status(409).json({ message: "An account with this email already exists." });
+        return errorPayload(res, "CONFLICT", "An account with this email already exists.", 409);
+      }
+
+      // Safe avatar replacement: delete old file if it exists and is different
+      if (avatarValue !== undefined && user.avatarImage && user.avatarImage !== avatarValue && isStoredAvatarPath(user.avatarImage)) {
+          const oldPath = storedAvatarToFilePath(user.avatarImage);
+          if (oldPath && fs.existsSync(oldPath)) {
+              try {
+                  fs.unlinkSync(oldPath);
+              } catch (err) {
+                  console.warn("Failed to delete old avatar file:", err.message);
+              }
+          }
       }
 
       user.fullName = nextFullName.slice(0, 120);
@@ -313,10 +382,11 @@ export function createUserRouter({
       await user.save();
       await syncSqlUserAccount(user);
 
-      return res.json({ user: toUserPayload(user) });
+      const userPayload = toUserPayload(user, req);
+      return successPayload(res, { user: userPayload });
     } catch (error) {
       console.error("Update profile error:", error.message);
-      return res.status(500).json({ message: "Unable to update profile." });
+      return errorPayload(res, "SERVER_ERROR", "Unable to update profile.", 500);
     }
   });
 
@@ -328,7 +398,7 @@ export function createUserRouter({
       const isAdmin = role === "admin";
 
       const parsedPage = Math.max(1, parseInt(page, 10) || 1);
-      const parsedLimit = Math.max(1, parseInt(limit, 10) || 10);
+      const parsedLimit = Math.max(1, Math.min(50, parseInt(limit, 10) || 10));
 
       const filter = isAdmin ? {} : { createdBy: req.user._id };
 
@@ -341,7 +411,7 @@ export function createUserRouter({
 
       const total = await Component.countDocuments(filter);
 
-      return res.json({
+      return res.json(successPayload({
         components,
         pagination: {
           total,
@@ -349,10 +419,10 @@ export function createUserRouter({
           limit: parsedLimit,
           pages: Math.ceil(total / parsedLimit),
         },
-      });
+      }));
     } catch (error) {
       console.error("Error fetching user components:", error.message);
-      return res.status(500).json({ message: "Unable to fetch your components." });
+      return res.status(500).json(errorPayload("Unable to fetch your components."));
     }
   });
 
@@ -361,28 +431,30 @@ export function createUserRouter({
     try {
       const { page = 1, limit = 20 } = req.query;
 
-      const skip = (page - 1) * limit;
+      const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+      const parsedLimit = Math.max(1, Math.min(50, parseInt(limit, 10) || 20));
+      const skip = (parsedPage - 1) * parsedLimit;
       const history = await SubmissionHistory.find({ userId: req.user._id })
         .populate("componentId", "id name")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(parsedLimit)
         .lean();
 
       const total = await SubmissionHistory.countDocuments({ userId: req.user._id });
 
-      return res.json({
+      return res.json(successPayload({
         history,
         pagination: {
           total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          pages: Math.ceil(total / limit),
+          page: parsedPage,
+          limit: parsedLimit,
+          pages: Math.ceil(total / parsedLimit),
         },
-      });
+      }));
     } catch (error) {
       console.error("Error fetching submission history:", error.message);
-      return res.status(500).json({ message: "Unable to fetch submission history." });
+      return res.status(500).json(errorPayload("Unable to fetch submission history."));
     }
   });
 
@@ -390,7 +462,7 @@ export function createUserRouter({
   router.get("/me/favorites", requireAuth, async (req, res) => {
     const user = await User.findById(req.user.id).select("favorites");
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json(errorPayload("User not found."));
     }
 
     const currentFavorites = Array.isArray(user.favorites) ? user.favorites : [];
@@ -402,21 +474,21 @@ export function createUserRouter({
       await syncSqlUserFavorites(user, normalizedFavorites);
     }
 
-    return res.json({
+    return res.json(successPayload({
       favorites: normalizedFavorites,
-    });
+    }));
   });
 
   // TOGGLE favorite
   router.post("/me/favorites/:componentId", requireAuth, requireCsrf, async (req, res) => {
     const componentId = String(req.params.componentId || "").trim();
     if (!componentId) {
-      return res.status(400).json({ message: "componentId is required." });
+      return res.status(400).json(errorPayload("componentId is required."));
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json(errorPayload("User not found."));
     }
 
     const normalizedComponentId = await resolveFavoritePublicId(componentId);
@@ -433,7 +505,7 @@ export function createUserRouter({
     await syncSqlUserAccount(user);
     await syncSqlUserFavorites(user, favorites);
 
-    return res.json({ favorites });
+    return res.json(successPayload({ favorites }));
   });
 
   // GET favorite components with details
@@ -441,7 +513,7 @@ export function createUserRouter({
     try {
       const user = await User.findById(req.user._id).select("favorites");
       if (!user) {
-        return res.status(404).json({ message: "User not found." });
+        return res.status(404).json(errorPayload("User not found."));
       }
 
       const favorites = await normalizeFavoriteIds(Array.isArray(user.favorites) ? user.favorites : []);
@@ -455,10 +527,10 @@ export function createUserRouter({
       const components = await Component.find({ id: { $in: favorites } })
         .lean();
 
-      return res.json({ components });
+      return res.json(successPayload({ components }));
     } catch (error) {
       console.error("Error fetching favorite components:", error.message);
-      return res.status(500).json({ message: "Unable to fetch favorites." });
+      return res.status(500).json(errorPayload("Unable to fetch favorites."));
     }
   });
 
