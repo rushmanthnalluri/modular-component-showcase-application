@@ -1,5 +1,9 @@
 name: CI/CD Pipeline
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   push:
     branches: [ main, develop ]
@@ -42,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'backend/package-lock.json'
       
@@ -73,6 +77,7 @@ jobs:
         with:
           name: backend-test-results
           path: backend/testResults_*.json
+          if-no-files-found: ignore
 
   gateway-test:
     runs-on: ubuntu-latest
@@ -141,7 +146,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
       
@@ -166,6 +171,7 @@ jobs:
         with:
           name: frontend-build
           path: frontend/dist
+          if-no-files-found: ignore
 
   spring-test:
     runs-on: ubuntu-latest
@@ -210,6 +216,7 @@ jobs:
         with:
           name: spring-test-results
           path: 'spring-service/target/surefire-reports/**'
+          if-no-files-found: ignore
 
   docker-build:
     runs-on: ubuntu-latest
@@ -260,7 +267,7 @@ jobs:
           output: 'trivy-results.sarif'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
