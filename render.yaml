@@ -103,11 +103,11 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: SPRING_JWT_SECRET
-        generateValue: true
+        sync: false
       - key: SPRING_ALLOWED_ORIGINS
         sync: false
       - key: SPRING_PROFILES_ACTIVE
-        value: prod
+        value: production
       - key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
         value: health,info,metrics,prometheus
       - key: OTEL_EXPORTER_OTLP_ENDPOINT
