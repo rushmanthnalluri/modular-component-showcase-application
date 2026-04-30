@@ -49,3 +49,4 @@ ENTRYPOINT ["sh", "-c", \
     -XX:+ExitOnOutOfMemoryError \
     -Djava.security.egd=file:/dev/./urandom \
     org.springframework.boot.loader.launch.JarLauncher"]
+    
