@@ -2,8 +2,9 @@ import pytest
 import httpx
 import uuid
 import base64
+import os
 
-GATEWAY_URL = "http://localhost:8000"
+GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
 
 @pytest.fixture
 def client():
