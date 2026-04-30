@@ -18,6 +18,8 @@ import com.modularshowcase.config.TestSecurityConfig;
 import com.modularshowcase.controller.UserController;
 import com.modularshowcase.dto.UserResponse;
 import com.modularshowcase.metrics.RequestMetricsRecorder;
+import com.modularshowcase.security.CustomUserDetailsService;
+import com.modularshowcase.security.JwtTokenProvider;
 import com.modularshowcase.service.UserService;
 
 @WebMvcTest(UserController.class)
@@ -35,6 +37,14 @@ class UserControllerTest {
     @SuppressWarnings("unused")
     @MockitoBean
     private RequestMetricsRecorder requestMetricsRecorder;
+
+    @SuppressWarnings("unused")
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @SuppressWarnings("unused")
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     void listUsersReturnsPayload() throws Exception {
