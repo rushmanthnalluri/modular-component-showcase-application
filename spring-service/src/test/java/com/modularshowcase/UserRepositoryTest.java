@@ -11,7 +11,7 @@ import com.modularshowcase.model.UserEntity;
 import com.modularshowcase.repository.UserRepository;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
 class UserRepositoryTest {
 
