@@ -370,371 +370,79 @@ From the repository root:
 ```bash
 npm run test:frontend
 npm run test:backend
+cd gateway && pytest
 ```
 
-Run gateway tests:
+---
 
-```bash
-cd gateway
-pytest -q
+## Observability
+
+- OpenTelemetry for tracing
+- Prometheus for metrics
+- Grafana for dashboards
+- Jaeger for trace inspection
+
+The goal is simple: one request can be traced from the browser through the gateway to the backend and database layers.
+
+---
+
+## Project Structure
+
+```text
+ModularComponentShowcaseApplication/
+├── frontend/
+├── backend/
+├── gateway/
+├── spring-service/
+├── docs/
+├── contracts/
+├── docker-compose.yml
+└── README.md
 ```
 
-Run Spring service tests:
+---
 
-```bash
-cd spring-service
-mvn test
-```
+## Academic Alignment
 
-### 6. Run linting
+This repository maps directly to the 25CS1302E evaluation goals:
 
-```bash
-npm run lint --workspace frontend
-```
+- **SQL normalization:** PostgreSQL schema is normalized and constrained
+- **NoSQL usage:** MongoDB stores embeddings, logs, and flexible documents
+- **Vector search:** Semantic retrieval uses cosine similarity over embeddings
+- **API Gateway:** FastAPI provides a dedicated routing and control layer
+- **Microservices:** Frontend, backend, gateway, and Spring service are separated by responsibility
 
-### 7. Seed demo data
+Reference documentation:
 
-```bash
-npm run seed:showcase
-```
+- [Architecture](docs/architecture.md)
+- [Database design](docs/database-design.md)
+- [Security](docs/security.md)
+- [Hybrid search](docs/hybrid-search-and-rag.md)
+- [Performance](docs/performance-report.md)
 
-### Production Deployment Checklist
+---
 
-- Confirm frontend builds successfully with `npm run build --workspace frontend`
-- Confirm backend tests pass with `npm run test:backend`
-- Confirm frontend tests pass with `npm run test:frontend`
-- Confirm gateway tests pass with `pytest -q` inside `gateway/`
-- Validate `docker compose config`
-- Verify Render services, Neon PostgreSQL, and MongoDB Atlas connectivity
-- Update live URLs in this README after deployment
+## Future Improvements
 
-## API Documentation
+- ANN / pgvector for faster vector search
+- CI/CD hardening and deployment automation
+- Load testing and performance regression checks
+- Additional cache layers for repeated search queries
 
-Base backend URL: `/api`  
-Base gateway URL: `/api` via FastAPI proxy  
-Auth mode: JWT access and refresh tokens in secure cookies  
-CSRF: required for state-changing routes unless `Authorization: Bearer` is used
+---
 
-### Health
+## Contributing
 
-Health, metrics, and service-level readiness endpoints.
+1. Fork the repository
+2. Create a feature branch
+3. Make focused changes
+4. Run tests
+5. Open a pull request
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/health` | Backend health check for service, database connectivity, and readiness |
-| GET | `/metrics` | Prometheus-style backend metrics |
-| GET | `/api` | API index with endpoint groups |
+Keep changes small, documented, and aligned with the existing architecture.
 
-### Authentication
-
-Authentication and session lifecycle endpoints.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/auth/csrf` | Returns a CSRF token for state-changing requests |
-| POST | `/api/auth/register` | Creates a new user account |
-| POST | `/api/auth/login` | Authenticates a user and issues auth cookies/tokens |
-| POST | `/api/auth/refresh` | Refreshes the access token using the refresh cookie |
-| POST | `/api/auth/logout` | Clears the user session |
-| POST | `/api/auth/forgot-password` | Password reset flow with phone verification |
-
-### Captcha
-
-Captcha support for abuse-resistant auth flows.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/captcha/getcaptcha/6` | Returns a captcha challenge |
-| GET | `/captcha/getcaptcha/6` | Direct backend captcha route |
-
-### Components
-
-Catalog, detail, and component management endpoints.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/components` | List showcase components |
-| GET | `/api/components/:id` | Get component details |
-| POST | `/api/components` | Create a new component |
-| PUT | `/api/components/:id` | Update an existing component |
-| DELETE | `/api/components/:id` | Delete a component |
-| GET | `/api/components/stats/most-viewed` | Return top viewed components |
-| GET | `/api/components/stats/top-rated` | Return top rated components |
-| POST | `/api/components/:id/dependencies` | Create or update component dependency metadata |
-| GET | `/api/components/:id/dependencies` | List component dependency metadata |
-| GET | `/api/components/:id/export` | Export component payload/code |
-
-### Reviews
-
-Review creation and retrieval endpoints for component feedback.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/reviews` | List reviews |
-| POST | `/api/reviews` | Create a review |
-| GET | `/api/components/:id/reviews` | List reviews for a component |
-| POST | `/api/components/:id/reviews` | Add a review for a component |
-| POST | `/api/components/:componentId/reviews/:reviewId/helpful` | Mark review feedback as helpful or unhelpful |
-| PUT | `/api/reviews/:reviewId` | Update a review |
-| DELETE | `/api/reviews/:reviewId` | Delete a review |
-
-### Ratings
-
-Rating endpoints for scoring components.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/components/:id/ratings` | Get component ratings |
-| POST | `/api/components/:id/ratings` | Submit or update a rating |
-| GET | `/api/ratings/:componentId` | Get component ratings |
-| POST | `/api/ratings/:componentId` | Submit or update a rating |
-
-### Favorites
-
-Favorite management for authenticated users.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/users/me/favorites` | List favorite component IDs |
-| GET | `/api/users/me/favorites/components` | List favorite components with details |
-| POST | `/api/users/me/favorites/:componentId` | Toggle a favorite component |
-
-### Discussions
-
-Discussion endpoints for component-centric conversations.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/discussions` | List discussions |
-| POST | `/api/discussions` | Create a discussion |
-| GET | `/api/components/:id/discussions` | List discussions for a component |
-| POST | `/api/components/:id/discussions` | Create a discussion for a component |
-| PATCH | `/api/components/:id/discussions/:discussionId` | Update a component discussion entry |
-
-### User Profile
-
-Authenticated user profile and account activity endpoints.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/users/me` | Get the current user profile |
-| PUT | `/api/users/me` | Update profile fields and preferences |
-| GET | `/api/users/me/components` | List components submitted by the current user |
-| GET | `/api/users/me/submission-history` | Get submission history |
-
-### SQL Catalog
-
-SQL-backed catalog and relational data inspection endpoints.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/sql/users` | List SQL users |
-| GET | `/api/sql/categories` | List SQL categories |
-| GET | `/api/sql/components` | List SQL components |
-| POST | `/api/sql/components` | Create a SQL component |
-| PUT | `/api/sql/components/:componentId` | Update a SQL component |
-| DELETE | `/api/sql/components/:componentId` | Delete a SQL component |
-
-### Spring Service via Gateway
-
-The gateway exposes Spring-backed routes under `/springservice/*` and forwards to the Spring Boot service.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/springservice/health` | Spring service health proxy |
-| GET | `/springservice/users` | List users from Spring service |
-| GET | `/springservice/components` | List components from Spring service |
-| GET | `/springservice/reviews` | List reviews from Spring service |
-
-Direct Spring service endpoints (service port `8081`) are also available under `/spring/*`, including `/spring/users`, `/spring/components`, `/spring/reviews`, `/spring/ratings`, and `/spring/favorites`.
-
-### Admin
-
-Operational and admin-only visibility endpoints.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/admin/rate-limits` | View rate-limit counters and blocked totals |
-| GET | `/api/admin/dashboard` | View aggregate dashboard metrics and top components |
-
-## Database Schema Overview
-
-The PostgreSQL schema is designed around a normalized relational model. The current core tables include:
-
-| Table | Stores |
-|---|---|
-| `users` | User identities, account metadata, roles, profile data, avatar details, social links, and user-level stats |
-| `categories` | Normalized component categories used for browsing and catalog organization |
-| `components` | The primary component catalog, including component names, descriptions, authorship, and category relationships |
-| `discussions` | Relational discussion records tied to users and component-linked Mongo identifiers |
-| `ratings` | User-submitted rating values for components |
-| `reviews` | Structured review content including rating, comment, title, status, and feedback counts |
-| `user_favorites` | User-to-component favorite relationships for saved components |
-
-The schema is initialized from [`backend/sql/postgres_schema.sql`](backend/sql/postgres_schema.sql) and is designed to work alongside MongoDB Atlas for document-heavy and search-oriented storage needs.
-
-## Deployment
-
-### Render
-
-- Frontend is deployed as a **static site** or web target depending on the delivery setup.
-- Backend is deployed as a **Node.js web service** with `/health` as the health check path.
-- Gateway is deployed as a separate **Python/FastAPI web service** when used in production.
-- Spring service is deployed as a dedicated **Spring Boot web service** with `/actuator/health` health checks.
-- `render.yaml` provides service definitions for frontend, backend, gateway, and spring-service deployment.
-
-### Neon PostgreSQL
-
-- Neon hosts the **relational data layer** for users, categories, components, reviews, ratings, discussions, and favorites.
-- The backend supports **schema initialization** on startup through SQL migration logic.
-- PostgreSQL serves as the **normalized source of truth** for core platform entities.
-
-### MongoDB Atlas
-
-- MongoDB Atlas stores **document-heavy and search-oriented data**, including logs, descriptions, embeddings, and legacy-compatible records.
-- The backend includes **SRV fallback logic** to improve reliability when DNS SRV resolution is unstable.
-- Atlas complements PostgreSQL by handling less rigid, document-structured workloads.
-
-### Docker
-
-- Docker Compose runs the full local stack with frontend, backend, gateway, spring-service, PostgreSQL, MongoDB, and pgAdmin.
-- Containerized development improves **environment consistency** and reduces onboarding friction.
-- Each service can be built and operated independently while still working as a coordinated stack.
-
-### GitHub Actions CI/CD
-
-- CI validates frontend linting, backend tests, frontend unit tests, frontend builds, Docker Compose config, gateway tests, and Spring Maven tests/package.
-- GitHub Pages deployment is automated for the frontend through a separate workflow.
-- This structure supports **continuous validation before deployment** and better release confidence.
-
-### Deployment Notes & Best Practices
-
-- Keep Render service configuration aligned with `render.yaml`
-- Use managed database credentials from Neon and MongoDB Atlas rather than embedding secrets in source
-- Verify `/health` and `/metrics` endpoints after each backend deployment
-- Test signup, login, favorites, reviews, discussions, and profile flows after each release
-- Replace placeholder demo URLs and screenshots once production deployments are finalized
-
-## Production Readiness
-
-### Security
-
-- [x] Authentication and session handling
-- [x] CSRF protection for state-changing requests
-- [x] Captcha integration for auth-related flows
-- [x] Rate limiting on critical request paths
-- [x] Helmet-based security headers
-- [x] Cookie-aware auth flow design
-
-### Performance
-
-- [x] Split frontend and backend services for cleaner scaling boundaries
-- [x] Vite-powered frontend build pipeline
-- [x] Optional FastAPI gateway for request routing flexibility
-- [x] SQL indexes defined for key relational access paths
-- [x] Docker-based parity for local performance validation
-
-### Testing
-
-- [x] Frontend unit testing with Vitest
-- [x] Backend tests with the Node test runner
-- [x] Gateway tests with Pytest
-- [x] Health checks for backend and gateway
-- [x] Manual QA support for responsive and auth flows
-
-### CI/CD
-
-- [x] GitHub Actions CI workflow
-- [x] Automated frontend build validation
-- [x] Docker Compose configuration validation
-- [x] GitHub Pages deployment workflow
-- [x] Render-ready repository structure
-
-### Monitoring & Operations
-
-- [x] Health endpoint for service readiness
-- [x] Metrics endpoint for backend observability
-- [x] Request logging and request ID support
-- [x] Admin dashboard and rate-limit insight endpoints
-- [ ] External alerting and uptime monitoring
-- [ ] Dedicated production incident runbooks
-
-### Database Reliability
-
-- [x] Neon PostgreSQL support
-- [x] MongoDB Atlas support
-- [x] SQL schema initialization support
-- [x] MongoDB Atlas SRV fallback handling
-- [x] Dockerized local database stack
-- [ ] Managed backup verification and restore drills
-
-<details>
-<summary>Operational considerations</summary>
-
-- Add external monitoring and uptime alerts for production services
-- Configure backup and restore policies for Neon and MongoDB Atlas
-- Rotate authentication secrets periodically
-- Keep Render service configuration synchronized with deployed branches
-- Capture screenshots and smoke-test the application after deploys
-
-</details>
-
-## Testing & Quality Assurance
-
-- Frontend tests validate routing, protected flows, and error boundaries
-- Backend tests validate API behavior, schema helpers, auth flows, health checks, and CSRF behavior
-- Gateway tests validate routing, proxy behavior, health handling, and request forwarding
-- Manual QA should cover login, registration, profile edits, favorites, reviews, discussions, search, and responsive behavior
-- Docker-based smoke testing is recommended before release
-
-## Author
-
-| Field | Value |
-|---|---|
-| Name | Rushmanth Nalluri |
-| GitHub | https://github.com/rushmanthnalluri |
-| LinkedIn | https://www.linkedin.com/in/rushmanthnalluri/ |
-| Email | rushmanth21@gmail.com |
+---
 
 ## License
 
-This project is released under the **MIT License**.
-
-<details>
-<summary>View license text</summary>
-
-```text
-MIT License
-
-Copyright (c) 2026 Rushmanth Nalluri
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-</details>
-
-## Quick Repository Navigation
-
-- [frontend/](frontend/)
-- [backend/](backend/)
-- [gateway/](gateway/)
-- [README.md](README.md)
-- [docs/api-reference.md](docs/api-reference.md)
-- [docs/deployment-guide.md](docs/deployment-guide.md)
-- [docs/environment-guide.md](docs/environment-guide.md)
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
