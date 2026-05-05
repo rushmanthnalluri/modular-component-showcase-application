@@ -37,7 +37,7 @@ EXPOSE 8081
 
 # Health check
 HEALTHCHECK --interval=20s --timeout=5s --retries=5 \
-  CMD wget -qO- http://localhost:${PORT}/actuator/health > /dev/null || exit 1
+  CMD curl -fsSL http://localhost:${PORT}/actuator/health || exit 1
 
 # JVM tuning: container-aware memory, use G1GC, reduce startup time
 ENTRYPOINT ["sh", "-c", \
