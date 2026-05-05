@@ -37,41 +37,42 @@ services:
     build:
       context: ./frontend
     container_name: showcase-frontend
+    env_file:
+      - ./frontend/.env
     environment:
-      VITE_GATEWAY_URL: http://localhost:8000
-      VITE_USE_GATEWAY: "true"
+      VITE_GATEWAY_URL: ${VITE_GATEWAY_URL}
+      VITE_USE_GATEWAY: ${VITE_USE_GATEWAY}
     ports:
       - "8080:8080"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       gateway:
-        condition: service_started
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+        condition: service_healthy
     restart: unless-stopped
 
   backend:
     build:
       context: ./backend
     container_name: showcase-backend
+    env_file:
+      - ./backend/.env
     environment:
-      PORT: 5000
-      MONGODB_URI: mongodb://mongo:27017/modular_components
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application
-      SQL_AUTO_MIGRATE: "true"
-      JWT_SECRET: development-secret
-      FRONTEND_ORIGINS: http://localhost:5173,http://localhost:8080
-      NODE_ENV: development
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      PORT: ${PORT}
+      MONGODB_URI: ${MONGODB_URI}
+      DATABASE_URL: ${DATABASE_URL}
+      SQL_AUTO_MIGRATE: ${SQL_AUTO_MIGRATE}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS}
+      NODE_ENV: ${NODE_ENV}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
     ports:
       - "5000:5000"
     depends_on:
       postgres:
         condition: service_healthy
       mongo:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 15s
@@ -83,14 +84,16 @@ services:
     build:
       context: ./gateway
     container_name: showcase-gateway
+    env_file:
+      - ./gateway/.env
     environment:
-      PORT: 8000
+      PORT: ${GATEWAY_PORT}
       BACKEND_URL: http://backend:5000
       SPRING_SERVICE_URL: http://spring-service:8081
-      FRONTEND_URL: http://localhost:8080
-      REQUEST_TIMEOUT_SECONDS: 20
-      REQUEST_MAX_RETRIES: 2
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      FRONTEND_URL: http://frontend:8080
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS}
+      REQUEST_MAX_RETRIES: ${REQUEST_MAX_RETRIES}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
     ports:
       - "8000:8000"
     depends_on:
@@ -99,7 +102,7 @@ services:
       spring-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "python -c 'import httpx; httpx.get(\"http://127.0.0.1:8000/health\", timeout=5).raise_for_status()'"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -118,19 +121,23 @@ services:
     build:
       context: ./spring-service
     container_name: showcase-spring-service
+    env_file:
+      - ./spring-service/.env
     environment:
-      PORT: 8081
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application
-      SPRING_JWT_SECRET: development-secret-development-secret-1234
-      SPRING_ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173,http://localhost:8000
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      PORT: ${PORT}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/modular_component_showcase_application
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JWT_SECRET: ${SPRING_JWT_SECRET}
+      SPRING_ALLOWED_ORIGINS: ${SPRING_ALLOWED_ORIGINS}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
     ports:
       - "8081:8081"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:8081/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
