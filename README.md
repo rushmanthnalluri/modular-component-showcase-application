@@ -281,13 +281,19 @@ The frontend consumes API requests through a configurable base URL and can route
 
 ## Configuration Notes
 
-Frontend, backend, and gateway configuration are each documented separately in the repository. The public README intentionally omits raw environment variable listings.
+Frontend, backend, gateway, and Spring service configuration are documented separately so local development, Docker, and CI can share the same defaults without committing secrets.
 
-Use the following references when setting up local or production configuration:
+Use these references when setting up configuration:
 
-- [.env.example](.env.example)
+- [.env.example](.env.example) for workspace-level Docker defaults
+- [frontend/.env.example](frontend/.env.example)
+- [backend/.env.example](backend/.env.example)
+- [gateway/.env.example](gateway/.env.example)
+- [spring-service/.env.example](spring-service/.env.example)
 - [docs/environment-guide.md](docs/environment-guide.md)
 - [render.yaml](render.yaml)
+
+GitHub Actions now generates runtime `.env` files from the examples before launching Docker Compose, so CI does not depend on local developer files. In production, inject real secrets through GitHub Secrets or your deployment platform instead of committing `.env` files.
 
 ## Enterprise Proof Pack
 
@@ -343,6 +349,16 @@ cd gateway
 uvicorn app.main:app --reload --port 8000
 ```
 
+If you want the full Docker stack to pick up local overrides, copy the example files first:
+
+```bash
+cp .env.example .env
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+cp gateway/.env.example gateway/.env
+cp spring-service/.env.example spring-service/.env
+```
+
 ### 4. Run with Docker
 
 Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin, frontend, backend, gateway, and spring-service:
@@ -350,6 +366,8 @@ Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin
 ```bash
 docker compose up --build
 ```
+
+The compose file now works even when the service-specific `.env` files are absent. When those files are present, they override the built-in safe defaults.
 
 Common service ports:
 
