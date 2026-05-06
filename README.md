@@ -393,6 +393,39 @@ cd gateway && pytest
 
 ---
 
+## Validation & CI troubleshooting
+
+When running in restricted/cloud execution environments (GitHub Actions hosted runners, some container sandboxes, or CI sandboxes) you may encounter limitations: Docker Engine may be unavailable, nested containerization blocked, or /var/run/docker.sock inaccessible. These restrictions prevent the runner from launching containers locally.
+
+What CI does in this repository:
+- The workflow runs `python scripts/prepare-ci-env.py` to generate runtime `.env` files from the `.env.example` files so CI does not rely on untracked local files.
+- The integration job then invokes `docker compose up -d --build ...` on runners that have Docker available.
+
+If Docker is not available in your environment, run the following locally on a machine with Docker Desktop / Engine installed to validate:
+
+```bash
+# Validate compose interpolation and structure
+docker compose config
+
+# Bring up core services (build images)
+docker compose up -d --build postgres mongo backend spring-service gateway
+
+# Inspect running services
+docker compose ps
+
+# Stream logs for troubleshooting
+docker compose logs -f backend gateway spring-service
+```
+
+If CI fails with "env file ... not found" or undefined interpolation warnings:
+- Ensure the repository contains the `.env.example` files (this repo includes root and per-service examples).
+- The GitHub Actions workflow runs `scripts/prepare-ci-env.py` automatically; confirm that step succeeded in the job logs and that the `.env` files were written in the workspace before `docker compose up` runs.
+- If you need to provide secrets to CI, add them to the repository secrets as `CI_JWT_SECRET` or `CI_SPRING_JWT_SECRET`. If absent, the prepare script generates ephemeral secrets for the run.
+
+CI Runners without Docker:
+- GitHub-hosted runners may or may not allow `docker compose up` depending on the job configuration. If your runner does not support Docker (error shows unable to connect to Docker daemon), push the branch/PR and inspect Actions logs on GitHub where runners with Docker (or configured self-hosted runners) can run the integration job.
+
+
 ## Observability
 
 - OpenTelemetry for tracing
