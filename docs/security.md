@@ -27,7 +27,7 @@ sequenceDiagram
 - The backend middleware rejects mismatched tokens before business logic executes.
 - This is especially important because the app uses cookies for browser-friendly auth flows.
 
-Relevant implementation: [backend/src/middleware/csrf.js](../backend/src/middleware/csrf.js)
+
 
 ## 3. Rate Limiting
 
@@ -35,10 +35,6 @@ Relevant implementation: [backend/src/middleware/csrf.js](../backend/src/middlew
 - General API traffic has a broader window but is still capped.
 - The gateway also reports request counts and error rates for oversight.
 
-Relevant implementation:
-
-- [backend/src/app.js](../backend/src/app.js)
-- [gateway/controllers/healthController.py](../gateway/controllers/healthController.py)
 
 ## 4. Input Validation
 
@@ -50,10 +46,7 @@ Validation is applied before persistence or forwarding.
 - avatar uploads are validated for type and size
 - semantic search queries reject empty input
 
-Relevant implementation:
 
-- [backend/src/utils/validation.js](../backend/src/utils/validation.js)
-- [backend/src/routes/mongoRoutes.js](../backend/src/routes/mongoRoutes.js)
 
 ## 5. Secure Headers
 
@@ -63,7 +56,7 @@ The ingress layer uses security headers to reduce common browser-side risks.
 - cross-origin resource policy is tuned for frontend integration
 - request IDs are propagated for traceability
 
-Relevant implementation: [backend/src/app.js](../backend/src/app.js)
+
 
 ## 6. Cookie Handling
 
@@ -71,12 +64,9 @@ Relevant implementation: [backend/src/app.js](../backend/src/app.js)
 - cookie settings are adapted for local and cross-site deployment modes
 - secure and same-site behavior is determined by environment and origin context
 
-Relevant implementation:
 
-- [backend/src/middleware/auth.js](../backend/src/middleware/auth.js)
-- [gateway/dependencies/security.py](../gateway/dependencies/security.py)
 
-## 7. Security Summary For The Viva
+## 7. Security Summary
 
 The design combines:
 
