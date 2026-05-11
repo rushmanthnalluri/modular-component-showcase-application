@@ -297,6 +297,10 @@ jobs:
       - name: Start integration stack
         run: docker compose up -d --build postgres mongo backend spring-service gateway
 
+      - name: Dump integration logs on startup failure
+        if: failure()
+        run: docker compose logs postgres mongo backend spring-service gateway
+
       - name: Wait for gateway health
         run: curl --fail --retry 30 --retry-all-errors --retry-delay 2 --retry-connrefused http://localhost:8000/health
       
