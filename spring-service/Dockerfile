@@ -35,9 +35,9 @@ USER appuser
 ENV PORT=8081
 EXPOSE 8081
 
-# Health check
-HEALTHCHECK --interval=20s --timeout=5s --retries=5 \
-  CMD wget -qO- http://localhost:${PORT}/actuator/health > /dev/null
+# Health check: use loopback explicitly and allow slower cold starts in CI.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=10 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT}/actuator/health || exit 1
 
 # JVM tuning: container-aware memory, use G1GC, reduce startup time
 ENTRYPOINT ["sh", "-c", \
