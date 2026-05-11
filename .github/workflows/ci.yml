@@ -302,7 +302,35 @@ jobs:
         run: docker compose logs postgres mongo backend spring-service gateway
 
       - name: Wait for gateway health
-        run: curl --fail --retry 30 --retry-all-errors --retry-delay 2 --retry-connrefused http://localhost:8000/health
+        run: |
+          python - <<'PY'
+          import json
+          import time
+          import urllib.request
+          import urllib.error
+          import sys
+
+          url = "http://localhost:8000/health"
+          last_payload = None
+
+          for attempt in range(1, 61):
+              try:
+                  with urllib.request.urlopen(url, timeout=5) as response:
+                      payload = json.loads(response.read().decode("utf-8"))
+                      last_payload = payload
+                      if payload.get("status") == "healthy":
+                          print("Gateway health is healthy.")
+                          sys.exit(0)
+                      print(f"Attempt {attempt}/60: gateway status={payload.get('status')}")
+              except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError) as exc:
+                  print(f"Attempt {attempt}/60: gateway not ready ({exc})")
+              time.sleep(2)
+
+          print("Gateway did not become healthy in time.")
+          if last_payload is not None:
+              print(json.dumps(last_payload))
+          sys.exit(1)
+          PY
       
       - name: Run integration tests
         working-directory: tests
