@@ -25,6 +25,8 @@ def parse_env_file(path: Path) -> dict[str, str]:
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
+    ci_jwt_secret = os.getenv("CI_JWT_SECRET", secrets.token_urlsafe(48))
+    ci_spring_jwt_secret = os.getenv("CI_SPRING_JWT_SECRET", secrets.token_urlsafe(48))
 
     examples = {
         root / ".env": root / ".env.example",
@@ -36,15 +38,17 @@ def main() -> None:
 
     overrides = {
         root / ".env": {
-            "JWT_SECRET": os.getenv("CI_JWT_SECRET", secrets.token_urlsafe(48)),
-            "SPRING_JWT_SECRET": os.getenv("CI_SPRING_JWT_SECRET", secrets.token_urlsafe(48)),
+            "JWT_SECRET": ci_jwt_secret,
+            "SPRING_JWT_SECRET": ci_spring_jwt_secret,
+            "BACKEND_URL": "http://backend:5000",
+            "SPRING_SERVICE_URL": "http://spring-service:8081",
         },
         root / "backend/.env": {
             "PORT": "5000",
             "NODE_ENV": "development",
             "MONGODB_URI": "mongodb://mongo:27017/modular_components",
             "DATABASE_URL": "postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application",
-            "JWT_SECRET": os.getenv("CI_JWT_SECRET", secrets.token_urlsafe(48)),
+            "JWT_SECRET": ci_jwt_secret,
             "FRONTEND_ORIGINS": "http://localhost:8080,http://localhost:5173",
             "SQL_AUTO_MIGRATE": "true",
             "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4318",
@@ -60,6 +64,7 @@ def main() -> None:
             "GATEWAY_PORT": "8000",
             "REQUEST_TIMEOUT_SECONDS": "20",
             "REQUEST_MAX_RETRIES": "2",
+            "JWT_SECRET": ci_jwt_secret,
             "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4318",
         },
         root / "spring-service/.env": {
@@ -67,7 +72,7 @@ def main() -> None:
             "SPRING_DATASOURCE_URL": "jdbc:postgresql://postgres:5432/modular_component_showcase_application",
             "SPRING_DATASOURCE_USERNAME": "postgres",
             "SPRING_DATASOURCE_PASSWORD": "postgres",
-            "SPRING_JWT_SECRET": os.getenv("CI_SPRING_JWT_SECRET", secrets.token_urlsafe(48)),
+            "SPRING_JWT_SECRET": ci_spring_jwt_secret,
             "SPRING_ALLOWED_ORIGINS": "http://localhost:8080,http://localhost:5173,http://localhost:8000",
             "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4318",
         },

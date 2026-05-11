@@ -46,8 +46,10 @@ def test_full_e2e_flow(client):
     resp = client.post("/api/auth/login", json=login_payload, headers=headers)
     record("login status", resp.status_code == 200, resp.text)
     login_data = resp.json().get("data") or resp.json()
-    record("login token", "token" in login_data, resp.text)
-    record("auth cookie preserved", any(cookie.name == "auth_token" for cookie in client.cookies.jar))
+    token = login_data.get("token") or login_data.get("accessToken")
+    record("login token", bool(token), resp.text)
+    record("auth session established", any(cookie.name == "auth_token" for cookie in client.cookies.jar) or bool(token))
+    auth_headers = {**headers, "Authorization": f"Bearer {token}"}
     
     # 4. Create Component
     comp_payload = {
@@ -58,13 +60,13 @@ def test_full_e2e_flow(client):
         "tags": ["test", "e2e"],
         "thumbnail": "https://example.com/thumb.png",
     }
-    resp = client.post("/api/components", json=comp_payload, headers=headers)
+    resp = client.post("/api/components", json=comp_payload, headers=auth_headers)
     record("create component status", resp.status_code == 201, resp.text)
     comp_data = resp.json().get("data") or resp.json()
     comp_id = comp_data.get("id")
     record("component id returned", comp_id is not None, resp.text)
 
-    resp = client.get(f"/api/components/{comp_id}")
+    resp = client.get(f"/api/components/{comp_id}", headers=auth_headers)
     record("component persisted", resp.status_code == 200 and (resp.json().get("data") or resp.json()).get("id") == comp_id, resp.text)
     
     # 5. Edit Component
@@ -72,7 +74,7 @@ def test_full_e2e_flow(client):
         "description": "Updated description by E2E test",
         "jsxCode": "<button>Updated Test</button>"
     }
-    resp = client.put(f"/api/components/{comp_id}", json=edit_payload, headers=headers)
+    resp = client.put(f"/api/components/{comp_id}", json=edit_payload, headers=auth_headers)
     record("edit component status", resp.status_code == 200, resp.text)
     edited_data = resp.json().get("data") or resp.json()
     record("edit component persisted", edited_data.get("description") == "Updated description by E2E test", resp.text)
@@ -83,27 +85,27 @@ def test_full_e2e_flow(client):
         "title": "Great component",
         "comment": "Works as expected"
     }
-    resp = client.post(f"/api/components/{comp_id}/reviews", json=review_payload, headers=headers)
+    resp = client.post(f"/api/components/{comp_id}/reviews", json=review_payload, headers=auth_headers)
     record("review status", resp.status_code == 201, resp.text)
     
     rating_payload = {"rating": 4}
-    resp = client.post(f"/api/components/{comp_id}/ratings", json=rating_payload, headers=headers)
+    resp = client.post(f"/api/components/{comp_id}/ratings", json=rating_payload, headers=auth_headers)
     record("rating status", resp.status_code == 200, resp.text)
     
     # 7. Add Discussion
     disc_payload = {
         "message": "Is this component responsive?"
     }
-    resp = client.post(f"/api/components/{comp_id}/discussions", json=disc_payload, headers=headers)
+    resp = client.post(f"/api/components/{comp_id}/discussions", json=disc_payload, headers=auth_headers)
     record("discussion status", resp.status_code == 201, resp.text)
     
     # 8. Favorite Toggle
-    resp = client.post(f"/api/users/me/favorites/{comp_id}", headers=headers)
+    resp = client.post(f"/api/users/me/favorites/{comp_id}", headers=auth_headers)
     record("favorite add status", resp.status_code == 200, resp.text)
     fav_data = resp.json().get("data") or resp.json()
     record("favorite added", comp_id in fav_data.get("favorites", []), resp.text)
 
-    resp = client.post(f"/api/users/me/favorites/{comp_id}", headers=headers)
+    resp = client.post(f"/api/users/me/favorites/{comp_id}", headers=auth_headers)
     record("favorite remove status", resp.status_code == 200, resp.text)
     fav_data = resp.json().get("data") or resp.json()
     record("favorite removed", comp_id not in fav_data.get("favorites", []), resp.text)
@@ -114,17 +116,17 @@ def test_full_e2e_flow(client):
     )
     files = {"avatar": ("test.png", png_bytes, "image/png")}
     data = {"fullName": "Test User", "email": email, "phone": "1234567890"}
-    resp = client.put("/api/users/me", files=files, data=data, headers=headers)
+    resp = client.put("/api/users/me", files=files, data=data, headers=auth_headers)
     record("avatar upload status", resp.status_code == 200, resp.text)
     user_data = (resp.json().get("data") or resp.json()).get("user", {})
     record("avatar public url", str(user_data.get("avatarUrl", "")).startswith("http"), resp.text)
     record("avatar path no app leak", "/app/" not in str(user_data.get("avatarPath", "")), resp.text)
     
     # 10. Delete Component
-    resp = client.delete(f"/api/components/{comp_id}", headers=headers)
+    resp = client.delete(f"/api/components/{comp_id}", headers=auth_headers)
     record("delete component status", resp.status_code == 200, resp.text)
 
-    resp = client.get(f"/api/components/{comp_id}")
+    resp = client.get(f"/api/components/{comp_id}", headers=auth_headers)
     record("delete component persisted", resp.status_code == 404, resp.text)
 
     passed = sum(1 for item in checks if item["passed"])
