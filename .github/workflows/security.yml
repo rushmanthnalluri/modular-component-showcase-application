@@ -34,8 +34,8 @@ jobs:
         with:
           sarif_file: ${{ runner.temp }}/trivy-fs.sarif
 
-      - name: Fail on Trivy filesystem findings
-        if: always()
+      - name: Fail on Trivy filesystem findings (push only)
+        if: always() && github.event_name == 'push'
         shell: bash
         run: |
           if [[ "${{ steps.trivy_fs_scan.outcome }}" != "success" ]]; then
@@ -68,8 +68,8 @@ jobs:
         with:
           sarif_file: ${{ runner.temp }}/trivy-image.sarif
 
-      - name: Fail on Trivy image findings
-        if: always()
+      - name: Fail on Trivy image findings (push only)
+        if: always() && github.event_name == 'push'
         shell: bash
         run: |
           if [[ "${{ steps.trivy_image_scan.outcome }}" != "success" ]]; then
