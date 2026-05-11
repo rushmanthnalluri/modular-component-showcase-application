@@ -10,16 +10,40 @@ permissions:
   pages: write
   id-token: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
+  pages-availability:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check GitHub Pages availability
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.repos.getPages({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              core.setOutput('enabled', 'true');
+            } catch (error) {
+              if (error.status === 404) {
+                core.warning('GitHub Pages is not configured for this repository. Skipping deploy jobs.');
+                core.setOutput('enabled', 'false');
+              } else {
+                throw error;
+              }
+            }
+
   build:
     runs-on: ubuntu-latest
+    needs: pages-availability
+    if: needs.pages-availability.outputs.enabled == 'true'
     steps:
       - uses: actions/checkout@v5
 
@@ -46,7 +70,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [pages-availability, build]
+    if: needs.pages-availability.outputs.enabled == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
