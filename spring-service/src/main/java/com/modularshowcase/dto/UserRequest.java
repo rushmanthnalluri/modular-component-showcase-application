@@ -24,6 +24,7 @@ public final class UserRequest {
         private final String phone;
 
         @NotBlank
+        @Pattern(regexp = "^(user|developer|admin|USER|DEVELOPER|ADMIN)$")
         private final String role;
 
         public UserRequest(String name, String fullName, String email, String phone, String role) {

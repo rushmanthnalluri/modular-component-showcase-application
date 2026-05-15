@@ -10,8 +10,10 @@ from fastapi.testclient import TestClient
 
 try:
     from gateway.main import app
+    from gateway.tests.auth_helpers import auth_headers
 except ImportError:
     from main import app
+    from tests.auth_helpers import auth_headers
 
 
 @pytest.fixture
@@ -24,6 +26,7 @@ def test_search_endpoint_exists(client):
     """Test that search endpoint is available."""
     response = client.post(
         "/searchservice/search",
+        headers=auth_headers(),
         json={
             "query": "button",
             "limit": 10,
@@ -35,7 +38,7 @@ def test_search_endpoint_exists(client):
 
 def test_history_endpoint_exists(client):
     """Test that history endpoint is available."""
-    response = client.get("/searchservice/history")
+    response = client.get("/searchservice/history", headers=auth_headers())
     assert response.status_code in [200, 500]
 
 

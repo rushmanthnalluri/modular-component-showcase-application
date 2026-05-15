@@ -34,7 +34,7 @@ export function createDiscussionsRouter({
 
             const discussions = await Discussion.find(query).sort({ createdAt: -1 }).limit(100).lean();
             return successPayload(res, { discussions });
-        } catch (error) {
+        } catch {
             return errorPayload(res, "SERVER_ERROR", "Unable to fetch discussions.", 500);
         }
     });
@@ -66,7 +66,7 @@ export function createDiscussionsRouter({
             await syncSqlDiscussion(discussion, { user, componentMongoId: component.id });
 
             return successPayload(res, { discussion }, 201);
-        } catch (error) {
+        } catch {
             return errorPayload(res, "SERVER_ERROR", "Unable to create discussion.", 500);
         }
     });
