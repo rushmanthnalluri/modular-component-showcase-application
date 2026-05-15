@@ -46,7 +46,7 @@ test("Multipart upload", async () => {
     app.use(cookieParser());
     app.use(express.json());
     app.use("/api/users", createUserRouter({ User, Component: {}, SubmissionHistory: {}, requireAuth, requireCsrf }));
-    app.use((err, req, res, next) => {
+    app.use((err, _req, res, _next) => {
         console.error("EXPRESS ERROR:", err);
         res.status(500).json({ message: err.message });
     });
@@ -70,8 +70,10 @@ test("Multipart upload", async () => {
             body: formData,
         });
 
-        const text = await res.text();
-        console.log("RESPONSE:", res.status, text);
+        assert.equal(res.status, 200);
+        const body = await res.json();
+        assert.equal(body.user.email, "test@example.com");
+        assert.match(body.user.avatarUrl, /\/uploads\/avatars\/.+\.jpg$/);
     } finally {
         server.close();
     }

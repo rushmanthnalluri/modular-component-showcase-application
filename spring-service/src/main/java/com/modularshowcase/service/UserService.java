@@ -64,7 +64,7 @@ public class UserService {
         entity.setFullName(request.fullName());
         entity.setEmail(request.email());
         entity.setPhone(request.phone());
-        entity.setRole(request.role().toLowerCase());
+        entity.setRole(request.role().trim().toLowerCase());
     }
 
     private UserResponse toResponse(@NonNull UserEntity entity) {

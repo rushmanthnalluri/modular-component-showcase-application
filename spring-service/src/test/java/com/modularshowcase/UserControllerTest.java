@@ -30,19 +30,15 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @SuppressWarnings("all")
     @MockitoBean
     private UserService userService;
 
-    @SuppressWarnings("unused")
     @MockitoBean
     private RequestMetricsRecorder requestMetricsRecorder;
 
-    @SuppressWarnings("unused")
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
-    @SuppressWarnings("unused")
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
 

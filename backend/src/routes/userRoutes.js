@@ -284,7 +284,7 @@ export function createUserRouter({
 
         const userPayload = toUserPayload(user, req);
         return successPayload(res, { user: userPayload });
-    } catch (error) {
+    } catch {
         return errorPayload(res, "SERVER_ERROR", "Unable to fetch profile.", 500);
     }
   });

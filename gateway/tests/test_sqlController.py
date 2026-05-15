@@ -10,8 +10,10 @@ from fastapi.testclient import TestClient
 
 try:
     from gateway.main import app
+    from gateway.tests.auth_helpers import auth_headers
 except ImportError:
     from main import app
+    from tests.auth_helpers import auth_headers
 
 
 @pytest.fixture
@@ -22,7 +24,7 @@ def client():
 
 def test_list_components_endpoint(client):
     """Test that list components endpoint exists."""
-    response = client.get("/sqlservice/components")
+    response = client.get("/sqlservice/components", headers=auth_headers())
     assert response.status_code in [200, 500, 422]
 
 
@@ -30,6 +32,7 @@ def test_create_component_endpoint(client):
     """Test that create component endpoint exists."""
     response = client.post(
         "/sqlservice/components",
+        headers=auth_headers(),
         json={
             "id": 1,
             "name": "Test",
@@ -45,6 +48,7 @@ def test_update_component_endpoint(client):
     """Test that update component endpoint exists."""
     response = client.put(
         "/sqlservice/components/1",
+        headers=auth_headers(),
         json={
             "id": 1,
             "name": "Updated",
@@ -58,5 +62,5 @@ def test_update_component_endpoint(client):
 
 def test_delete_component_endpoint(client):
     """Test that delete component endpoint exists."""
-    response = client.delete("/sqlservice/components/1")
+    response = client.delete("/sqlservice/components/1", headers=auth_headers())
     assert response.status_code in [200, 404, 500, 422]

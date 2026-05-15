@@ -10,8 +10,10 @@ from fastapi.testclient import TestClient
 
 try:
     from gateway.main import app
+    from gateway.tests.auth_helpers import auth_headers
 except ImportError:
     from main import app
+    from tests.auth_helpers import auth_headers
 
 
 @pytest.fixture
@@ -76,7 +78,7 @@ def test_search_routes_exist(client):
 
 def test_sql_routes_exist(client):
     """Test SQL routes exist."""
-    response = client.get("/sqlservice/components")
+    response = client.get("/sqlservice/components", headers=auth_headers())
     assert response.status_code in [200, 500, 422]
 
 
@@ -101,7 +103,7 @@ def test_auth_register_alias_exists(client):
 
 
 def test_sql_users_alias_exists(client):
-    response = client.get("/sqlservice/users")
+    response = client.get("/sqlservice/users", headers=auth_headers())
     assert response.status_code in [200, 500, 422]
 
 

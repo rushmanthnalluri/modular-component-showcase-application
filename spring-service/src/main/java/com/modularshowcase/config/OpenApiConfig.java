@@ -21,7 +21,7 @@ import io.swagger.v3.oas.models.servers.Server;
  *
  * <p>Example JWT login flow:
  * <pre>
- * POST /spring/auth/login  { "email": "...", "password": "..." }
+ * POST /spring/auth/token  { "email": "...", "role": "..." }
  * → { "token": "eyJ..." }
  * → Paste token into Swagger Authorize → Bearer &lt;token&gt;
  * </pre>
@@ -40,8 +40,9 @@ public class OpenApiConfig {
                                 Enterprise-grade Spring Boot 3 microservice. Provides CRUD for users, components,
                                 reviews, ratings, and favorites. Secured with JWT Bearer authentication.
 
-                                **Login:** `POST /spring/auth/login` -> copy the returned `token` -> click
-                                **Authorize** above and paste as `Bearer <token>`.
+                                **Token:** `POST /spring/auth/token` with an existing SQL user email and persisted
+                                role -> copy `accessToken` -> click **Authorize** above and paste as
+                                `Bearer <token>`.
                                 """)
                         .version("0.1.0")
                         .contact(new Contact()
@@ -60,7 +61,7 @@ public class OpenApiConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
                                         .description("""
-                                                JWT token from POST /spring/auth/login.
+                                                JWT token from POST /spring/auth/token.
                                                 Format: Bearer <token>
                                                 """)));
     }

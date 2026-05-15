@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public final class AuthRequest {
 
@@ -12,6 +13,7 @@ public final class AuthRequest {
         private final String email;
 
         @NotBlank
+        @Pattern(regexp = "^(user|developer|admin|USER|DEVELOPER|ADMIN)$")
         private final String role;
 
         @JsonCreator

@@ -3,6 +3,7 @@ package com.modularshowcase.service;
 import com.modularshowcase.dto.AuthRequest;
 import com.modularshowcase.dto.AuthResponse;
 import com.modularshowcase.dto.UserResponse;
+import com.modularshowcase.exception.AccessDeniedBusinessException;
 import com.modularshowcase.model.UserEntity;
 import com.modularshowcase.security.JwtTokenProvider;
 import com.modularshowcase.security.UserPrincipal;
@@ -24,7 +25,7 @@ public class AuthService {
     public AuthResponse issueToken(@NonNull AuthRequest request) {
         UserEntity user = userService.findByEmail(Objects.requireNonNull(request.email(), "email must not be null"));
         if (!user.getRole().equalsIgnoreCase(request.role())) {
-            user.setRole(request.role().toLowerCase());
+            throw new AccessDeniedBusinessException("Requested role does not match persisted user role.");
         }
         UserPrincipal principal = new UserPrincipal(user.getUserId(), user.getEmail(), user.getRole());
         String token = jwtTokenProvider.generateToken(principal);

@@ -13,7 +13,7 @@ import os from "node:os";
 import express from "express";
 import cookieParser from "cookie-parser";
 import multer from "multer";
-import { avatarUpload, mapAvatarUploadError } from "../middleware/avatarUpload.js";
+import { mapAvatarUploadError } from "../middleware/avatarUpload.js";
 import { createUserRouter } from "../routes/userRoutes.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -89,7 +89,6 @@ function buildApp() {
     );
 
     // Mirror the global error handler in app.js
-    // eslint-disable-next-line no-unused-vars
     app.use((err, _req, res, _next) => {
         const avatarError = mapAvatarUploadError(err);
         if (avatarError) return res.status(avatarError.status).json({ message: avatarError.message });
@@ -201,7 +200,6 @@ test("PUT /api/users/me — unauthenticated returns 401", async () => {
         "/api/users",
         createUserRouter({ User, Component: {}, SubmissionHistory: {}, requireAuth, requireCsrf })
     );
-    // eslint-disable-next-line no-unused-vars
     app.use((err, _req, res, _next) => res.status(500).json({ message: "Server error." }));
 
     await withServer(app, async (baseUrl) => {
