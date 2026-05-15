@@ -41,3 +41,25 @@ paths:
       summary: Search, paginate, and sort components
       responses:
         '200': { description: Paginated component search results }
+  /discussions:
+    get:
+      summary: List discussion rows, optionally filtered by componentMongoId
+      responses:
+        '200': { description: Discussions }
+    post:
+      summary: Create discussion row
+      responses:
+        '200': { description: Discussion created }
+  /discussions/{discussionId}:
+    get:
+      summary: Get discussion by SQL id
+      responses:
+        '200': { description: Discussion }
+    put:
+      summary: Update discussion by SQL id
+      responses:
+        '200': { description: Discussion updated }
+    delete:
+      summary: Delete discussion by SQL id
+      responses:
+        '200': { description: Discussion deleted }

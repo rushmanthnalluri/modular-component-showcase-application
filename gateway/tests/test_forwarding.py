@@ -11,9 +11,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     from gateway.main import app
     from gateway.controllers import authenticationController, sqlController
+    from gateway.tests.auth_helpers import auth_headers
 except ImportError:
     from main import app
     from controllers import authenticationController, sqlController
+    from tests.auth_helpers import auth_headers
 
 
 def test_auth_register_alias_forwards(monkeypatch):
@@ -45,7 +47,7 @@ def test_sql_users_alias_forwards(monkeypatch):
     monkeypatch.setattr(sqlController.SQLService, "list_users", fake_list_users)
 
     client = TestClient(app)
-    response = client.get("/sqlservice/users")
+    response = client.get("/sqlservice/users", headers=auth_headers())
 
     assert response.status_code == 200
     assert response.json()["items"][0]["name"] == "Admin"

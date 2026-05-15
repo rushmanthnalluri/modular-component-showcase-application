@@ -26,7 +26,7 @@ export function createReviewsRouter({
             const query = componentId ? { componentId } : {};
             const reviews = await Review.find(query).sort({ createdAt: -1 }).limit(100).lean();
             return successPayload(res, { reviews });
-        } catch (error) {
+        } catch {
             return errorPayload(res, "SERVER_ERROR", "Unable to fetch reviews.", 500);
         }
     });
@@ -61,7 +61,7 @@ export function createReviewsRouter({
             await syncSqlReview(review, { user, componentMongoId: component.id });
 
             return successPayload(res, { review }, 201);
-        } catch (error) {
+        } catch {
             return errorPayload(res, "SERVER_ERROR", "Unable to create review.", 500);
         }
     });

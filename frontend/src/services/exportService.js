@@ -1,22 +1,30 @@
-export function copyToClipboard(text, label = "Text") {
+function copyWithTextarea(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "absolute";
+  textArea.style.left = "-9999px";
+  document.body.appendChild(textArea);
+  textArea.select();
+
   try {
-    navigator.clipboard.writeText(text).then(() => {
-      console.log(`${label} copied to clipboard!`);
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textArea);
+  }
+}
+
+export async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
       return true;
-    }).catch((error) => {
-      console.error("Failed to copy to clipboard:", error);
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      return true;
-    });
+    }
+
+    return copyWithTextarea(text);
   } catch (error) {
-    console.error("Copy error:", error);
-    return false;
+    console.error("Clipboard copy failed:", error);
+    return copyWithTextarea(text);
   }
 }
 

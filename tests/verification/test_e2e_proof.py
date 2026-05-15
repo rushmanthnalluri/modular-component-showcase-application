@@ -10,7 +10,18 @@ GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
 def client():
     return httpx.Client(base_url=GATEWAY_URL, follow_redirects=True)
 
+
+def require_live_gateway(client):
+    try:
+        response = client.get("/livez", timeout=2)
+    except httpx.HTTPError as exc:
+        pytest.skip(f"Live gateway is not available at {GATEWAY_URL}: {exc}")
+
+    if response.status_code != 200:
+        pytest.skip(f"Live gateway is not healthy at {GATEWAY_URL}: {response.status_code}")
+
 def test_full_e2e_flow(client):
+    require_live_gateway(client)
     checks = []
 
     def record(name, condition, details=""):

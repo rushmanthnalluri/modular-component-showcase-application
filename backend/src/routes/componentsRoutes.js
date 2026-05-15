@@ -58,10 +58,6 @@ export function createComponentsRouter({
         return sendError(res, code, message, status, details);
     }
 
-    function escapeRegex(value) {
-        return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-
     const validateCreateComponent = createValidatedBodyMiddleware(validateComponentPayload, { status: 422 });
 
     function toSafeInteger(value, { defaultValue, min, max }) {
