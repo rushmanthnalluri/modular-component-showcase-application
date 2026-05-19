@@ -4,7 +4,7 @@
 
 ### A production-style full-stack platform for discovering, previewing, reviewing, and managing reusable UI components
 
-Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, **FastAPI gateway**, and **Spring Boot microservice**, backed by **Neon PostgreSQL** and **MongoDB Atlas**, containerized with **Docker**, and deployment-ready for **Render** with **GitHub Actions CI/CD**.
+Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, **FastAPI gateway**, and **Spring Boot microservice**, backed by **PostgreSQL + pgvector** and **MongoDB**, containerized with **Docker**, and deployment-ready with **GitHub Actions CI/CD**.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/ci.yml?branch=main&label=CI&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/ci.yml)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/deploy-pages.yml?branch=main&label=GitHub%20Pages&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/deploy-pages.yml)
@@ -40,7 +40,7 @@ This project is especially useful for:
 ## Why This Project Matters
 
 - It shows how a **React UI** can be paired with a **secure Node/Express API** and an optional **FastAPI gateway** in a realistic delivery model.
-- It demonstrates **polyglot persistence** using **Neon PostgreSQL** for normalized relational data and **MongoDB Atlas** for document-oriented workloads.
+- It demonstrates **polyglot persistence** using **PostgreSQL** for normalized relational data and pgvector ANN search, plus **MongoDB** for document-oriented workloads.
 - It includes **production-oriented concerns** such as CSRF, rate limiting, containerization, health checks, linting, testing, CI/CD, and Render deployment.
 - It highlights both **developer experience** and **user experience**, from local Docker setup to responsive UI, theme switching, and interactive component previews.
 
@@ -165,8 +165,8 @@ Backend (Node.js + Express)
 | Frontend | React + Vite UI for routing, stateful UX, showcase pages, previews, profile flows, and API consumption |
 | Backend | Node.js + Express service for authentication, component management, reviews, ratings, favorites, discussions, and profile operations |
 | Gateway | FastAPI proxy layer that provides a stable entry point for `/api` traffic and deployment flexibility |
-| PostgreSQL | Neon-hosted relational source of truth for normalized user, category, component, review, rating, discussion, and favorites data |
-| MongoDB Atlas | Document-oriented storage for legacy support, search-oriented data, content payloads, logs, embeddings, and discussion-linked records |
+| PostgreSQL | Relational source of truth for normalized user, category, component, review, rating, discussion, favorites, outbox, idempotency, and pgvector embedding-index data |
+| MongoDB | Document-oriented storage for component documents, search metadata, content payloads, logs, embeddings fallback, and discussion-linked records |
 | Docker | Containerized development and deployment parity through dedicated service definitions |
 | Render | Hosting platform for frontend, backend, and gateway services |
 | GitHub Actions | Continuous integration and deployment workflows for validation and release automation |
@@ -298,6 +298,7 @@ GitHub Actions now generates runtime `.env` files from the examples before launc
 ## Enterprise Proof Pack
 
 - [docs/final-verification-report.md](docs/final-verification-report.md)
+- [docs/evaluator-upgrade-report.md](docs/evaluator-upgrade-report.md)
 - [docs/viva-ready-theory-to-code-mapping.md](docs/viva-ready-theory-to-code-mapping.md)
 - [docs/testing-and-quality-proof.md](docs/testing-and-quality-proof.md)
 - [docs/security-hardening-proof.md](docs/security-hardening-proof.md)
@@ -346,7 +347,7 @@ Start the FastAPI gateway separately:
 
 ```bash
 cd gateway
-uvicorn app.main:app --reload --port 8000
+uvicorn main:app --reload --port 8000
 ```
 
 If you want the full Docker stack to pick up local overrides, copy the example files first:
@@ -459,7 +460,7 @@ This repository maps directly to the 25CS1302E evaluation goals:
 
 - **SQL normalization:** PostgreSQL schema is normalized and constrained
 - **NoSQL usage:** MongoDB stores embeddings, logs, and flexible documents
-- **Vector search:** Semantic retrieval uses cosine similarity over embeddings
+- **Vector search:** Semantic retrieval uses PostgreSQL pgvector HNSW when available, with MongoDB exact-scan fallback for local/dev environments
 - **API Gateway:** FastAPI provides a dedicated routing and control layer
 - **Microservices:** Frontend, backend, gateway, and Spring service are separated by responsibility
 
@@ -475,8 +476,8 @@ Reference documentation:
 
 ## Future Improvements
 
-- ANN / pgvector for faster vector search
-- CI/CD hardening and deployment automation
+- Load-tested query baselines for larger vector corpora
+- Deployment promotion automation for staging-to-production releases
 - Load testing and performance regression checks
 - Additional cache layers for repeated search queries
 

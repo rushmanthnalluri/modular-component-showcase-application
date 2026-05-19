@@ -57,6 +57,20 @@ vitest-*.log
 # Legacy migration artifacts
 .tsupgrader/
 .github/modernize/
+
+# Runtime secrets: keep local env files on disk but out of Git.
+.env
+.env.*
+!.env.example
 frontend/.env
+frontend/.env.*
+!frontend/.env.example
 backend/.env
+backend/.env.*
+!backend/.env.example
 gateway/.env
+gateway/.env.*
+!gateway/.env.example
+spring-service/.env
+spring-service/.env.*
+!spring-service/.env.example

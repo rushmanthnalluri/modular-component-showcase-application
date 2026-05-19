@@ -37,17 +37,31 @@ def _jwt_decode_kwargs() -> dict:
     return kwargs
 
 
-def _resolve_token(token: str | None, access_token_cookie: str | None, refresh_token_cookie: str | None) -> str | None:
+def _resolve_token(
+    token: str | None,
+    access_token_cookie: str | None,
+    backend_access_token_cookie: str | None,
+) -> str | None:
     return (
         (token or "").strip()
         or (access_token_cookie or "").strip()
-        or (refresh_token_cookie or "").strip()
+        or (backend_access_token_cookie or "").strip()
         or None
     )
 
 
-def _principal_from_token(token: str) -> SecurityPrincipal:
+def _bearer_token(value: str | None) -> str | None:
+    header = (value or "").strip()
+    if header.lower().startswith("bearer "):
+        return header[7:].strip() or None
+    return None
+
+
+def _principal_from_token(token: str, expected_token_type: str = "access") -> SecurityPrincipal:
     payload = jwt.decode(token, _jwt_secret(), **_jwt_decode_kwargs())
+    token_type = str(payload.get("tokenType") or expected_token_type).lower()
+    if token_type != expected_token_type:
+        raise ValueError("Invalid token type")
     user_id = str(payload.get("userId") or payload.get("sub") or "")
     email = str(payload.get("email") or "")
     role = str(payload.get("role") or payload.get("authority") or "user").replace("ROLE_", "").lower()
@@ -62,9 +76,9 @@ def _principal_from_token(token: str) -> SecurityPrincipal:
 def get_current_principal(
     token: str | None = Depends(oauth2_scheme),
     access_token_cookie: str | None = Cookie(default=None, alias="accessToken"),
-    refresh_token_cookie: str | None = Cookie(default=None, alias="refreshToken"),
+    backend_access_token_cookie: str | None = Cookie(default=None, alias="auth_token"),
 ) -> SecurityPrincipal:
-    token = _resolve_token(token, access_token_cookie, refresh_token_cookie)
+    token = _resolve_token(token, access_token_cookie, backend_access_token_cookie)
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
@@ -76,9 +90,9 @@ def get_current_principal(
 
 def verify_request_jwt(request: Request) -> SecurityPrincipal:
     token = _resolve_token(
-        request.headers.get("authorization", "").removeprefix("Bearer ").strip() or None,
+        _bearer_token(request.headers.get("authorization")),
         request.cookies.get("accessToken") if hasattr(request, "cookies") else None,
-        request.cookies.get("refreshToken") if hasattr(request, "cookies") else None,
+        request.cookies.get("auth_token") if hasattr(request, "cookies") else None,
     )
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")

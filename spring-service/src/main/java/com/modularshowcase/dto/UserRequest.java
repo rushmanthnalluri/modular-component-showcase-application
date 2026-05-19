@@ -27,12 +27,17 @@ public final class UserRequest {
         @Pattern(regexp = "^(user|developer|admin|USER|DEVELOPER|ADMIN)$")
         private final String role;
 
-        public UserRequest(String name, String fullName, String email, String phone, String role) {
+        @NotBlank
+        @Size(min = 8, max = 128)
+        private final String password;
+
+        public UserRequest(String name, String fullName, String email, String phone, String role, String password) {
                 this.name = name;
                 this.fullName = fullName;
                 this.email = email;
                 this.phone = phone;
                 this.role = role;
+                this.password = password;
         }
 
         public String name() {
@@ -53,5 +58,9 @@ public final class UserRequest {
 
         public String role() {
                 return role;
+        }
+
+        public String password() {
+                return password;
         }
 }

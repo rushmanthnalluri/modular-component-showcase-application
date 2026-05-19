@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import crypto from "node:crypto";
+import { hasSqlConnectionConfig, sqlQuery } from "../sql/db.js";
 
 const emitter = new EventEmitter();
 const outboxStore = new Map();
@@ -25,8 +26,39 @@ export function publishOutboxEvent(event) {
   };
 
   outboxStore.set(normalized.id, normalized);
+  persistOutboxEvent(normalized);
   emitter.emit("outbox_event", normalized);
   return normalized;
+}
+
+function persistOutboxEvent(event) {
+  if (!hasSqlConnectionConfig()) {
+    return;
+  }
+
+  sqlQuery(
+    `INSERT INTO service_outbox (
+        event_id, event_type, event_source, payload, metadata, status, attempts, created_at
+     ) VALUES (
+        $1, $2, $3, $4::jsonb, $5::jsonb, $6, $7, $8::timestamptz
+     )
+     ON CONFLICT (event_id) DO UPDATE SET
+        status = EXCLUDED.status,
+        attempts = EXCLUDED.attempts,
+        metadata = EXCLUDED.metadata`,
+    [
+      event.id,
+      event.type,
+      event.source,
+      JSON.stringify(event.payload || {}),
+      JSON.stringify({ ...(event.metadata || {}), dedupeKey: event.dedupeKey || "" }),
+      event.status,
+      event.attempts,
+      event.createdAt,
+    ]
+  ).catch((error) => {
+    console.warn(`Skipping PostgreSQL outbox persistence: ${error.message}`);
+  });
 }
 
 export function subscribeOutbox(listener) {

@@ -2,6 +2,7 @@ import express from "express";
 import { runHybridSearch } from "../services/hybridSearchService.js";
 import { generateEmbedding, getEmbeddingProviderCapabilities } from "../services/embeddingProvider.js";
 import { describeVectorCapabilities, scoreSimilarity } from "../services/vectorSearchService.js";
+import { searchPgVectorEmbeddings, upsertPgVectorEmbedding } from "../services/pgVectorSearchService.js";
 import { publishVectorEmbeddingUpserted } from "../producers/componentEventProducer.js";
 
 export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, requireAuth, idempotencyService }) {
@@ -63,6 +64,28 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
     const limit = Math.max(1, Math.min(50, Number(req.body?.limit) || 10));
     const metric = String(req.body?.metric || "cosine").trim().toLowerCase();
     const safeCategory = String(req.body?.category || "").trim().toLowerCase();
+    const pgVectorResult = await searchPgVectorEmbeddings({
+      embedding: generated.embedding,
+      metric,
+      category: safeCategory,
+      limit,
+    });
+
+    if (pgVectorResult.available) {
+      return res.json({
+        query,
+        metric,
+        count: pgVectorResult.items.length,
+        items: pgVectorResult.items,
+        provider: generated.provider,
+        model: generated.model,
+        retrieval: {
+          engine: `pgvector-${pgVectorResult.schema.indexType || "exact"}`,
+          indexed: Boolean(pgVectorResult.schema.indexed),
+          dimensions: pgVectorResult.schema.dimensions,
+        },
+      });
+    }
 
     const candidates = await ComponentEmbedding.find({})
       .select("componentId componentName category text model embedding")
@@ -94,6 +117,11 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
       items,
       provider: generated.provider,
       model: generated.model,
+      retrieval: {
+        engine: "mongo-linear-fallback",
+        indexed: false,
+        reason: pgVectorResult.schema?.reason || "pgvector_unavailable",
+      },
     });
   });
 
@@ -199,6 +227,23 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
       ).lean();
 
+      let pgVector = { available: false };
+      try {
+        pgVector = await upsertPgVectorEmbedding({
+          componentId,
+          componentName,
+          category,
+          text,
+          model: generated.model,
+          provider: generated.provider,
+          embeddingHash: generated.embeddingHash,
+          embedding: generated.embedding,
+          metadata: { source: "vector-upsert" },
+        });
+      } catch (error) {
+        pgVector = { available: false, error: error.message };
+      }
+
       publishVectorEmbeddingUpserted({
         componentId,
         componentName,
@@ -207,7 +252,15 @@ export function createVectorRouter({ Component, ComponentEmbedding, UsageLog, re
         model: generated.model,
       });
       idempotencyService.commit({ composite: reserve.composite, payload: item, statusCode: 201 });
-      return res.status(201).json({ item, embedding: { provider: generated.provider, model: generated.model } });
+      return res.status(201).json({
+        item,
+        embedding: { provider: generated.provider, model: generated.model },
+        vectorIndex: {
+          engine: pgVector.available ? `pgvector-${pgVector.schema.indexType || "exact"}` : "mongo-only",
+          indexed: Boolean(pgVector.schema?.indexed),
+          reason: pgVector.schema?.reason || pgVector.error || "pgvector_unavailable",
+        },
+      });
     } catch (error) {
       idempotencyService.fail({ composite: reserve.composite });
       return res.status(500).json({ message: error.message || "Unable to upsert embedding" });

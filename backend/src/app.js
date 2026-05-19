@@ -85,6 +85,14 @@ const avatarUploadDir = path.resolve(process.env.AVATAR_UPLOAD_DIR || path.join(
 process.env.AVATAR_UPLOAD_DIR = avatarUploadDir;
 fs.mkdirSync(avatarUploadDir, { recursive: true });
 
+if (process.env.JWT_SECRET && Buffer.byteLength(process.env.JWT_SECRET, "utf8") < 32) {
+    const message = "JWT_SECRET must be at least 32 UTF-8 bytes.";
+    if (isProduction) {
+        throw new Error(message);
+    }
+    logger.warn(message);
+}
+
 const mongoConnectOptions = {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,

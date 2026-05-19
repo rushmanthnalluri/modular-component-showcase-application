@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE TABLE IF NOT EXISTS components (
     component_id BIGSERIAL PRIMARY KEY,
+    component_public_id TEXT UNIQUE,
     name VARCHAR(160) NOT NULL,
     description TEXT NOT NULL,
     category_id BIGINT NOT NULL REFERENCES categories(category_id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -42,12 +43,16 @@ CREATE TABLE IF NOT EXISTS components (
 CREATE INDEX IF NOT EXISTS idx_components_category_id ON components(category_id);
 CREATE INDEX IF NOT EXISTS idx_components_user_id ON components(user_id);
 CREATE INDEX IF NOT EXISTS idx_components_name ON components(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_components_public_id
+    ON components(component_public_id)
+    WHERE component_public_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS user_favorites (
     favorite_id BIGSERIAL PRIMARY KEY,
     mongo_user_id TEXT NOT NULL,
     user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
     component_mongo_id TEXT NOT NULL,
+    component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT user_favorites_unique UNIQUE (user_id, component_mongo_id)
@@ -59,6 +64,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     mongo_user_id TEXT NOT NULL,
     user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
     component_mongo_id TEXT NOT NULL,
+    component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     title TEXT NOT NULL DEFAULT '',
     comment TEXT NOT NULL,
@@ -76,6 +82,7 @@ CREATE TABLE IF NOT EXISTS discussions (
     mongo_user_id TEXT NOT NULL,
     user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
     component_mongo_id TEXT NOT NULL,
+    component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
     parent_mongo_id TEXT,
     message TEXT NOT NULL,
     likes INTEGER NOT NULL DEFAULT 0,
@@ -90,6 +97,7 @@ CREATE TABLE IF NOT EXISTS ratings (
     mongo_user_id TEXT NOT NULL,
     user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
     component_mongo_id TEXT NOT NULL,
+    component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -123,12 +131,16 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
 
 CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_favorites_component ON user_favorites(component_mongo_id);
+CREATE INDEX IF NOT EXISTS idx_user_favorites_component_id ON user_favorites(component_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_component ON reviews(component_mongo_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_component_id ON reviews(component_id);
 CREATE INDEX IF NOT EXISTS idx_discussions_user_id ON discussions(user_id);
 CREATE INDEX IF NOT EXISTS idx_discussions_component ON discussions(component_mongo_id);
+CREATE INDEX IF NOT EXISTS idx_discussions_component_id ON discussions(component_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON ratings(user_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_component ON ratings(component_mongo_id);
+CREATE INDEX IF NOT EXISTS idx_ratings_component_id ON ratings(component_id);
 CREATE INDEX IF NOT EXISTS idx_outbox_status_created_at ON service_outbox(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_idempotency_keys_expires_at ON idempotency_keys(expires_at);
 
@@ -147,6 +159,30 @@ BEGIN
 EXCEPTION
     WHEN undefined_file THEN
         RAISE NOTICE 'pgvector extension is not available in this environment.';
+END;
+$$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+        EXECUTE 'CREATE TABLE IF NOT EXISTS component_vector_embeddings (
+            component_id TEXT PRIMARY KEY,
+            component_name TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT '''',
+            text TEXT NOT NULL DEFAULT '''',
+            model TEXT NOT NULL DEFAULT '''',
+            provider TEXT NOT NULL DEFAULT '''',
+            embedding_hash TEXT NOT NULL DEFAULT '''',
+            embedding vector(128) NOT NULL,
+            metadata JSONB NOT NULL DEFAULT ''{}''::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )';
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_component_vector_embeddings_category
+            ON component_vector_embeddings (lower(category))';
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_component_vector_embeddings_embedding_hnsw
+            ON component_vector_embeddings USING hnsw (embedding vector_cosine_ops)';
+    END IF;
 END;
 $$;
 

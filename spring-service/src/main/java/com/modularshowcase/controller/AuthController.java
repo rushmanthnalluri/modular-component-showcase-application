@@ -1,14 +1,17 @@
 package com.modularshowcase.controller;
 
-import com.modularshowcase.dto.AuthRequest;
-import com.modularshowcase.dto.AuthResponse;
-import com.modularshowcase.service.AuthService;
-import jakarta.validation.Valid;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.modularshowcase.dto.AuthRefreshRequest;
+import com.modularshowcase.dto.AuthRequest;
+import com.modularshowcase.dto.AuthResponse;
+import com.modularshowcase.service.AuthService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/spring/auth")
@@ -23,5 +26,10 @@ public class AuthController {
     @PostMapping("/token")
     public AuthResponse issueToken(@Valid @RequestBody @NonNull AuthRequest request) {
         return authService.issueToken(request);
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refreshToken(@Valid @RequestBody @NonNull AuthRefreshRequest request) {
+        return authService.refreshToken(request);
     }
 }
