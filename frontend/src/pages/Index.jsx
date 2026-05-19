@@ -1,5 +1,5 @@
-import { useMemo, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/common/CategoryFilter";
 import ComponentCard from "@/components/common/ComponentCard";
 import Layout from "@/components/layout/Layout";
@@ -13,16 +13,14 @@ import "./Index.css";
 
 const Index = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { categoryId } = useParams();
   const [authUser, setAuthUser] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [draftQuery, setDraftQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [displayedComponents, setDisplayedComponents] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchMessage, setSearchMessage] = useState(
-    "Search components, UI ideas, or describe functionality to explore the catalog."
-  );
+  const searchTimerRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
@@ -60,43 +58,22 @@ const Index = () => {
     }
 
     if (categoryId === "all" || !validCategoryIds.includes(categoryId)) {
-      navigate(
-        {
-          pathname: "/",
-          search: location.search,
-        },
-        { replace: true }
-      );
+      navigate({ pathname: "/" }, { replace: true });
     }
-  }, [categoryId, validCategoryIds, navigate, location.search]);
-
-  const searchQuery = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    return searchParams.get("q") || "";
-  }, [location.search]);
-
-  useEffect(() => {
-    const syncTimer = window.setTimeout(() => {
-      setDraftQuery(searchQuery);
-    }, 0);
-
-    return () => {
-      window.clearTimeout(syncTimer);
-    };
-  }, [searchQuery]);
+  }, [categoryId, validCategoryIds, navigate]);
 
   const handleCategoryChange = (nextCategory) => {
     const normalizedCategory = validCategoryIds.includes(nextCategory) ? nextCategory : "all";
     const nextPath = normalizedCategory === "all" ? "/" : `/category/${normalizedCategory}`;
+    const currentPath = activeCategory === "all" ? "/" : `/category/${activeCategory}`;
 
-    if (nextPath === location.pathname) {
+    if (nextPath === currentPath) {
       return;
     }
 
     navigate(
       {
         pathname: nextPath,
-        search: location.search,
       },
       { replace: false }
     );
@@ -107,34 +84,6 @@ const Index = () => {
     setFavoriteIds(next);
   };
 
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    const normalizedQuery = draftQuery.trim();
-    const params = new URLSearchParams(location.search);
-
-    if (normalizedQuery) {
-      params.set("q", normalizedQuery);
-    } else {
-      params.delete("q");
-    }
-
-    const nextSearch = params.toString() ? `?${params.toString()}` : "";
-    if (nextSearch !== location.search) {
-      navigate(
-        {
-          pathname: location.pathname,
-          search: nextSearch,
-        },
-        { replace: true }
-      );
-    }
-  };
-
-  // Delegate deletion to the hook which does optimistic update + rollback on error.
-  const handleDelete = async (id) => {
-    await removeComponent(id);
-  };
-
   const baseScopedComponents = useMemo(() => {
     return componentItems.filter((item) => {
       const matchesCategory = activeCategory === "all" || item.category === activeCategory;
@@ -142,94 +91,117 @@ const Index = () => {
     });
   }, [activeCategory, componentItems]);
 
-  useEffect(() => {
-    let active = true;
-    let timerId = null;
+  const componentLookup = useMemo(() => {
+    return new Map(
+      componentItems
+        .map((component) => [String(component.id || "").trim(), component])
+        .filter(([key]) => Boolean(key))
+    );
+  }, [componentItems]);
 
-    const runSearch = async () => {
-      if (!searchQuery.trim()) {
-        if (active) {
-          setSearchResults([]);
-          setSearchMessage("Search components, UI ideas, or describe functionality to explore the catalog.");
-          setSearchLoading(false);
-        }
+  const searchTerm = draftQuery.trim();
+
+  const executeSearch = useCallback(
+    async (queryText) => {
+      const normalizedQuery = String(queryText || "").trim();
+      const requestId = searchRequestIdRef.current + 1;
+      searchRequestIdRef.current = requestId;
+
+      if (!normalizedQuery) {
+        setDisplayedComponents(baseScopedComponents);
+        setSearchLoading(false);
         return;
       }
 
-      const nextMode = detectSearchMode(searchQuery);
-      if (nextMode === "semantic") {
-        setSearchLoading(true);
-        timerId = window.setTimeout(() => {
-          void (async () => {
-            try {
-              const outcome = await unifiedComponentSearch({
-                query: searchQuery,
-                components: baseScopedComponents,
-                category: activeCategory,
-                limit: 12,
-                mode: nextMode,
-              });
+      const nextMode = detectSearchMode(normalizedQuery);
+      setSearchLoading(true);
 
-              if (!active) {
-                return;
-              }
-
-              setSearchResults(outcome.results);
-              setSearchMessage(outcome.message);
-            } catch {
-              if (!active) {
-                return;
-              }
-
-              setSearchResults([]);
-              setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
-            } finally {
-              if (active) {
-                setSearchLoading(false);
-              }
-            }
-          })();
-        }, 220);
-        return;
-      }
-
-      setSearchLoading(false);
       try {
         const outcome = await unifiedComponentSearch({
-          query: searchQuery,
+          query: normalizedQuery,
           components: baseScopedComponents,
           category: activeCategory,
           limit: 12,
           mode: nextMode,
         });
 
-        if (!active) {
+        if (searchRequestIdRef.current !== requestId) {
           return;
         }
 
-        setSearchResults(outcome.results);
-        setSearchMessage(outcome.message);
+        const enrichedResults = outcome.results.map((component) => {
+          const fallback = componentLookup.get(String(component.id || "").trim());
+          if (!fallback) {
+            return component;
+          }
+
+          return {
+            ...fallback,
+            ...component,
+            thumbnail: component.thumbnail || fallback.thumbnail,
+          };
+        });
+
+        setDisplayedComponents(enrichedResults);
       } catch {
-        if (!active) {
+        if (searchRequestIdRef.current !== requestId) {
           return;
         }
 
-        setSearchResults([]);
-        setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
+        setDisplayedComponents([]);
+      } finally {
+        if (searchRequestIdRef.current === requestId) {
+          setSearchLoading(false);
+        }
       }
-    };
+    },
+    [activeCategory, baseScopedComponents, componentLookup]
+  );
 
-    runSearch();
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    if (searchTimerRef.current) {
+      window.clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+
+    void executeSearch(searchTerm);
+  };
+
+  // Delegate deletion to the hook which does optimistic update + rollback on error.
+  const handleDelete = async (id) => {
+    await removeComponent(id);
+  };
+
+  useEffect(() => {
+    if (searchTimerRef.current) {
+      window.clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+
+    if (!searchTerm) {
+      const resetTimer = window.setTimeout(() => {
+        setDisplayedComponents(baseScopedComponents);
+        setSearchLoading(false);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(resetTimer);
+      };
+    }
+
+    searchTimerRef.current = window.setTimeout(() => {
+      void executeSearch(searchTerm);
+      searchTimerRef.current = null;
+    }, 180);
+
     return () => {
-      active = false;
-      if (timerId) {
-        window.clearTimeout(timerId);
+      if (searchTimerRef.current) {
+        window.clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
       }
     };
-  }, [activeCategory, baseScopedComponents, searchQuery]);
-
-  const hasSearchQuery = Boolean(searchQuery.trim());
-  const visibleComponents = hasSearchQuery ? searchResults : baseScopedComponents;
+  }, [baseScopedComponents, executeSearch, searchTerm]);
 
   return (
     <Layout>
@@ -275,112 +247,46 @@ const Index = () => {
           </div>
         </section>
 
-        {hasSearchQuery ? (
-          <section className="search-results-section" aria-labelledby="search-results-heading">
-            <div className="layout-container">
-              <div className="search-results-shell">
-                <div className="search-results-header">
-                  <h2 id="search-results-heading">Search results</h2>
-                  <span className="search-results-summary">{searchMessage}</span>
-                </div>
-
-                <div className="unified-search-results" aria-live="polite">
-                  {searchLoading ? (
-                    <div className="loader-wrap" role="status" aria-live="polite">
-                      <div className="loader" aria-hidden="true" />
-                      <span className="sr-only">Loading search results</span>
-                    </div>
-                  ) : visibleComponents.length > 0 ? (
-                    visibleComponents.map((component) => (
-                      <article key={component.id} className="unified-search-result-card">
-                        <div className="unified-search-result-header">
-                          <div>
-                            <span
-                              className={
-                                component.sourceType === "Semantic Match"
-                                  ? "search-result-chip semantic"
-                                  : "search-result-chip keyword"
-                              }
-                            >
-                              {component.sourceType}
-                            </span>
-                            <h3>{component.name}</h3>
-                          </div>
-                          <strong className="unified-search-score">{component.scoreLabel}</strong>
-                        </div>
-                        <p>{component.preview || component.description}</p>
-                        <div className="unified-search-result-meta">
-                          <span>{component.category || "Uncategorized"}</span>
-                          <span>Relevance {component.scoreLabel}</span>
-                        </div>
-                        {Array.isArray(component.tags) && component.tags.length > 0 ? (
-                          <div className="component-card-tags" aria-label="Result tags">
-                            {component.tags.slice(0, 6).map((tag) => (
-                              <span key={tag} className="component-tag">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                        <Link className="unified-search-link" to={`/component/${component.id}`}>
-                          View component
-                        </Link>
-                      </article>
-                    ))
-                  ) : (
-                    <div className="unified-search-empty">
-                      <strong>No matching components found.</strong>
-                      <span>{searchMessage}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+        <section id="components" className="index-components">
+          <div className="layout-container">
+            <div id="categories" className="category-block">
+              <CategoryFilter
+                activeCategory={activeCategory}
+                onCategoryChange={handleCategoryChange}
+              />
             </div>
-          </section>
-        ) : null}
-
-        {!hasSearchQuery ? (
-          <section id="components" className="index-components">
-            <div className="layout-container">
-              <div id="categories" className="category-block">
-                <CategoryFilter
-                  activeCategory={activeCategory}
-                  onCategoryChange={handleCategoryChange}
-                />
+            {isLoading ? (
+              <div className="loader-wrap" role="status" aria-live="polite">
+                <div className="loader" aria-hidden="true" />
+                <span className="sr-only">Loading components</span>
               </div>
-              {isLoading ? (
-                <div className="loader-wrap" role="status" aria-live="polite">
-                  <div className="loader" aria-hidden="true" />
-                  <span className="sr-only">Loading components</span>
-                </div>
-              ) : visibleComponents.length > 0 ? (
-                <div className="component-grid">
-                  {visibleComponents.map((component) => (
-                    <ComponentCard
-                      key={component.id}
-                      id={component.id}
-                      name={component.name}
-                      description={component.description}
-                      thumbnail={component.thumbnail}
-                      tags={component.tags}
-                      isFavorite={favoriteIds.includes(component.id)}
-                      onToggleFavorite={handleToggleFavorite}
-                      averageRating={component.averageRating}
-                      totalReviews={component.totalReviews}
-                      canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <strong>No matching components found.</strong>
-                  <span>Try a different category to continue exploring the catalog.</span>
-                </div>
-              )}
-            </div>
-          </section>
-        ) : null}
+            ) : displayedComponents.length > 0 ? (
+              <div className="component-grid">
+                {displayedComponents.map((component) => (
+                  <ComponentCard
+                    key={component.id}
+                    id={component.id}
+                    name={component.name}
+                    description={component.description}
+                    thumbnail={component.thumbnail}
+                    tags={component.tags}
+                    isFavorite={favoriteIds.includes(component.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    averageRating={component.averageRating}
+                    totalReviews={component.totalReviews}
+                    canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <strong>No matching components found.</strong>
+                <span>Try a different category or search term to continue exploring the catalog.</span>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </Layout>
   );
