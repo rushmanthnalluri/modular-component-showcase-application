@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.modularshowcase.dto.UserRequest;
 import com.modularshowcase.dto.UserResponse;
@@ -23,6 +24,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -45,7 +49,7 @@ class UserServiceTest {
 
     @Test
     void createPersistsUser() {
-        UserRequest request = new UserRequest("Create", "Create User", "create.user@example.com", "1234567890", "user");
+        UserRequest request = new UserRequest("Create", "Create User", "create.user@example.com", "1234567890", "user", "Password123!");
         UserEntity saved = new UserEntity();
         saved.setUserId(2L);
         saved.setName(request.name());
@@ -53,7 +57,9 @@ class UserServiceTest {
         saved.setEmail(request.email());
         saved.setPhone(request.phone());
         saved.setRole(request.role());
+        saved.setPasswordHash("encoded-password");
 
+        when(passwordEncoder.encode("Password123!")).thenReturn("encoded-password");
         when(userRepository.save(org.mockito.ArgumentMatchers.any(UserEntity.class)))
             .thenReturn(Objects.requireNonNull(saved));
 

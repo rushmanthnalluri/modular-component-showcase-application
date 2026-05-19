@@ -1,5 +1,7 @@
 import { getSqlPool, hasSqlConnectionConfig } from "../sql/db.js";
 
+const columnSupportCache = new Map();
+
 function toTrimmedString(value, fallback = "") {
     const normalized = String(value ?? fallback).trim();
     return normalized;
@@ -146,6 +148,47 @@ async function ensureSqlUser(client, user) {
     return insertResult.rows[0].user_id;
 }
 
+async function resolveSqlComponentId(client, componentPublicId) {
+    const normalizedId = toTrimmedString(componentPublicId);
+    if (!normalizedId) {
+        return null;
+    }
+
+    const hasPublicIdColumn = await hasTableColumn(client, "components", "component_public_id");
+    const predicate = hasPublicIdColumn ? "component_public_id = $1 OR name = $1" : "name = $1";
+    const { rows } = await client.query(
+        `SELECT component_id
+         FROM components
+         WHERE ${predicate}
+         ORDER BY component_id
+         LIMIT 1`,
+        [normalizedId]
+    );
+
+    return rows[0]?.component_id || null;
+}
+
+async function hasTableColumn(client, tableName, columnName) {
+    const key = `${tableName}.${columnName}`;
+    if (columnSupportCache.has(key)) {
+        return columnSupportCache.get(key);
+    }
+
+    const { rows } = await client.query(
+        `SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = $1
+              AND column_name = $2
+        ) AS present`,
+        [tableName, columnName]
+    );
+    const present = Boolean(rows[0]?.present);
+    columnSupportCache.set(key, present);
+    return present;
+}
+
 export async function syncSqlUserAccount(user) {
     if (!hasSqlConnectionConfig() || !user) {
         return null;
@@ -169,15 +212,30 @@ export async function syncSqlUserFavorites(user, favorites = []) {
     try {
         return await withSqlTransaction(async (client) => {
             const sqlUserId = await ensureSqlUser(client, user);
+            const supportsComponentFk = await hasTableColumn(client, "user_favorites", "component_id");
             await client.query("DELETE FROM user_favorites WHERE user_id = $1", [sqlUserId]);
 
             for (const componentMongoId of normalizedFavorites) {
+                const componentId = supportsComponentFk ? await resolveSqlComponentId(client, componentMongoId) : null;
+                if (!supportsComponentFk) {
+                    await client.query(
+                        `INSERT INTO user_favorites (mongo_user_id, user_id, component_mongo_id, updated_at)
+                         VALUES ($1, $2, $3, NOW())
+                         ON CONFLICT (user_id, component_mongo_id)
+                         DO UPDATE SET updated_at = NOW()`,
+                        [toTrimmedString(user?._id || user?.id), sqlUserId, componentMongoId]
+                    );
+                    continue;
+                }
+
                 await client.query(
-                    `INSERT INTO user_favorites (mongo_user_id, user_id, component_mongo_id, updated_at)
-                     VALUES ($1, $2, $3, NOW())
+                    `INSERT INTO user_favorites (mongo_user_id, user_id, component_mongo_id, component_id, updated_at)
+                     VALUES ($1, $2, $3, $4, NOW())
                      ON CONFLICT (user_id, component_mongo_id)
-                     DO UPDATE SET updated_at = NOW()`,
-                    [toTrimmedString(user?._id || user?.id), sqlUserId, componentMongoId]
+                     DO UPDATE SET
+                        component_id = COALESCE(EXCLUDED.component_id, user_favorites.component_id),
+                        updated_at = NOW()`,
+                    [toTrimmedString(user?._id || user?.id), sqlUserId, componentMongoId, componentId]
                 );
             }
 
@@ -206,12 +264,55 @@ export async function syncSqlReview(review, { user = null, componentMongoId = ""
     try {
         return await withSqlTransaction(async (client) => {
             const sqlUserId = await ensureSqlUser(client, reviewUser);
+            const supportsComponentFk = await hasTableColumn(client, "reviews", "component_id");
+            const componentId = supportsComponentFk ? await resolveSqlComponentId(client, resolvedComponentMongoId) : null;
+            if (!supportsComponentFk) {
+                const { rows } = await client.query(
+                    `INSERT INTO reviews (
+                        mongo_review_id, mongo_user_id, user_id, component_mongo_id, rating, title, comment,
+                        helpful, unhelpful, is_verified, status, updated_at
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
+                    )
+                    ON CONFLICT (mongo_review_id)
+                    DO UPDATE SET
+                        mongo_user_id = EXCLUDED.mongo_user_id,
+                        user_id = EXCLUDED.user_id,
+                        component_mongo_id = EXCLUDED.component_mongo_id,
+                        rating = EXCLUDED.rating,
+                        title = EXCLUDED.title,
+                        comment = EXCLUDED.comment,
+                        helpful = EXCLUDED.helpful,
+                        unhelpful = EXCLUDED.unhelpful,
+                        is_verified = EXCLUDED.is_verified,
+                        status = EXCLUDED.status,
+                        updated_at = NOW()
+                    RETURNING review_id`,
+                    [
+                        reviewMongoId,
+                        toTrimmedString(reviewUserId),
+                        sqlUserId,
+                        resolvedComponentMongoId,
+                        Number(review.rating) || 0,
+                        toTrimmedString(review.title),
+                        toTrimmedString(review.comment),
+                        Number(review.helpful) || 0,
+                        Number(review.unhelpful) || 0,
+                        Boolean(review.isVerified),
+                        toTrimmedString(review.status || "approved") || "approved",
+                    ]
+                );
+
+                return rows[0]?.review_id || null;
+            }
+
             const { rows } = await client.query(
                 `INSERT INTO reviews (
                     mongo_review_id,
                     mongo_user_id,
                     user_id,
                     component_mongo_id,
+                    component_id,
                     rating,
                     title,
                     comment,
@@ -221,13 +322,14 @@ export async function syncSqlReview(review, { user = null, componentMongoId = ""
                     status,
                     updated_at
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()
                 )
                 ON CONFLICT (mongo_review_id)
                 DO UPDATE SET
                     mongo_user_id = EXCLUDED.mongo_user_id,
                     user_id = EXCLUDED.user_id,
                     component_mongo_id = EXCLUDED.component_mongo_id,
+                    component_id = COALESCE(EXCLUDED.component_id, reviews.component_id),
                     rating = EXCLUDED.rating,
                     title = EXCLUDED.title,
                     comment = EXCLUDED.comment,
@@ -242,6 +344,7 @@ export async function syncSqlReview(review, { user = null, componentMongoId = ""
                     toTrimmedString(reviewUserId),
                     sqlUserId,
                     resolvedComponentMongoId,
+                    componentId,
                     Number(review.rating) || 0,
                     toTrimmedString(review.title),
                     toTrimmedString(review.comment),
@@ -277,22 +380,53 @@ export async function syncSqlRating(ratingRecord, { user = null, componentMongoI
     try {
         return await withSqlTransaction(async (client) => {
             const sqlUserId = await ensureSqlUser(client, ratingUser);
+            const supportsComponentFk = await hasTableColumn(client, "ratings", "component_id");
+            const componentId = supportsComponentFk ? await resolveSqlComponentId(client, resolvedComponentMongoId) : null;
+            if (!supportsComponentFk) {
+                const { rows } = await client.query(
+                    `INSERT INTO ratings (
+                        mongo_rating_id, mongo_user_id, user_id, component_mongo_id, rating, updated_at
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, NOW()
+                    )
+                    ON CONFLICT (mongo_rating_id)
+                    DO UPDATE SET
+                        mongo_user_id = EXCLUDED.mongo_user_id,
+                        user_id = EXCLUDED.user_id,
+                        component_mongo_id = EXCLUDED.component_mongo_id,
+                        rating = EXCLUDED.rating,
+                        updated_at = NOW()
+                    RETURNING rating_id`,
+                    [
+                        ratingMongoId,
+                        toTrimmedString(ratingUserId),
+                        sqlUserId,
+                        resolvedComponentMongoId,
+                        Number(ratingRecord.rating) || 0,
+                    ]
+                );
+
+                return rows[0]?.rating_id || null;
+            }
+
             const { rows } = await client.query(
                 `INSERT INTO ratings (
                     mongo_rating_id,
                     mongo_user_id,
                     user_id,
                     component_mongo_id,
+                    component_id,
                     rating,
                     updated_at
                 ) VALUES (
-                    $1, $2, $3, $4, $5, NOW()
+                    $1, $2, $3, $4, $5, $6, NOW()
                 )
                 ON CONFLICT (mongo_rating_id)
                 DO UPDATE SET
                     mongo_user_id = EXCLUDED.mongo_user_id,
                     user_id = EXCLUDED.user_id,
                     component_mongo_id = EXCLUDED.component_mongo_id,
+                    component_id = COALESCE(EXCLUDED.component_id, ratings.component_id),
                     rating = EXCLUDED.rating,
                     updated_at = NOW()
                 RETURNING rating_id`,
@@ -301,6 +435,7 @@ export async function syncSqlRating(ratingRecord, { user = null, componentMongoI
                     toTrimmedString(ratingUserId),
                     sqlUserId,
                     resolvedComponentMongoId,
+                    componentId,
                     Number(ratingRecord.rating) || 0,
                 ]
             );
@@ -330,25 +465,63 @@ export async function syncSqlDiscussion(discussion, { user = null, componentMong
     try {
         return await withSqlTransaction(async (client) => {
             const sqlUserId = await ensureSqlUser(client, discussionUser);
+            const supportsComponentFk = await hasTableColumn(client, "discussions", "component_id");
+            const componentId = supportsComponentFk ? await resolveSqlComponentId(client, resolvedComponentMongoId) : null;
+            if (!supportsComponentFk) {
+                const { rows } = await client.query(
+                    `INSERT INTO discussions (
+                        mongo_discussion_id, mongo_user_id, user_id, component_mongo_id, parent_mongo_id,
+                        message, likes, status, updated_at
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, NOW()
+                    )
+                    ON CONFLICT (mongo_discussion_id)
+                    DO UPDATE SET
+                        mongo_user_id = EXCLUDED.mongo_user_id,
+                        user_id = EXCLUDED.user_id,
+                        component_mongo_id = EXCLUDED.component_mongo_id,
+                        parent_mongo_id = EXCLUDED.parent_mongo_id,
+                        message = EXCLUDED.message,
+                        likes = EXCLUDED.likes,
+                        status = EXCLUDED.status,
+                        updated_at = NOW()
+                    RETURNING discussion_id`,
+                    [
+                        discussionMongoId,
+                        toTrimmedString(discussionUserId),
+                        sqlUserId,
+                        resolvedComponentMongoId,
+                        discussion.parentId ? toTrimmedString(discussion.parentId) : null,
+                        toTrimmedString(discussion.message),
+                        Number(discussion.likes) || 0,
+                        toTrimmedString(discussion.status || "active") || "active",
+                    ]
+                );
+
+                return rows[0]?.discussion_id || null;
+            }
+
             const { rows } = await client.query(
                 `INSERT INTO discussions (
                     mongo_discussion_id,
                     mongo_user_id,
                     user_id,
                     component_mongo_id,
+                    component_id,
                     parent_mongo_id,
                     message,
                     likes,
                     status,
                     updated_at
                 ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, NOW()
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()
                 )
                 ON CONFLICT (mongo_discussion_id)
                 DO UPDATE SET
                     mongo_user_id = EXCLUDED.mongo_user_id,
                     user_id = EXCLUDED.user_id,
                     component_mongo_id = EXCLUDED.component_mongo_id,
+                    component_id = COALESCE(EXCLUDED.component_id, discussions.component_id),
                     parent_mongo_id = EXCLUDED.parent_mongo_id,
                     message = EXCLUDED.message,
                     likes = EXCLUDED.likes,
@@ -360,6 +533,7 @@ export async function syncSqlDiscussion(discussion, { user = null, componentMong
                     toTrimmedString(discussionUserId),
                     sqlUserId,
                     resolvedComponentMongoId,
+                    componentId,
                     discussion.parentId ? toTrimmedString(discussion.parentId) : null,
                     toTrimmedString(discussion.message),
                     Number(discussion.likes) || 0,

@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse, Response
 
 try:
     # Import from package structure (when run as `uvicorn gateway.main:app`)
-    from gateway.utils.env import settings
+    from gateway.utils.env import settings, validate_runtime_environment
     from gateway.controllers import (
         authenticationController,
         searchController,
@@ -34,7 +34,7 @@ try:
     from gateway.dependencies.security import verify_request_jwt
 except ImportError:
     # Import with relative paths (when run in container)
-    from utils.env import settings
+    from utils.env import settings, validate_runtime_environment
     from controllers import (
         authenticationController,
         searchController,
@@ -52,6 +52,7 @@ except ImportError:
 # Configure logging
 logging.basicConfig(level=settings.log_level.upper())
 logger = logging.getLogger(__name__)
+validate_runtime_environment()
 
 # Create FastAPI app
 app = FastAPI(
@@ -118,6 +119,41 @@ app.include_router(healthController.router)
 app.include_router(sqlController.router)
 app.include_router(componentController.router)
 app.include_router(springController.router)
+
+
+PUBLIC_API_PREFIXES = ("auth", "health", "readyz", "livez", "captcha", "email")
+PUBLIC_API_READ_PREFIXES = (
+    "components",
+    "reviews",
+    "discussions",
+    "search",
+    "vector/providers/capabilities",
+)
+PUBLIC_API_SEARCH_PATHS = {
+    "search",
+    "mongo/search",
+    "mongo/search/semantic",
+    "vector/search/semantic",
+    "vector/search/hybrid",
+}
+
+
+def _is_public_api_route(full_path: str, method: str) -> bool:
+    path = str(full_path or "").strip("/").lower()
+    http_method = method.upper()
+    if not path:
+        return True
+
+    if any(path == prefix or path.startswith(f"{prefix}/") for prefix in PUBLIC_API_PREFIXES):
+        return True
+
+    if http_method in {"GET", "HEAD", "OPTIONS"}:
+        return any(path == prefix or path.startswith(f"{prefix}/") for prefix in PUBLIC_API_READ_PREFIXES)
+
+    if http_method == "POST" and path in PUBLIC_API_SEARCH_PATHS:
+        return True
+
+    return False
 
 
 def _decode_json_payload(content: bytes, headers: dict) -> dict | list | None:
@@ -264,8 +300,7 @@ async def livez():
 )
 async def proxy_api(full_path: str, request: Request):
     """Forward all /api/* traffic to backend while preserving cookies and query params."""
-    protected_prefixes = ("auth/", "auth", "health", "readyz", "livez", "captcha")
-    if not any(str(full_path or "").lower().startswith(prefix) for prefix in protected_prefixes):
+    if not _is_public_api_route(full_path, request.method):
         verify_request_jwt(request)
 
     target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"

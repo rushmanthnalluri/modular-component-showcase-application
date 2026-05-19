@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.modularshowcase.dto.UserRequest;
@@ -17,9 +18,11 @@ import com.modularshowcase.repository.UserRepository;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UserResponse> getAll() {
@@ -65,6 +68,9 @@ public class UserService {
         entity.setEmail(request.email());
         entity.setPhone(request.phone());
         entity.setRole(request.role().trim().toLowerCase());
+        if (request.password() != null && !request.password().isBlank()) {
+            entity.setPasswordHash(passwordEncoder.encode(request.password()));
+        }
     }
 
     private UserResponse toResponse(@NonNull UserEntity entity) {

@@ -85,3 +85,14 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
+
+def validate_runtime_environment() -> None:
+    """Fail fast on missing production secrets while keeping local development ergonomic."""
+    environment = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development")).lower()
+    if environment not in {"production", "prod"}:
+        return
+
+    secret = os.getenv("JWT_SECRET") or os.getenv("SPRING_JWT_SECRET") or ""
+    if len(secret.encode("utf-8")) < 32:
+        raise RuntimeError("JWT_SECRET or SPRING_JWT_SECRET must be at least 32 UTF-8 bytes in production.")

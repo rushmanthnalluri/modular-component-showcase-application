@@ -129,6 +129,9 @@ export function describeVectorCapabilities() {
             metadataFiltering: true,
             hybridSearch: true,
             idempotentUpserts: true,
+            indexedAnn: pgVectorEnabled,
+            primaryIndex: pgVectorEnabled ? "PostgreSQL pgvector HNSW (vector_cosine_ops)" : null,
+            fallbackIndex: "MongoDB exact scan",
         },
     };
 }

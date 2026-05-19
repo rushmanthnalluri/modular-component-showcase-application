@@ -1,7 +1,9 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { ComponentEmbedding } from "../models/appModels.js";
-import { generateMockEmbedding } from "../services/vectorSearchService.js";
+import { generateEmbedding } from "../services/embeddingProvider.js";
+import { upsertPgVectorEmbedding } from "../services/pgVectorSearchService.js";
+import { closeSqlPool } from "../sql/db.js";
 import { connectMongoWithSrvFallback } from "../utils/mongoSrvFallback.js";
 
 const SAMPLE_EMBEDDINGS = [
@@ -40,7 +42,11 @@ async function seedEmbeddings() {
   await connectMongo();
 
   for (const item of SAMPLE_EMBEDDINGS) {
-    const embedding = generateMockEmbedding(item.text, 32);
+    const generated = await generateEmbedding({
+      text: item.text,
+      dimensions: 128,
+      metadata: { componentId: item.componentId, componentName: item.componentName, category: item.category },
+    });
 
     await ComponentEmbedding.findOneAndUpdate(
       { componentId: item.componentId },
@@ -50,8 +56,10 @@ async function seedEmbeddings() {
           componentName: item.componentName,
           category: item.category,
           text: item.text,
-          model: "mock-v1",
-          embedding,
+          model: generated.model,
+          provider: generated.provider,
+          embeddingHash: generated.embeddingHash,
+          embedding: generated.embedding,
         },
       },
       {
@@ -60,6 +68,18 @@ async function seedEmbeddings() {
         setDefaultsOnInsert: true,
       }
     );
+
+    await upsertPgVectorEmbedding({
+      componentId: item.componentId,
+      componentName: item.componentName,
+      category: item.category,
+      text: item.text,
+      model: generated.model,
+      provider: generated.provider,
+      embeddingHash: generated.embeddingHash,
+      embedding: generated.embedding,
+      metadata: { seed: true },
+    });
   }
 
   console.log(`[seed-embeddings] Upserted ${SAMPLE_EMBEDDINGS.length} component embeddings.`);
@@ -72,4 +92,5 @@ seedEmbeddings()
   })
   .finally(async () => {
     await mongoose.connection.close().catch(() => {});
+    await closeSqlPool().catch(() => {});
   });

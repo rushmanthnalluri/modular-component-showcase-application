@@ -30,6 +30,9 @@ public class UserEntity {
     @Column(name = "role", nullable = false)
     private String role = "user";
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     public Long getUserId() {
         return userId;
     }
@@ -76,5 +79,13 @@ public class UserEntity {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

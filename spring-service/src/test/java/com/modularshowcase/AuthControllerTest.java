@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.modularshowcase.config.TestSecurityConfig;
 import com.modularshowcase.controller.AuthController;
+import com.modularshowcase.dto.AuthRefreshRequest;
 import com.modularshowcase.dto.AuthRequest;
 import com.modularshowcase.dto.AuthResponse;
 import com.modularshowcase.dto.UserResponse;
@@ -51,6 +52,7 @@ class AuthControllerTest {
     void tokenEndpointReturnsJwtPayload() throws Exception {
         AuthResponse response = new AuthResponse(
                 "signed-jwt-token",
+                "signed-refresh-token",
                 "Bearer",
                 3_600_000L,
                 new UserResponse(7L, "Verifier", "Verifier User", "verifier@example.com", "1234567890", "admin")
@@ -61,10 +63,33 @@ class AuthControllerTest {
         mockMvc.perform(post("/spring/auth/token")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(Objects.requireNonNull(objectMapper.writeValueAsString(
-                    new AuthRequest("verifier@example.com", "admin")))))
+                    new AuthRequest("verifier@example.com", "admin", "Password123!")))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("signed-jwt-token"))
+                .andExpect(jsonPath("$.refreshToken").value("signed-refresh-token"))
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.user.email").value("verifier@example.com"));
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    void refreshEndpointReturnsJwtPayload() throws Exception {
+        AuthResponse response = new AuthResponse(
+                "new-access-token",
+                "new-refresh-token",
+                "Bearer",
+                3_600_000L,
+                new UserResponse(7L, "Verifier", "Verifier User", "verifier@example.com", "1234567890", "admin")
+        );
+
+        when(authService.refreshToken(any(AuthRefreshRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/spring/auth/refresh")
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(
+                    new AuthRefreshRequest("signed-refresh-token")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
     }
 }

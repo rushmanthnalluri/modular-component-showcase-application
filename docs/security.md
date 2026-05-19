@@ -20,6 +20,15 @@ sequenceDiagram
   Backend-->>Gateway: Protected response
 ```
 
+Current cookie contract:
+
+- access cookie: `auth_token`
+- refresh cookie: `refresh_token`
+- gateway compatibility aliases: `accessToken` and `auth_token` for access-token reads
+- refresh tokens are not accepted as access credentials
+
+Spring Boot and Node both enforce password verification before issuing tokens. The Spring service uses BCrypt through `PasswordEncoder`; the Node backend uses bcryptjs. JWT secrets must be at least 32 UTF-8 bytes in production.
+
 ## 2. CSRF Protection
 
 - CSRF tokens are issued for browser sessions.

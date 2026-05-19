@@ -22,41 +22,41 @@ class SpringService:
     """Service for forwarding requests to Spring service."""
 
     @staticmethod
-    async def get_users() -> Dict[str, Any]:
+    async def get_users(headers: Dict[str, str] | None = None) -> Dict[str, Any]:
         client = get_service_client(settings.spring_service_base_url)
         try:
             async with client as http_client:
-                return await http_client.request_json("GET", "/spring/users")
+                return await http_client.request_json("GET", "/spring/users", headers=headers)
         except httpx.HTTPError as e:
             logger.error(f"Spring users fetch failed: {e}")
             raise
 
     @staticmethod
-    async def get_components() -> Dict[str, Any]:
+    async def get_components(headers: Dict[str, str] | None = None) -> Dict[str, Any]:
         client = get_service_client(settings.spring_service_base_url)
         try:
             async with client as http_client:
-                return await http_client.request_json("GET", "/spring/components")
+                return await http_client.request_json("GET", "/spring/components", headers=headers)
         except httpx.HTTPError as e:
             logger.error(f"Spring components fetch failed: {e}")
             raise
 
     @staticmethod
-    async def get_reviews() -> Dict[str, Any]:
+    async def get_reviews(headers: Dict[str, str] | None = None) -> Dict[str, Any]:
         client = get_service_client(settings.spring_service_base_url)
         try:
             async with client as http_client:
-                return await http_client.request_json("GET", "/spring/reviews")
+                return await http_client.request_json("GET", "/spring/reviews", headers=headers)
         except httpx.HTTPError as e:
             logger.error(f"Spring reviews fetch failed: {e}")
             raise
 
     @staticmethod
-    async def check_health() -> Dict[str, str]:
+    async def check_health(headers: Dict[str, str] | None = None) -> Dict[str, str]:
         client = get_service_client(settings.spring_service_base_url)
         try:
             async with client as http_client:
-                await http_client.request_json("GET", "/spring/health")
+                await http_client.request_json("GET", "/spring/health", headers=headers)
                 return {"status": "up", "spring_service": "up"}
         except httpx.HTTPError:
             return {"status": "down", "spring_service": "down"}

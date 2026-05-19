@@ -51,6 +51,29 @@ class _FakeAsyncClient:
         )
 
 
+class _PublicReadFakeAsyncClient:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+    async def request(self, method, url, headers=None, params=None, content=None):
+        assert method == "GET"
+        assert "/api/components" in url
+        assert headers is not None
+        assert "authorization" not in {key.lower() for key in headers.keys()}
+        return _FakeAsyncResponse(
+            status_code=200,
+            content=b'{"components":[]}',
+            headers={"content-type": "application/json"},
+        )
+
+
 def test_proxy_api_forwards_and_preserves_set_cookie(monkeypatch):
     import gateway.main as gateway_main
 
@@ -68,3 +91,23 @@ def test_proxy_api_forwards_and_preserves_set_cookie(monkeypatch):
     assert response.json()["success"] is True
     assert "set-cookie" in response.headers
     assert response.headers.get("x-request-id") == "req-123"
+
+
+def test_public_component_reads_do_not_require_gateway_auth(monkeypatch):
+    import gateway.main as gateway_main
+
+    monkeypatch.setattr(gateway_main.httpx, "AsyncClient", _PublicReadFakeAsyncClient)
+
+    client = TestClient(app)
+    response = client.get("/api/components")
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    assert response.json()["components"] == []
+
+
+def test_component_writes_require_gateway_auth():
+    client = TestClient(app)
+    response = client.post("/api/components", json={"name": "Button"})
+
+    assert response.status_code == 401

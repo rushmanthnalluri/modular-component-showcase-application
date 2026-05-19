@@ -1,110 +1,97 @@
 # Vector Search
 
-This project already contains a working semantic retrieval path. The important academic point is not just that search exists, but that it is explainable, measurable, and visible in the UI.
+This repository now has a real indexed vector-search path with a safe local fallback.
 
-## 1. What The Feature Does
+## Current Implementation
 
-Vector search maps component text into embeddings, compares a user query embedding against stored embeddings, and returns semantically related components.
+Primary indexed path:
 
-The implementation uses:
+- PostgreSQL `pgvector`
+- `component_vector_embeddings`
+- `embedding vector(128)`
+- HNSW index using `vector_cosine_ops`
+- cosine search by default
+- dot-product and Euclidean alternatives in the service layer
 
-- deterministic fallback embeddings when no external provider is configured
-- cosine similarity by default, with dot-product and Euclidean alternatives available
-- MongoDB for embedding storage and fast candidate scanning
-- a frontend prompt that turns plain-language UI descriptions into ranked matches
+Fallback path:
 
-## 2. API
-
-Primary evaluator-facing route:
-
-```http
-GET /api/search?q=form validation&limit=5
-```
-
-The older POST contract still works for compatibility, but the GET form is easier to demonstrate live from the browser.
-
-## 3. Implementation Flow
-
-```mermaid
-flowchart LR
-  Q[User query or UI description] --> E[Generate query embedding]
-  E --> M[Fetch candidate embeddings from MongoDB]
-  M --> S[Score similarity]
-  S --> R[Rank top matches]
-  R --> F[Frontend renders semantic recommendations]
-```
-
-## 4. Similarity Logic
-
-The backend exposes these similarity modes:
-
-- cosine
-- dot product
-- Euclidean similarity as a fallback option
-
-Cosine similarity is the strongest default for semantic matching because it rewards directional similarity and is scale-insensitive once embeddings are normalized.
-
-## 5. Sample Queries
-
-### Query 1
-
-```http
-GET /api/search?q=form validation&limit=5
-```
-
-Likely matches:
-
-- Validated Input
-- Neon Input
-- Toast Notification
-
-Why these match:
-
-- they contain form and feedback vocabulary
-- their metadata refers to validation, helper text, or user feedback patterns
-
-### Query 2
-
-```http
-GET /api/search?q=data table filters empty state&limit=5
-```
-
-Likely matches:
-
-- Data Table
-- Pagination or dashboard-style components
-- Feedback components if the prompt mentions states or errors
-
-### Query 3
-
-```http
-GET /api/search?q=auth form with email validation&limit=5
-```
-
-Likely matches:
-
-- Neon Input
-- Validated Input
-- Modal or toast components for success and error flow
-
-## 6. Frontend Use
-
-The homepage now includes a natural-language search panel that asks the evaluator to describe a UI and then shows ranked semantic matches.
+- MongoDB `ComponentEmbedding`
+- deterministic or OpenAI-generated embeddings
+- in-process similarity scoring
+- used only when PostgreSQL is not configured, `pgvector` is unavailable, or the embedding dimensions do not match the pgvector table
 
 Relevant files:
 
-- [frontend/src/pages/Index.jsx](../frontend/src/pages/Index.jsx)
-- [frontend/src/services/componentEngagementService.js](../frontend/src/services/componentEngagementService.js)
-- [backend/src/routes/mongoRoutes.js](../backend/src/routes/mongoRoutes.js)
+- `backend/src/services/pgVectorSearchService.js`
+- `backend/src/routes/vectorRoutes.js`
+- `backend/src/routes/mongoRoutes.js`
+- `backend/src/services/embeddingProvider.js`
+- `backend/src/sql/initSchema.js`
+- `spring-service/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
 
-## 7. Proof And Verification
+## API
 
-- Deterministic fallback verified in the test suite.
-- Search payload contract verified in the integration test suite.
-- The new GET compatibility route was added so the demo can be run directly from the browser.
+Semantic search through the backend or gateway:
 
-## 8. Why This Is High Value For The Viva
+```http
+POST /api/vector/search/semantic
+Content-Type: application/json
 
-- It shows an applied vector search use case, not just a library call.
-- It connects semantic retrieval to a visible UI journey.
-- It supports a discussion of embeddings, similarity metrics, candidate ranking, and retrieval quality.
+{
+  "query": "Form validation components",
+  "limit": 5,
+  "metric": "cosine"
+}
+```
+
+Compatibility search route:
+
+```http
+GET /api/search?q=Reusable%20dashboard%20widgets&limit=5
+```
+
+## Retrieval Flow
+
+```mermaid
+flowchart LR
+  Q[User query] --> E[Generate 128-d embedding]
+  E --> P{pgvector available?}
+  P -->|yes| H[HNSW nearest-neighbor query]
+  H --> R[Ranked matches]
+  P -->|no| M[Mongo fallback exact scan]
+  M --> R
+```
+
+The response includes retrieval metadata on the vector route:
+
+```json
+{
+  "retrieval": {
+    "engine": "pgvector-hnsw",
+    "indexed": true,
+    "dimensions": 128
+  }
+}
+```
+
+If the fallback path is used, the response reports `mongo-linear-fallback` and the reason.
+
+## Evaluator Queries
+
+Use these for live verification:
+
+- `Form validation components`
+- `Reusable dashboard widgets`
+
+Expected behavior:
+
+- form queries should rank input, validation, form, feedback, or toast-like components highly
+- dashboard queries should rank data display, table, card, chart, or widget-like components highly
+
+## Why This Meets CO2
+
+- Embeddings are persisted.
+- PostgreSQL provides an indexed vector store through `pgvector`.
+- HNSW ANN is created when `pgvector` is available.
+- MongoDB remains the document/search metadata store and fallback.
+- The implementation is test-covered by `backend/src/tests/pgVectorSearch.test.js`.
