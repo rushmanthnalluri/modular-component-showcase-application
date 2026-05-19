@@ -248,24 +248,25 @@ const Index = () => {
                   clean single-page React application.
                 </p>
                 <form className="hero-search-form" onSubmit={handleSearchSubmit}>
-                  <SearchBar
-                    value={draftQuery}
-                    onChange={setDraftQuery}
-                    placeholder="Search components, UI ideas, or describe functionality..."
-                    label="Unified component search"
-                    inputId="unified-component-search"
-                  />
-                  <div className="hero-search-actions">
-                    <button className="hero-search-button" type="submit" disabled={searchLoading}>
+                  <div className="hero-search-row">
+                    <SearchBar
+                      value={draftQuery}
+                      onChange={setDraftQuery}
+                      placeholder="Search components, UI ideas, or describe functionality..."
+                      label="Unified component search"
+                      inputId="unified-component-search"
+                    />
+                    <button
+                      className="hero-search-button hero-pill-control"
+                      type="submit"
+                      disabled={searchLoading}
+                    >
                       {searchLoading ? "Searching..." : "Search"}
                     </button>
-                    <span className="hero-search-status">
-                        One clean search box for the whole catalog.
-                    </span>
                   </div>
                 </form>
                 <div className="hero-favorites-link-wrap">
-                  <Link className="hero-favorites-link" to="/favorites">
+                  <Link className="hero-favorites-link hero-pill-control" to="/favorites">
                     Favorites
                   </Link>
                 </div>
