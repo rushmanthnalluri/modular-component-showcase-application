@@ -20,8 +20,6 @@ const Index = () => {
   const [draftQuery, setDraftQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchMode, setSearchMode] = useState("keyword");
-  const [searchSourceType, setSearchSourceType] = useState("Keyword Match");
   const [searchMessage, setSearchMessage] = useState(
     "Search components, UI ideas, or describe functionality to explore the catalog."
   );
@@ -78,7 +76,13 @@ const Index = () => {
   }, [location.search]);
 
   useEffect(() => {
-    setDraftQuery(searchQuery);
+    const syncTimer = window.setTimeout(() => {
+      setDraftQuery(searchQuery);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+    };
   }, [searchQuery]);
 
   const handleCategoryChange = (nextCategory) => {
@@ -146,8 +150,6 @@ const Index = () => {
       if (!searchQuery.trim()) {
         if (active) {
           setSearchResults([]);
-          setSearchMode("keyword");
-          setSearchSourceType("Keyword Match");
           setSearchMessage("Search components, UI ideas, or describe functionality to explore the catalog.");
           setSearchLoading(false);
         }
@@ -155,10 +157,6 @@ const Index = () => {
       }
 
       const nextMode = detectSearchMode(searchQuery);
-      if (active) {
-        setSearchMode(nextMode);
-        setSearchSourceType(nextMode === "semantic" ? "Semantic Match" : "Keyword Match");
-      }
       if (nextMode === "semantic") {
         setSearchLoading(true);
         timerId = window.setTimeout(() => {
@@ -177,8 +175,6 @@ const Index = () => {
               }
 
               setSearchResults(outcome.results);
-              setSearchMode(outcome.mode);
-              setSearchSourceType(outcome.sourceType);
               setSearchMessage(outcome.message);
             } catch {
               if (!active) {
@@ -186,8 +182,6 @@ const Index = () => {
               }
 
               setSearchResults([]);
-              setSearchMode("keyword");
-              setSearchSourceType("Keyword Match");
               setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
             } finally {
               if (active) {
@@ -214,8 +208,6 @@ const Index = () => {
         }
 
         setSearchResults(outcome.results);
-        setSearchMode(outcome.mode);
-        setSearchSourceType(outcome.sourceType);
         setSearchMessage(outcome.message);
       } catch {
         if (!active) {
@@ -223,8 +215,6 @@ const Index = () => {
         }
 
         setSearchResults([]);
-        setSearchMode("keyword");
-        setSearchSourceType("Keyword Match");
         setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
       }
     };
@@ -270,7 +260,7 @@ const Index = () => {
                       {searchLoading ? "Searching..." : "Search"}
                     </button>
                     <span className="hero-search-status">
-                      One search box for keyword queries and semantic prompts.
+                        One clean search box for the whole catalog.
                     </span>
                   </div>
                 </form>
@@ -284,88 +274,69 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="unified-search-section" aria-labelledby="unified-search-heading">
-          <div className="layout-container">
-            <div className="unified-search-panel">
-              <div className="unified-search-copy">
-                <span className="unified-search-kicker">Intelligent search</span>
-                <h2 id="unified-search-heading">One box for keyword search and semantic discovery</h2>
-                <p>
-                  Short queries like <strong>modal</strong> or <strong>navbar</strong> stay fast and exact.
-                  Longer prompts like <strong>auth form with email validation</strong> route into the vector-backed semantic index.
-                </p>
-                <div className="unified-search-summary">
-                  <span className={`search-mode-pill ${searchMode}`}>
-                    {searchSourceType}
-                  </span>
-                  <span className="unified-search-summary-text">{searchMessage}</span>
+        {hasSearchQuery ? (
+          <section className="search-results-section" aria-labelledby="search-results-heading">
+            <div className="layout-container">
+              <div className="search-results-shell">
+                <div className="search-results-header">
+                  <h2 id="search-results-heading">Search results</h2>
+                  <span className="search-results-summary">{searchMessage}</span>
                 </div>
-                <div className="unified-search-examples" aria-label="Search examples">
-                  <span>button</span>
-                  <span>dashboard widget</span>
-                  <span>auth form with email validation</span>
-                  <span>animated modal component</span>
-                </div>
-              </div>
 
-              <div className="unified-search-results" aria-live="polite">
-                {searchLoading ? (
-                  <div className="loader-wrap" role="status" aria-live="polite">
-                    <div className="loader" aria-hidden="true" />
-                    <span className="sr-only">Loading search results</span>
-                  </div>
-                ) : hasSearchQuery && visibleComponents.length > 0 ? (
-                  visibleComponents.map((component) => (
-                    <article key={component.id} className="unified-search-result-card">
-                      <div className="unified-search-result-header">
-                        <div>
-                          <span
-                            className={
-                              component.sourceType === "Semantic Match"
-                                ? "search-result-chip semantic"
-                                : "search-result-chip keyword"
-                            }
-                          >
-                            {component.sourceType}
-                          </span>
-                          <h3>{component.name}</h3>
-                        </div>
-                        <strong className="unified-search-score">{component.scoreLabel}</strong>
-                      </div>
-                      <p>{component.preview || component.description}</p>
-                      <div className="unified-search-result-meta">
-                        <span>{component.category || "Uncategorized"}</span>
-                        <span>Relevance {component.scoreLabel}</span>
-                      </div>
-                      {Array.isArray(component.tags) && component.tags.length > 0 ? (
-                        <div className="component-card-tags" aria-label="Result tags">
-                          {component.tags.slice(0, 6).map((tag) => (
-                            <span key={tag} className="component-tag">
-                              {tag}
+                <div className="unified-search-results" aria-live="polite">
+                  {searchLoading ? (
+                    <div className="loader-wrap" role="status" aria-live="polite">
+                      <div className="loader" aria-hidden="true" />
+                      <span className="sr-only">Loading search results</span>
+                    </div>
+                  ) : visibleComponents.length > 0 ? (
+                    visibleComponents.map((component) => (
+                      <article key={component.id} className="unified-search-result-card">
+                        <div className="unified-search-result-header">
+                          <div>
+                            <span
+                              className={
+                                component.sourceType === "Semantic Match"
+                                  ? "search-result-chip semantic"
+                                  : "search-result-chip keyword"
+                              }
+                            >
+                              {component.sourceType}
                             </span>
-                          ))}
+                            <h3>{component.name}</h3>
+                          </div>
+                          <strong className="unified-search-score">{component.scoreLabel}</strong>
                         </div>
-                      ) : null}
-                      <Link className="unified-search-link" to={`/component/${component.id}`}>
-                        View component
-                      </Link>
-                    </article>
-                  ))
-                ) : hasSearchQuery ? (
-                  <div className="unified-search-empty">
-                    <strong>No matching components found.</strong>
-                    <span>{searchMessage}</span>
-                  </div>
-                ) : (
-                  <div className="unified-search-empty unified-search-empty-idle">
-                    <strong>Start with a keyword or describe the UI you need.</strong>
-                    <span>Try queries such as “modal”, “dashboard widget”, or “reusable onboarding flow”.</span>
-                  </div>
-                )}
+                        <p>{component.preview || component.description}</p>
+                        <div className="unified-search-result-meta">
+                          <span>{component.category || "Uncategorized"}</span>
+                          <span>Relevance {component.scoreLabel}</span>
+                        </div>
+                        {Array.isArray(component.tags) && component.tags.length > 0 ? (
+                          <div className="component-card-tags" aria-label="Result tags">
+                            {component.tags.slice(0, 6).map((tag) => (
+                              <span key={tag} className="component-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                        <Link className="unified-search-link" to={`/component/${component.id}`}>
+                          View component
+                        </Link>
+                      </article>
+                    ))
+                  ) : (
+                    <div className="unified-search-empty">
+                      <strong>No matching components found.</strong>
+                      <span>{searchMessage}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         {!hasSearchQuery ? (
           <section id="components" className="index-components">
