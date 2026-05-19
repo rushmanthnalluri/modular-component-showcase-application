@@ -11,11 +11,17 @@ public class UserPrincipal implements UserDetails {
     private final Long userId;
     private final String email;
     private final String role;
+    private final String passwordHash;
 
     public UserPrincipal(Long userId, String email, String role) {
+        this(userId, email, role, null);
+    }
+
+    public UserPrincipal(Long userId, String email, String role, String passwordHash) {
         this.userId = userId;
         this.email = email;
         this.role = role;
+        this.passwordHash = passwordHash;
     }
 
     public Long getUserId() {
@@ -29,7 +35,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getPassword() {
-        return "";
+        return passwordHash == null ? "" : passwordHash;
     }
 
     @Override

@@ -1,5 +1,5 @@
 """Spring controller for forwarding Spring service requests."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 import sys
 from pathlib import Path
 
@@ -17,9 +17,10 @@ router = APIRouter(prefix="/springservice", tags=["spring"])
 
 
 @router.get("/users")
-async def spring_users(_principal=Depends(get_current_principal)):
+async def spring_users(request: Request, _principal=Depends(get_current_principal)):
     try:
-        return await SpringService.get_users()
+        headers = {"Authorization": request.headers.get("authorization")} if request.headers.get("authorization") else None
+        return await SpringService.get_users(headers=headers)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -28,9 +29,10 @@ async def spring_users(_principal=Depends(get_current_principal)):
 
 
 @router.get("/components")
-async def spring_components(_principal=Depends(get_current_principal)):
+async def spring_components(request: Request, _principal=Depends(get_current_principal)):
     try:
-        return await SpringService.get_components()
+        headers = {"Authorization": request.headers.get("authorization")} if request.headers.get("authorization") else None
+        return await SpringService.get_components(headers=headers)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -39,9 +41,10 @@ async def spring_components(_principal=Depends(get_current_principal)):
 
 
 @router.get("/reviews")
-async def spring_reviews(_principal=Depends(get_current_principal)):
+async def spring_reviews(request: Request, _principal=Depends(get_current_principal)):
     try:
-        return await SpringService.get_reviews()
+        headers = {"Authorization": request.headers.get("authorization")} if request.headers.get("authorization") else None
+        return await SpringService.get_reviews(headers=headers)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -50,9 +53,10 @@ async def spring_reviews(_principal=Depends(get_current_principal)):
 
 
 @router.get("/health")
-async def spring_health():
+async def spring_health(request: Request):
     try:
-        return await SpringService.check_health()
+        headers = {"Authorization": request.headers.get("authorization")} if request.headers.get("authorization") else None
+        return await SpringService.check_health(headers=headers)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

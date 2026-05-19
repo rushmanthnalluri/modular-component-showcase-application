@@ -60,7 +60,7 @@ jobs:
       
       - name: Run security audit
         working-directory: backend
-        run: npm run security --if-present
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Run tests
         working-directory: backend
@@ -129,12 +129,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           JWT_SECRET: test-secret-key-do-not-use-in-production
           ENVIRONMENT: test
-        run: |
-          if [ -f pytest.ini ]; then
-            pytest
-          else
-            echo "No pytest.ini found, skipping tests"
-          fi
+        run: pytest -q
 
   frontend-test:
     runs-on: ubuntu-latest
@@ -161,6 +156,10 @@ jobs:
       - name: Run tests
         working-directory: frontend
         run: npm run test:unit --if-present || npm test --if-present || echo "No tests configured"
+
+      - name: Run production dependency audit
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
       
       - name: Build for production
         working-directory: frontend
@@ -242,6 +241,14 @@ jobs:
           context: ./gateway
           push: false
           tags: modular-showcase-gateway:${{ github.sha }}
+
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: modular-showcase-frontend:${{ github.sha }}
       
       - name: Build spring-service Docker image
         uses: docker/build-push-action@v5
@@ -258,18 +265,27 @@ jobs:
       
       - name: Run Trivy vulnerability scanner
         # Pin to a stable release to avoid breaking changes from `master`
+        id: trivy_fs_scan
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
       
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Fail on HIGH/CRITICAL Trivy findings
+        if: always() && steps.trivy_fs_scan.outcome != 'success'
+        run: exit 1
 
   integration-test:
     runs-on: ubuntu-latest
@@ -339,7 +355,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/integration_test_db
           MONGODB_URI: mongodb://localhost:27017/integration_test_db
-          JWT_SECRET: test-secret-key
+          JWT_SECRET: test-secret-key-do-not-use-in-production
+          SPRING_JWT_SECRET: test-secret-key-do-not-use-in-production
           GATEWAY_URL: http://localhost:8000
         run: |
           if [ -f "verification/test_e2e_proof.py" ]; then

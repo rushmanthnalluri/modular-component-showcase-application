@@ -45,13 +45,18 @@ The current schema separates concerns into stable entities.
 - `component_embeddings`
 - `usage_logs`
 
+Vector ANN storage:
+
+- PostgreSQL `component_vector_embeddings` stores the indexed `vector(128)` representation with HNSW.
+- MongoDB `component_embeddings` stores document/search metadata and remains the fallback exact-scan store.
+
 ## 3. Before vs After
 
 | Aspect | Before | After |
 |---|---|---|
 | Component metadata | One wide record with repeated labels | Separate `components`, `categories`, `users` |
 | Reviews and ratings | Embedded or duplicated in component rows | Separate transactional tables with foreign keys |
-| Semantic search | Mixed into the same row as operational data | Dedicated `component_embeddings` collection |
+| Semantic search | Mixed into the same row as operational data | PostgreSQL pgvector HNSW table plus MongoDB metadata/fallback collection |
 | Logs | Stored alongside application entities | Dedicated `usage_logs` collection |
 | Update safety | High risk of drift | Controlled by keys, constraints, and indexes |
 
@@ -83,11 +88,11 @@ This is the right choice for structured state that should not drift.
 MongoDB is used for flexible and semi-structured data.
 
 - component descriptions change more often than relational schema
-- embeddings are array-like, dense, and search-oriented
+- embedding metadata and fallback vectors are search-oriented and document-friendly
 - logs are append-heavy and benefit from schema flexibility
-- semantic search results need fast candidate retrieval and metadata filtering
+- semantic search can still run locally when pgvector is unavailable
 
-This separation keeps PostgreSQL clean while giving vector and log data a better home.
+This separation keeps normalized transactional data in PostgreSQL, ANN retrieval in pgvector, and flexible descriptions/logs in MongoDB.
 
 ## 7. Indexing Strategy
 
@@ -96,12 +101,12 @@ This separation keeps PostgreSQL clean while giving vector and log data a better
 - unique index on user email
 - unique index on public component identifiers
 - indexes on foreign key columns used by reviews, ratings, discussions, and favorites
+- HNSW index on `component_vector_embeddings.embedding`
 - sort-supporting indexes for recent components and most viewed components
 - any reporting or materialized view index required by the demo scripts
 
 ### MongoDB indexing
 
-- vector index on `component_embeddings.embedding`
 - filter indexes on `componentId`, `componentName`, and `category`
 - log timestamp index for recent activity queries
 
@@ -118,6 +123,7 @@ This separation keeps PostgreSQL clean while giving vector and log data a better
 
 - PostgreSQL schema bootstrap: [backend/src/sql/initSchema.js](../backend/src/sql/initSchema.js)
 - Mongo search and embeddings: [backend/src/routes/mongoRoutes.js](../backend/src/routes/mongoRoutes.js)
+- pgvector search service: [backend/src/services/pgVectorSearchService.js](../backend/src/services/pgVectorSearchService.js)
 - Vector math and scoring: [backend/src/services/vectorSearchService.js](../backend/src/services/vectorSearchService.js)
 - Seed embeddings script: [backend/src/scripts/seedComponentEmbeddings.js](../backend/src/scripts/seedComponentEmbeddings.js)
 - Existing proof pack: [docs/database-proof-pack.md](database-proof-pack.md)

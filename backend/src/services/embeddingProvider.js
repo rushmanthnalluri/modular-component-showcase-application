@@ -93,6 +93,7 @@ export async function generateEmbedding({ text, model = "deterministic-v1", dime
         body: JSON.stringify({
           model: openAiModel,
           input: payload,
+          dimensions: safeDimensions,
         }),
         signal: controller.signal,
       });

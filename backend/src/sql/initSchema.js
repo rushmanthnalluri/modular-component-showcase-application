@@ -35,6 +35,7 @@ export const DDL = [
     )`,
     `CREATE TABLE IF NOT EXISTS components (
         component_id BIGSERIAL PRIMARY KEY,
+        component_public_id TEXT UNIQUE,
         name VARCHAR(160) NOT NULL,
         description TEXT NOT NULL,
         category_id BIGINT NOT NULL REFERENCES categories(category_id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -43,11 +44,13 @@ export const DDL = [
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         CONSTRAINT components_name_non_empty CHECK (length(trim(name)) > 0)
     )`,
+    "ALTER TABLE components ADD COLUMN IF NOT EXISTS component_public_id TEXT",
     `CREATE TABLE IF NOT EXISTS user_favorites (
         favorite_id BIGSERIAL PRIMARY KEY,
         mongo_user_id TEXT NOT NULL,
         user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
         component_mongo_id TEXT NOT NULL,
+        component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         CONSTRAINT user_favorites_unique UNIQUE (user_id, component_mongo_id)
@@ -58,6 +61,7 @@ export const DDL = [
         mongo_user_id TEXT NOT NULL,
         user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
         component_mongo_id TEXT NOT NULL,
+        component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
         rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
         title TEXT NOT NULL DEFAULT '',
         comment TEXT NOT NULL,
@@ -74,6 +78,7 @@ export const DDL = [
         mongo_user_id TEXT NOT NULL,
         user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
         component_mongo_id TEXT NOT NULL,
+        component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
         parent_mongo_id TEXT,
         message TEXT NOT NULL,
         likes INTEGER NOT NULL DEFAULT 0,
@@ -87,6 +92,7 @@ export const DDL = [
         mongo_user_id TEXT NOT NULL,
         user_id BIGINT NOT NULL REFERENCES users(user_id) ON UPDATE CASCADE ON DELETE CASCADE,
         component_mongo_id TEXT NOT NULL,
+        component_id BIGINT REFERENCES components(component_id) ON UPDATE CASCADE ON DELETE SET NULL,
         rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -115,17 +121,78 @@ export const DDL = [
         expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10 minutes',
         CONSTRAINT idempotency_keys_scope_key_unique UNIQUE (scope, idempotency_key)
     )`,
+    `DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'vector') THEN
+                EXECUTE 'CREATE EXTENSION IF NOT EXISTS vector';
+                EXECUTE 'CREATE TABLE IF NOT EXISTS component_vector_embeddings (
+                    component_id TEXT PRIMARY KEY,
+                    component_name TEXT NOT NULL,
+                    category TEXT NOT NULL DEFAULT '''',
+                    text TEXT NOT NULL DEFAULT '''',
+                    model TEXT NOT NULL DEFAULT '''',
+                    provider TEXT NOT NULL DEFAULT '''',
+                    embedding_hash TEXT NOT NULL DEFAULT '''',
+                    embedding vector(128) NOT NULL,
+                    metadata JSONB NOT NULL DEFAULT ''{}''::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )';
+                EXECUTE 'CREATE INDEX IF NOT EXISTS idx_component_vector_embeddings_category
+                    ON component_vector_embeddings (lower(category))';
+                EXECUTE 'CREATE INDEX IF NOT EXISTS idx_component_vector_embeddings_embedding_hnsw
+                    ON component_vector_embeddings USING hnsw (embedding vector_cosine_ops)';
+            END IF;
+        END
+        $$`,
     "CREATE INDEX IF NOT EXISTS idx_components_category_id ON components(category_id)",
     "CREATE INDEX IF NOT EXISTS idx_components_user_id ON components(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_components_name ON components(name)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_components_public_id ON components(component_public_id) WHERE component_public_id IS NOT NULL",
+    "ALTER TABLE user_favorites ADD COLUMN IF NOT EXISTS component_id BIGINT",
+    "ALTER TABLE reviews ADD COLUMN IF NOT EXISTS component_id BIGINT",
+    "ALTER TABLE discussions ADD COLUMN IF NOT EXISTS component_id BIGINT",
+    "ALTER TABLE ratings ADD COLUMN IF NOT EXISTS component_id BIGINT",
+    `DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_favorites_component_fk') THEN
+                ALTER TABLE user_favorites
+                    ADD CONSTRAINT user_favorites_component_fk
+                    FOREIGN KEY (component_id) REFERENCES components(component_id)
+                    ON UPDATE CASCADE ON DELETE SET NULL;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'reviews_component_fk') THEN
+                ALTER TABLE reviews
+                    ADD CONSTRAINT reviews_component_fk
+                    FOREIGN KEY (component_id) REFERENCES components(component_id)
+                    ON UPDATE CASCADE ON DELETE SET NULL;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'discussions_component_fk') THEN
+                ALTER TABLE discussions
+                    ADD CONSTRAINT discussions_component_fk
+                    FOREIGN KEY (component_id) REFERENCES components(component_id)
+                    ON UPDATE CASCADE ON DELETE SET NULL;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ratings_component_fk') THEN
+                ALTER TABLE ratings
+                    ADD CONSTRAINT ratings_component_fk
+                    FOREIGN KEY (component_id) REFERENCES components(component_id)
+                    ON UPDATE CASCADE ON DELETE SET NULL;
+            END IF;
+        END
+        $$`,
     "CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_user_favorites_component ON user_favorites(component_mongo_id)",
+    "CREATE INDEX IF NOT EXISTS idx_user_favorites_component_id ON user_favorites(component_id)",
     "CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_reviews_component ON reviews(component_mongo_id)",
+    "CREATE INDEX IF NOT EXISTS idx_reviews_component_id ON reviews(component_id)",
     "CREATE INDEX IF NOT EXISTS idx_discussions_user_id ON discussions(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_discussions_component ON discussions(component_mongo_id)",
+    "CREATE INDEX IF NOT EXISTS idx_discussions_component_id ON discussions(component_id)",
     "CREATE INDEX IF NOT EXISTS idx_ratings_user_id ON ratings(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_ratings_component ON ratings(component_mongo_id)",
+    "CREATE INDEX IF NOT EXISTS idx_ratings_component_id ON ratings(component_id)",
     "CREATE INDEX IF NOT EXISTS idx_outbox_status_created_at ON service_outbox(status, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_idempotency_keys_expires_at ON idempotency_keys(expires_at)",
     `CREATE OR REPLACE FUNCTION set_updated_at_timestamp()
@@ -172,8 +239,12 @@ export const DDL = [
             COUNT(DISTINCT rv.review_id) AS review_events,
             NOW() AS snapshot_at
         FROM components c
-        LEFT JOIN ratings r ON r.component_mongo_id = c.name
-        LEFT JOIN reviews rv ON rv.component_mongo_id = c.name
+        LEFT JOIN ratings r ON r.component_id = c.component_id
+            OR r.component_mongo_id = c.component_public_id
+            OR r.component_mongo_id = c.name
+        LEFT JOIN reviews rv ON rv.component_id = c.component_id
+            OR rv.component_mongo_id = c.component_public_id
+            OR rv.component_mongo_id = c.name
         GROUP BY c.component_id, c.name, c.category_id`,
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_component_quality_snapshot_component_id ON mv_component_quality_snapshot(component_id)",
 ];

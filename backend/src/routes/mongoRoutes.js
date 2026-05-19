@@ -1,7 +1,8 @@
 import express from "express";
+import { generateEmbedding } from "../services/embeddingProvider.js";
+import { searchPgVectorEmbeddings, upsertPgVectorEmbedding } from "../services/pgVectorSearchService.js";
 import {
     cosineSimilarity,
-    generateMockEmbedding,
     normalizeEmbedding,
 } from "../services/vectorSearchService.js";
 
@@ -89,7 +90,31 @@ export async function upsertMongoEmbedding(req, res, { ComponentEmbedding }) {
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     ).lean();
 
-    return res.status(201).json({ item });
+    let pgVector = { available: false };
+    try {
+        pgVector = await upsertPgVectorEmbedding({
+            componentId,
+            componentName,
+            category,
+            text,
+            model,
+            provider: String(req.body?.provider || "manual").trim(),
+            embeddingHash: String(req.body?.embeddingHash || "").trim(),
+            embedding,
+            metadata: { source: "mongo-embedding-upsert" },
+        });
+    } catch (error) {
+        pgVector = { available: false, error: error.message };
+    }
+
+    return res.status(201).json({
+        item,
+        vectorIndex: {
+            engine: pgVector.available ? `pgvector-${pgVector.schema.indexType || "exact"}` : "mongo-only",
+            indexed: Boolean(pgVector.schema?.indexed),
+            reason: pgVector.schema?.reason || pgVector.error || "pgvector_unavailable",
+        },
+    });
 }
 
 export async function semanticSearch(req, res, { ComponentEmbedding, Component, UsageLog }) {
@@ -99,14 +124,42 @@ export async function semanticSearch(req, res, { ComponentEmbedding, Component, 
     }
 
     const providedQueryEmbedding = normalizeEmbedding(req.body?.queryEmbedding);
-    const queryEmbedding = providedQueryEmbedding.length > 0
-        ? providedQueryEmbedding
-        : generateMockEmbedding(query);
+    const generated = providedQueryEmbedding.length > 0
+        ? { embedding: providedQueryEmbedding, provider: "request", model: "provided" }
+        : await generateEmbedding({ text: query, dimensions: 128 });
+    const queryEmbedding = generated.embedding;
     const limitSource = req.body?.limit ?? req.query?.limit ?? 10;
     const limit = Math.max(1, Math.min(25, Number.parseInt(String(limitSource), 10) || 10));
 
     if (queryEmbedding.length === 0) {
         return res.status(400).json({ message: "query embedding generation failed." });
+    }
+
+    const category = String(req.body?.category || req.query?.category || "").trim();
+    const pgVectorResult = await searchPgVectorEmbeddings({
+        embedding: queryEmbedding,
+        metric: req.body?.metric || req.query?.metric || "cosine",
+        category,
+        limit,
+    });
+
+    if (pgVectorResult.available) {
+        await UsageLog.create({
+            eventType: "SEARCH",
+            metadata: {
+                query,
+                resultCount: pgVectorResult.items.length,
+                retrievalEngine: `pgvector-${pgVectorResult.schema.indexType || "exact"}`,
+            },
+        });
+
+        return res.json(pgVectorResult.items.map((item) => ({
+            componentId: item.componentId,
+            componentName: item.componentName,
+            category: item.category,
+            score: item.score,
+            retrievalEngine: `pgvector-${pgVectorResult.schema.indexType || "exact"}`,
+        })));
     }
 
     const candidates = await ComponentEmbedding.find({}).limit(200).lean();

@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import CategoryFilter from "@/components/common/CategoryFilter";
 import ComponentCard from "@/components/common/ComponentCard";
@@ -7,7 +7,7 @@ import SearchBar from "@/components/search/SearchBar";
 import { useComponents } from "@/hooks/useComponents";
 import { subscribeToAuthUser } from "@/services/authAccess";
 import { getFavoriteIds, toggleFavorite } from "@/services/favoritesService";
-import { semanticComponentSearch } from "@/services/componentEngagementService";
+import { detectSearchMode, unifiedComponentSearch } from "@/services/unifiedSearchService";
 import { categories } from "@/data/components.data";
 import "./Index.css";
 
@@ -17,12 +17,14 @@ const Index = () => {
   const { categoryId } = useParams();
   const [authUser, setAuthUser] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [semanticLoading, setSemanticLoading] = useState(false);
-  const [semanticIds, setSemanticIds] = useState([]);
-  const [uiPrompt, setUiPrompt] = useState("A compact onboarding form with validation and success feedback");
-  const [uiMatches, setUiMatches] = useState([]);
-  const [uiMatchesLoading, setUiMatchesLoading] = useState(false);
-  const [uiMatchesStatus, setUiMatchesStatus] = useState("Describe a UI to get semantic component matches.");
+  const [draftQuery, setDraftQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchMode, setSearchMode] = useState("keyword");
+  const [searchSourceType, setSearchSourceType] = useState("Keyword Match");
+  const [searchMessage, setSearchMessage] = useState(
+    "Search components, UI ideas, or describe functionality to explore the catalog."
+  );
 
   // Custom hooks — single responsibility: data fetching lives in useComponents,
   // auth subscription lives in useAuth via subscribeToAuthUser.
@@ -75,6 +77,10 @@ const Index = () => {
     return searchParams.get("q") || "";
   }, [location.search]);
 
+  useEffect(() => {
+    setDraftQuery(searchQuery);
+  }, [searchQuery]);
+
   const handleCategoryChange = (nextCategory) => {
     const normalizedCategory = validCategoryIds.includes(nextCategory) ? nextCategory : "all";
     const nextPath = normalizedCategory === "all" ? "/" : `/category/${normalizedCategory}`;
@@ -97,36 +103,10 @@ const Index = () => {
     setFavoriteIds(next);
   };
 
-  const handleUiMatchSubmit = async (event) => {
+  const handleSearchSubmit = (event) => {
     event.preventDefault();
-    const trimmedPrompt = uiPrompt.trim();
-    if (!trimmedPrompt) {
-      setUiMatches([]);
-      setUiMatchesStatus("Enter a short UI description to search the component catalog.");
-      return;
-    }
-
-    setUiMatchesLoading(true);
-    setUiMatchesStatus("Finding semantically similar components...");
-    try {
-      const items = await semanticComponentSearch(trimmedPrompt, 5);
-      setUiMatches(items);
-      setUiMatchesStatus(
-        items.length > 0
-          ? `Matched ${items.length} components using vector search over component metadata.`
-          : "No strong matches yet. Try adding more detail, like layout, state, or interaction goals."
-      );
-    } catch {
-      setUiMatches([]);
-      setUiMatchesStatus("The recommendation service is temporarily unavailable.");
-    } finally {
-      setUiMatchesLoading(false);
-    }
-  };
-
-  const setSearchQuery = useCallback((nextQuery) => {
+    const normalizedQuery = draftQuery.trim();
     const params = new URLSearchParams(location.search);
-    const normalizedQuery = String(nextQuery || "").trim();
 
     if (normalizedQuery) {
       params.set("q", normalizedQuery);
@@ -144,7 +124,7 @@ const Index = () => {
         { replace: true }
       );
     }
-  }, [location.pathname, location.search, navigate]);
+  };
 
   // Delegate deletion to the hook which does optimistic update + rollback on error.
   const handleDelete = async (id) => {
@@ -158,109 +138,108 @@ const Index = () => {
     });
   }, [activeCategory, componentItems]);
 
-  const normalizedQuery = useMemo(() => searchQuery.trim().toLowerCase(), [searchQuery]);
-  const queryTokens = useMemo(
-    () => normalizedQuery.split(/\s+/).filter(Boolean),
-    [normalizedQuery]
-  );
-  const shouldUseSemanticSearch = queryTokens.length >= 2;
-
-  const keywordRankedComponents = useMemo(() => {
-    if (!normalizedQuery) {
-      return baseScopedComponents;
-    }
-
-    const scored = baseScopedComponents
-      .map((item) => {
-        const name = String(item.name || "").toLowerCase();
-        const description = String(item.description || "").toLowerCase();
-        const category = String(item.category || "").toLowerCase();
-        const tags = Array.isArray(item.tags) ? item.tags.map((tag) => String(tag || "").toLowerCase()) : [];
-
-        const hasMatch =
-          name.includes(normalizedQuery) ||
-          description.includes(normalizedQuery) ||
-          category.includes(normalizedQuery) ||
-          tags.some((tag) => tag.includes(normalizedQuery));
-
-        if (!hasMatch) {
-          return null;
-        }
-
-        let score = 0;
-        if (name.includes(normalizedQuery)) score += 5;
-        if (category.includes(normalizedQuery)) score += 4;
-        if (tags.some((tag) => tag.includes(normalizedQuery))) score += 3;
-        if (description.includes(normalizedQuery)) score += 2;
-        if (name === normalizedQuery) score += 3;
-
-        return { item, score };
-      })
-      .filter(Boolean)
-      .sort((left, right) => right.score - left.score || String(left.item.name).localeCompare(String(right.item.name)));
-
-    return scored.map((entry) => entry.item);
-  }, [baseScopedComponents, normalizedQuery]);
-
   useEffect(() => {
     let active = true;
+    let timerId = null;
 
-    const runHybridSearch = async () => {
-      if (!shouldUseSemanticSearch || !normalizedQuery) {
-        setSemanticIds([]);
+    const runSearch = async () => {
+      if (!searchQuery.trim()) {
+        if (active) {
+          setSearchResults([]);
+          setSearchMode("keyword");
+          setSearchSourceType("Keyword Match");
+          setSearchMessage("Search components, UI ideas, or describe functionality to explore the catalog.");
+          setSearchLoading(false);
+        }
         return;
       }
 
-      setSemanticLoading(true);
+      const nextMode = detectSearchMode(searchQuery);
+      if (active) {
+        setSearchMode(nextMode);
+        setSearchSourceType(nextMode === "semantic" ? "Semantic Match" : "Keyword Match");
+      }
+      if (nextMode === "semantic") {
+        setSearchLoading(true);
+        timerId = window.setTimeout(() => {
+          void (async () => {
+            try {
+              const outcome = await unifiedComponentSearch({
+                query: searchQuery,
+                components: baseScopedComponents,
+                category: activeCategory,
+                limit: 12,
+                mode: nextMode,
+              });
+
+              if (!active) {
+                return;
+              }
+
+              setSearchResults(outcome.results);
+              setSearchMode(outcome.mode);
+              setSearchSourceType(outcome.sourceType);
+              setSearchMessage(outcome.message);
+            } catch {
+              if (!active) {
+                return;
+              }
+
+              setSearchResults([]);
+              setSearchMode("keyword");
+              setSearchSourceType("Keyword Match");
+              setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
+            } finally {
+              if (active) {
+                setSearchLoading(false);
+              }
+            }
+          })();
+        }, 220);
+        return;
+      }
+
+      setSearchLoading(false);
       try {
-        const items = await semanticComponentSearch(normalizedQuery, 24);
+        const outcome = await unifiedComponentSearch({
+          query: searchQuery,
+          components: baseScopedComponents,
+          category: activeCategory,
+          limit: 12,
+          mode: nextMode,
+        });
+
         if (!active) {
           return;
         }
-        setSemanticIds(items.map((item) => String(item.componentId || "")).filter(Boolean));
+
+        setSearchResults(outcome.results);
+        setSearchMode(outcome.mode);
+        setSearchSourceType(outcome.sourceType);
+        setSearchMessage(outcome.message);
       } catch {
-        if (active) setSemanticIds([]);
-      } finally {
-        if (active) {
-          setSemanticLoading(false);
+        if (!active) {
+          return;
         }
+
+        setSearchResults([]);
+        setSearchMode("keyword");
+        setSearchSourceType("Keyword Match");
+        setSearchMessage("Search is temporarily unavailable. Try a shorter keyword or retry in a moment.");
       }
     };
 
-    runHybridSearch();
+    runSearch();
     return () => {
       active = false;
-    };
-  }, [normalizedQuery, shouldUseSemanticSearch]);
-
-  const visibleComponents = useMemo(() => {
-    if (!normalizedQuery) {
-      return baseScopedComponents;
-    }
-
-    if (!shouldUseSemanticSearch) {
-      return keywordRankedComponents;
-    }
-
-    if (semanticIds.length === 0) {
-      return keywordRankedComponents;
-    }
-
-    const mapById = new Map(baseScopedComponents.map((item) => [item.id, item]));
-    const keywordIds = new Set(keywordRankedComponents.map((item) => item.id));
-    const merged = [...keywordRankedComponents];
-
-    semanticIds.forEach((id) => {
-      if (!keywordIds.has(id)) {
-        const candidate = mapById.get(id);
-        if (candidate) {
-          merged.push(candidate);
-        }
+      if (timerId) {
+        window.clearTimeout(timerId);
       }
-    });
+    };
+  }, [activeCategory, baseScopedComponents, searchQuery]);
 
-    return merged;
-  }, [baseScopedComponents, keywordRankedComponents, normalizedQuery, semanticIds, shouldUseSemanticSearch]);
+  const hasSearchQuery = Boolean(searchQuery.trim());
+  const visibleComponents = hasSearchQuery ? searchResults : baseScopedComponents;
 
   return (
     <Layout>
@@ -278,7 +257,23 @@ const Index = () => {
                   Explore reusable components and prop-driven interactions in a
                   clean single-page React application.
                 </p>
-                <SearchBar value={searchQuery} onChange={setSearchQuery} />
+                <form className="hero-search-form" onSubmit={handleSearchSubmit}>
+                  <SearchBar
+                    value={draftQuery}
+                    onChange={setDraftQuery}
+                    placeholder="Search components, UI ideas, or describe functionality..."
+                    label="Unified component search"
+                    inputId="unified-component-search"
+                  />
+                  <div className="hero-search-actions">
+                    <button className="hero-search-button" type="submit" disabled={searchLoading}>
+                      {searchLoading ? "Searching..." : "Search"}
+                    </button>
+                    <span className="hero-search-status">
+                      One search box for keyword queries and semantic prompts.
+                    </span>
+                  </div>
+                </form>
                 <div className="hero-favorites-link-wrap">
                   <Link className="hero-favorites-link" to="/favorites">
                     Favorites
@@ -289,51 +284,82 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="innovation-section" aria-labelledby="innovation-heading">
+        <section className="unified-search-section" aria-labelledby="unified-search-heading">
           <div className="layout-container">
-            <div className="innovation-panel">
-              <div className="innovation-copy">
-                <span className="innovation-kicker">Innovation feature</span>
-                <h2 id="innovation-heading">Describe UI, get matching components</h2>
+            <div className="unified-search-panel">
+              <div className="unified-search-copy">
+                <span className="unified-search-kicker">Intelligent search</span>
+                <h2 id="unified-search-heading">One box for keyword search and semantic discovery</h2>
                 <p>
-                  Describe the interface you want in plain language and the system
-                  returns semantically related components from the vector index.
+                  Short queries like <strong>modal</strong> or <strong>navbar</strong> stay fast and exact.
+                  Longer prompts like <strong>auth form with email validation</strong> route into the vector-backed semantic index.
                 </p>
-                <form className="innovation-form" onSubmit={handleUiMatchSubmit}>
-                  <label className="sr-only" htmlFor="innovation-prompt">
-                    Describe the UI you want
-                  </label>
-                  <textarea
-                    id="innovation-prompt"
-                    className="innovation-textarea"
-                    value={uiPrompt}
-                    onChange={(event) => setUiPrompt(event.target.value)}
-                    placeholder="A compact onboarding flow with validation, helper text, and a success state"
-                    rows={4}
-                  />
-                  <div className="innovation-actions">
-                    <button className="innovation-button" type="submit" disabled={uiMatchesLoading}>
-                      {uiMatchesLoading ? "Searching..." : "Find matches"}
-                    </button>
-                    <span className="innovation-status">{uiMatchesStatus}</span>
-                  </div>
-                </form>
+                <div className="unified-search-summary">
+                  <span className={`search-mode-pill ${searchMode}`}>
+                    {searchSourceType}
+                  </span>
+                  <span className="unified-search-summary-text">{searchMessage}</span>
+                </div>
+                <div className="unified-search-examples" aria-label="Search examples">
+                  <span>button</span>
+                  <span>dashboard widget</span>
+                  <span>auth form with email validation</span>
+                  <span>animated modal component</span>
+                </div>
               </div>
 
-              <div className="innovation-results" aria-live="polite">
-                {uiMatches.length > 0 ? (
-                  uiMatches.map((match) => (
-                    <article key={`${match.componentId}-${match.componentName}`} className="innovation-result-card">
-                      <div className="innovation-result-header">
-                        <strong>{match.componentName}</strong>
-                        <span>{match.category}</span>
+              <div className="unified-search-results" aria-live="polite">
+                {searchLoading ? (
+                  <div className="loader-wrap" role="status" aria-live="polite">
+                    <div className="loader" aria-hidden="true" />
+                    <span className="sr-only">Loading search results</span>
+                  </div>
+                ) : hasSearchQuery && visibleComponents.length > 0 ? (
+                  visibleComponents.map((component) => (
+                    <article key={component.id} className="unified-search-result-card">
+                      <div className="unified-search-result-header">
+                        <div>
+                          <span
+                            className={
+                              component.sourceType === "Semantic Match"
+                                ? "search-result-chip semantic"
+                                : "search-result-chip keyword"
+                            }
+                          >
+                            {component.sourceType}
+                          </span>
+                          <h3>{component.name}</h3>
+                        </div>
+                        <strong className="unified-search-score">{component.scoreLabel}</strong>
                       </div>
-                      <p>Semantic score {Number(match.score || 0).toFixed(3)}</p>
+                      <p>{component.preview || component.description}</p>
+                      <div className="unified-search-result-meta">
+                        <span>{component.category || "Uncategorized"}</span>
+                        <span>Relevance {component.scoreLabel}</span>
+                      </div>
+                      {Array.isArray(component.tags) && component.tags.length > 0 ? (
+                        <div className="component-card-tags" aria-label="Result tags">
+                          {component.tags.slice(0, 6).map((tag) => (
+                            <span key={tag} className="component-tag">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                      <Link className="unified-search-link" to={`/component/${component.id}`}>
+                        View component
+                      </Link>
                     </article>
                   ))
+                ) : hasSearchQuery ? (
+                  <div className="unified-search-empty">
+                    <strong>No matching components found.</strong>
+                    <span>{searchMessage}</span>
+                  </div>
                 ) : (
-                  <div className="innovation-results-empty">
-                    Try prompts like “auth form with email validation” or “data table with filters and empty state”.
+                  <div className="unified-search-empty unified-search-empty-idle">
+                    <strong>Start with a keyword or describe the UI you need.</strong>
+                    <span>Try queries such as “modal”, “dashboard widget”, or “reusable onboarding flow”.</span>
                   </div>
                 )}
               </div>
@@ -341,46 +367,48 @@ const Index = () => {
           </div>
         </section>
 
-        <section id="components" className="index-components">
-          <div className="layout-container">
-            <div id="categories" className="category-block">
-              <CategoryFilter
-                activeCategory={activeCategory}
-                onCategoryChange={handleCategoryChange}
-              />
+        {!hasSearchQuery ? (
+          <section id="components" className="index-components">
+            <div className="layout-container">
+              <div id="categories" className="category-block">
+                <CategoryFilter
+                  activeCategory={activeCategory}
+                  onCategoryChange={handleCategoryChange}
+                />
+              </div>
+              {isLoading ? (
+                <div className="loader-wrap" role="status" aria-live="polite">
+                  <div className="loader" aria-hidden="true" />
+                  <span className="sr-only">Loading components</span>
+                </div>
+              ) : visibleComponents.length > 0 ? (
+                <div className="component-grid">
+                  {visibleComponents.map((component) => (
+                    <ComponentCard
+                      key={component.id}
+                      id={component.id}
+                      name={component.name}
+                      description={component.description}
+                      thumbnail={component.thumbnail}
+                      tags={component.tags}
+                      isFavorite={favoriteIds.includes(component.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      averageRating={component.averageRating}
+                      totalReviews={component.totalReviews}
+                      canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <strong>No matching components found.</strong>
+                  <span>Try a different category to continue exploring the catalog.</span>
+                </div>
+              )}
             </div>
-            {isLoading || semanticLoading ? (
-              <div className="loader-wrap" role="status" aria-live="polite">
-                <div className="loader" aria-hidden="true" />
-                <span className="sr-only">Loading components</span>
-              </div>
-            ) : visibleComponents.length > 0 ? (
-              <div className="component-grid">
-                {visibleComponents.map((component) => (
-                  <ComponentCard
-                    key={component.id}
-                    id={component.id}
-                    name={component.name}
-                    description={component.description}
-                    thumbnail={component.thumbnail}
-                    tags={component.tags}
-                    isFavorite={favoriteIds.includes(component.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    averageRating={component.averageRating}
-                    totalReviews={component.totalReviews}
-                    canDelete={Boolean(authUser && (authUser.id === component.createdBy || authUser.role === "admin"))}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <strong>No matching components found.</strong>
-                <span>Try a different keyword or switch to another category to continue exploring.</span>
-              </div>
-            )}
-          </div>
-        </section>
+          </section>
+        ) : null}
       </div>
     </Layout>
   );
