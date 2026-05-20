@@ -1,7 +1,8 @@
 const DEFAULT_DEV_API_BASE_URL = "/api";
 const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
-const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
-const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-backend.onrender.com";
+// Render gateway URL - adjust if the actual deployed URL differs from service name  
+const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-application-ve5e.onrender.com";
+const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-application-ve5e.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const BACKEND_FALLBACK_PREFIXES = [
   "/api",
