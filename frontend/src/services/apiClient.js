@@ -1,8 +1,7 @@
 const DEFAULT_DEV_API_BASE_URL = "/api";
 const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
-// Render gateway URL - adjust if the actual deployed URL differs from service name  
-const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-application-ve5e.onrender.com";
-const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-application-ve5e.onrender.com";
+const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
+const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-backend.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const BACKEND_FALLBACK_PREFIXES = [
   "/api",
@@ -102,6 +101,9 @@ function inferBrowserGatewayBaseUrl() {
   }
 
   const hostname = String(window.location?.hostname || "").toLowerCase();
+  if (hostname.endsWith(".onrender.com")) {
+    return String(window.location.origin || "").trim();
+  }
   if (hostname.endsWith("github.io")) {
     return DEFAULT_PRODUCTION_GATEWAY_BASE_URL;
   }
@@ -115,6 +117,9 @@ function inferBrowserBackendBaseUrl() {
   }
 
   const hostname = String(window.location?.hostname || "").toLowerCase();
+  if (hostname.endsWith(".onrender.com")) {
+    return String(window.location.origin || "").trim();
+  }
   if (hostname.endsWith("github.io")) {
     return DEFAULT_PRODUCTION_BACKEND_BASE_URL;
   }
