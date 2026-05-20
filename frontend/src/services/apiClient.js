@@ -1,5 +1,6 @@
 const DEFAULT_DEV_API_BASE_URL = "/api";
 const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
+const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
 let csrfBootstrapPromise = null;
@@ -78,6 +79,19 @@ function sanitizeConfiguredUrl(baseUrl) {
   return normalizedBaseUrl;
 }
 
+function inferBrowserGatewayBaseUrl() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const hostname = String(window.location?.hostname || "").toLowerCase();
+  if (hostname.endsWith("github.io")) {
+    return DEFAULT_PRODUCTION_GATEWAY_BASE_URL;
+  }
+
+  return "";
+}
+
 // Production convention: frontend calls the FastAPI gateway only.
 // Gateway routes are mounted at the origin + "/api" (e.g. https://<gateway>/api/profile).
 export const API_BASE_URL =
@@ -98,6 +112,7 @@ function normalizeGatewayBaseUrl(value) {
 export const GATEWAY_BASE_URL =
   normalizeGatewayBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
   normalizeGatewayBaseUrl(stripApiSuffix(import.meta.env.VITE_API_BASE_URL)) ||
+  inferBrowserGatewayBaseUrl() ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
 
 export const USE_GATEWAY =

@@ -415,6 +415,7 @@ apiRouter.use(cookieParser());
 apiRouter.use(ensureCsrfCookie);
 apiRouter.use(requireCsrf);
 apiRouter.use("/captcha", captchaRouter);
+apiRouter.use("/auth/captcha", captchaRouter);
 
 apiRouter.get("/", (_req, res) => {
     res.json(buildSuccess({

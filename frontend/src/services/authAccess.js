@@ -61,7 +61,7 @@ export async function registerUser({
 }
 
 export async function fetchRegisterCaptcha(length = 6) {
-  const payload = await apiRequest(`/captcha/getcaptcha/${length}`, {
+  const payload = await apiRequest(`/api/captcha/getcaptcha/${length}`, {
     method: "GET",
   });
 
