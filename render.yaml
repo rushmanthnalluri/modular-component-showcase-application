@@ -15,11 +15,11 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: VITE_API_BASE_URL
-        sync: false
+        value: https://modular-component-showcase-gateway.onrender.com
       - key: VITE_GATEWAY_URL
-        sync: false
+        value: https://modular-component-showcase-gateway.onrender.com
       - key: VITE_BACKEND_URL
-        sync: false
+        value: https://modular-component-showcase-backend.onrender.com
       - key: VITE_USE_GATEWAY
         value: true
       - key: VITE_APP_NAME
@@ -47,7 +47,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_ORIGINS
-        sync: false
+        value: https://rushmanthnalluri.github.io,https://modular-component-showcase-application-222h.onrender.com
       - key: JWT_ISSUER
         value: modular-component-showcase
       - key: JWT_AUDIENCE
@@ -75,9 +75,9 @@ services:
       - key: PORT
         value: 8000
       - key: BACKEND_URL
-        sync: false
+        value: https://modular-component-showcase-backend.onrender.com
       - key: SPRING_SERVICE_URL
-        sync: false
+        value: https://modular-component-showcase-spring-service.onrender.com
       - key: SQL_SERVICE_URL
         sync: false
       - key: REQUEST_TIMEOUT_SECONDS
@@ -107,7 +107,7 @@ services:
       - key: SPRING_JWT_SECRET
         sync: false
       - key: SPRING_ALLOWED_ORIGINS
-        sync: false
+        value: https://rushmanthnalluri.github.io,https://modular-component-showcase-application-222h.onrender.com
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
