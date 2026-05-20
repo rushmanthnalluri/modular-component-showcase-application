@@ -63,13 +63,27 @@ app = FastAPI(
 )
 
 # Add CORS middleware
+# Production-safe config: explicit origins + credentials + preflight support.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-CSRF-Token",
+        "x-csrf-token",
+        "X-Requested-With",
+        "Accept",
+        "Accept-Language",
+        "X-Correlation-Id",
+        "X-Request-Id",
+    ],
 )
+
+
+
 
 
 @app.exception_handler(Exception)
@@ -132,11 +146,19 @@ from fastapi import Response as _Response
 
 
 def _forward_to_backend(full_path: str, request: Request):
+
     """Use the same proxy logic as /api/{full_path}.
 
     Implemented as an internal call to avoid route drift.
     """
     return proxy_api(full_path=full_path, request=request)
+
+
+def _forward_captcha_to_backend(full_path: str, request: Request, backend_prefix: str = "captcha"):
+    """Forward captcha aliases into the backend captcha route."""
+    suffix = str(full_path or "").strip("/")
+    captcha_path = backend_prefix if not suffix else f"{backend_prefix}/{suffix}"
+    return proxy_api(full_path=captcha_path, request=request)
 
 
 @app.api_route("/api/profile", methods=["GET", "PUT", "PATCH", "OPTIONS", "HEAD"], include_in_schema=False)
@@ -148,6 +170,34 @@ async def api_profile(request: Request):
 @app.api_route("/api/dashboard", methods=["GET", "OPTIONS", "HEAD"], include_in_schema=False)
 async def api_dashboard(request: Request):
     return await _forward_to_backend("dashboard", request)
+
+
+@app.api_route("/api/captcha", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_captcha_root(request: Request):
+    return await _forward_captcha_to_backend("", request, "captcha")
+
+
+@app.api_route(
+    "/api/captcha/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+async def api_captcha_proxy(request: Request, full_path: str):
+    return await _forward_captcha_to_backend(full_path, request, "captcha")
+
+
+@app.api_route("/api/auth/captcha", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_auth_captcha_root(request: Request):
+    return await _forward_captcha_to_backend("", request, "auth/captcha")
+
+
+@app.api_route(
+    "/api/auth/captcha/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+async def api_auth_captcha_proxy(request: Request, full_path: str):
+    return await _forward_captcha_to_backend(full_path, request, "auth/captcha")
 
 
 @app.api_route(
@@ -346,8 +396,15 @@ async def livez():
 )
 async def proxy_api(full_path: str, request: Request):
     """Forward all /api/* traffic to backend while preserving cookies and query params."""
+    # Preflight must always return CORS headers (handled by CORSMiddleware),
+    # and must not be blocked by auth logic.
+    if str(request.method).upper() == "OPTIONS":
+        # Let CORSMiddleware add the Access-Control-* headers.
+        return Response(status_code=204)
+
     if not _is_public_api_route(full_path, request.method):
         verify_request_jwt(request)
+
 
     target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"
     body = await request.body()
