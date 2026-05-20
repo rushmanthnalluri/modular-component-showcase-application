@@ -58,14 +58,51 @@ function alignLocalHostAlias(baseUrl) {
   return normalizedBaseUrl;
 }
 
+function sanitizeConfiguredUrl(baseUrl) {
+  const normalizedBaseUrl = alignLocalHostAlias(baseUrl);
+  if (!normalizedBaseUrl) {
+    return "";
+  }
+
+  if (typeof window !== "undefined" && !import.meta.env.DEV && /^https?:\/\//i.test(normalizedBaseUrl)) {
+    try {
+      const parsed = new URL(normalizedBaseUrl);
+      if (isLocalHostAlias(parsed.hostname)) {
+        return "";
+      }
+    } catch {
+      return "";
+    }
+  }
+
+  return normalizedBaseUrl;
+}
+
+// Production convention: frontend calls the FastAPI gateway only.
+// Gateway routes are mounted at the origin + "/api" (e.g. https://<gateway>/api/profile).
 export const API_BASE_URL =
-  alignLocalHostAlias(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
+  sanitizeConfiguredUrl(import.meta.env.VITE_API_BASE_URL) || DEFAULT_DEV_API_BASE_URL;
+
+// Accept VITE_GATEWAY_URL in either form:
+//   1) "https://gateway.example.com"  (preferred)
+//   2) "https://gateway.example.com/api" (tolerated)
+function normalizeGatewayBaseUrl(value) {
+  const raw = sanitizeConfiguredUrl(value);
+  if (!raw) return "";
+
+  const normalized = normalizeBaseUrl(raw);
+  // Remove a trailing /api so we can consistently prepend /api in buildApiUrl.
+  return normalized.replace(/\/api\/+$/i, "").replace(/\/+$/, "");
+}
+
 export const GATEWAY_BASE_URL =
-  alignLocalHostAlias(import.meta.env.VITE_GATEWAY_URL) ||
-  alignLocalHostAlias(stripApiSuffix(import.meta.env.VITE_API_BASE_URL)) ||
+  normalizeGatewayBaseUrl(import.meta.env.VITE_GATEWAY_URL) ||
+  normalizeGatewayBaseUrl(stripApiSuffix(import.meta.env.VITE_API_BASE_URL)) ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
+
 export const USE_GATEWAY =
   String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";
+
 
 function resolveBaseUrl(path = "") {
   const useGatewayForApi =
@@ -109,6 +146,15 @@ function toAbsoluteFetchUrl(baseUrl, path = "") {
   } catch {
     return `${normalizedBaseUrl}${normalizedPath}`;
   }
+}
+
+export function buildApiUrl(path = "", { useGateway = true } = {}) {
+  const baseUrl = useGateway ? resolveBaseUrl(path) : API_BASE_URL;
+  const normalizedPath = String(path || "").startsWith("/api")
+    ? String(path)
+    : `${useGateway && baseUrl === GATEWAY_BASE_URL ? "/api" : ""}${String(path || "")}`;
+
+  return toAbsoluteFetchUrl(baseUrl, normalizedPath);
 }
 
 function getCookieValue(name) {
@@ -222,12 +268,7 @@ export async function apiRequest(path, options = {}) {
     await ensureCsrfCookie(`${baseUrl}${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}`);
   }
 
-  return callApi(
-    method,
-    toAbsoluteFetchUrl(baseUrl, normalizedPath),
-    body,
-    { headers }
-  );
+  return callApi(method, toAbsoluteFetchUrl(baseUrl, normalizedPath), body, { headers });
 }
 
 export async function gatewayRequest(path, options = {}) {

@@ -74,13 +74,13 @@ Top rated components.
 
 ## User
 
-### `GET /api/users/me`
+### `GET /api/profile`
 Current authenticated user profile.
 
-### `PUT /api/users/me`
+### `PUT /api/profile`
 Update current user profile.
 
-### `GET /api/users/me/components`
+### `GET /api/dashboard`
 User-created components.
 
 ### `GET /api/users/me/submission-history`
@@ -111,22 +111,22 @@ Create discussion.
 
 ## SQL Catalog
 
-### `GET /api/sql/users`
+### `GET /api/admin/sql/users`
 List SQL users.
 
-### `GET /api/sql/categories`
+### `GET /api/admin/sql/categories`
 List SQL categories.
 
-### `GET /api/sql/components`
+### `GET /api/admin/sql/components`
 List SQL components.
 
-### `POST /api/sql/components`
+### `POST /api/admin/sql/components`
 Create SQL component.
 
-### `PUT /api/sql/components/:componentId`
+### `PUT /api/admin/sql/components/:componentId`
 Update SQL component.
 
-### `DELETE /api/sql/components/:componentId`
+### `DELETE /api/admin/sql/components/:componentId`
 Delete SQL component.
 
 ## Admin

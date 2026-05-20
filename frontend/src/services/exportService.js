@@ -1,3 +1,5 @@
+import { buildApiUrl } from "@/services/apiClient";
+
 function copyWithTextarea(text) {
   const textArea = document.createElement("textarea");
   textArea.value = text;
@@ -81,7 +83,9 @@ export function downloadFile(content, filename, mimeType = "text/plain") {
 
 export async function downloadFromServer(componentId, format = "jsx") {
   try {
-    const response = await fetch(`/api/components/${componentId}/export?format=${format}`);
+    const response = await fetch(buildApiUrl(`/components/${componentId}/export?format=${format}`), {
+      credentials: "include",
+    });
     if (!response.ok) throw new Error("Download failed");
 
     const blob = await response.blob();

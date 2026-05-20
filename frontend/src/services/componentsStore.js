@@ -261,7 +261,7 @@ export async function updateComponent(id, updates) {
 }
 
 export async function getMyComponents({ page = 1, limit = 20 } = {}) {
-  const payload = await apiRequest(`/users/me/components?page=${page}&limit=${limit}`, {
+  const payload = await apiRequest(`/dashboard?page=${page}&limit=${limit}`, {
     method: "GET",
   });
 
