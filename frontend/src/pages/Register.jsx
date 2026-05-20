@@ -55,6 +55,7 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captcha, setCaptcha] = useState({ text: "", image: "" });
   const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaStatus, setCaptchaStatus] = useState("loading");
   const [avatarFileName, setAvatarFileName] = useState("");
 
   const getCaptchaImageSrc = (rawImage) => {
@@ -119,9 +120,18 @@ const Register = () => {
   };
 
   const loadCaptcha = useCallback(async () => {
-    const payload = await fetchRegisterCaptcha(6);
-    setCaptcha({ text: payload.text, image: payload.image });
-    setCaptchaInput("");
+    setCaptchaStatus("loading");
+    try {
+      const payload = await fetchRegisterCaptcha(6);
+      setCaptcha({ text: payload.text, image: payload.image });
+      setCaptchaInput("");
+      setCaptchaStatus("ready");
+    } catch (error) {
+      setCaptcha({ text: "", image: "" });
+      setCaptchaInput("");
+      setCaptchaStatus("error");
+      throw error;
+    }
   }, []);
 
   useEffect(() => {
@@ -262,6 +272,20 @@ const Register = () => {
           <span className="toast-inline">
             <img src={loadingIcon} alt="" aria-hidden className="toast-inline-icon" />
             Phone number must contain 10 to 15 digits only.
+          </span>
+        ),
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (captchaStatus !== "ready") {
+      toast({
+        title: "Captcha unavailable",
+        description: (
+          <span className="toast-inline">
+            <img src={warningIcon} alt="" aria-hidden className="toast-inline-icon" />
+            Refresh the captcha before trying again.
           </span>
         ),
         duration: 4000,
@@ -593,6 +617,10 @@ const Register = () => {
                   src={getCaptchaImageSrc(captcha.image)}
                   alt="Captcha"
                 />
+              ) : captchaStatus === "error" ? (
+                <div className="captcha-placeholder captcha-placeholder-error">
+                  Captcha unavailable. Refresh to retry.
+                </div>
               ) : (
                 <div className="captcha-placeholder">Loading captcha...</div>
               )}
