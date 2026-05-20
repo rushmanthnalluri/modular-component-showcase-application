@@ -1,6 +1,7 @@
 const DEFAULT_DEV_API_BASE_URL = "/api";
 const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
 const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
+const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-backend.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
 let csrfBootstrapPromise = null;
@@ -92,6 +93,19 @@ function inferBrowserGatewayBaseUrl() {
   return "";
 }
 
+function inferBrowserBackendBaseUrl() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const hostname = String(window.location?.hostname || "").toLowerCase();
+  if (hostname.endsWith("github.io")) {
+    return DEFAULT_PRODUCTION_BACKEND_BASE_URL;
+  }
+
+  return "";
+}
+
 // Production convention: frontend calls the FastAPI gateway only.
 // Gateway routes are mounted at the origin + "/api" (e.g. https://<gateway>/api/profile).
 export const API_BASE_URL =
@@ -114,6 +128,11 @@ export const GATEWAY_BASE_URL =
   normalizeGatewayBaseUrl(stripApiSuffix(import.meta.env.VITE_API_BASE_URL)) ||
   inferBrowserGatewayBaseUrl() ||
   (import.meta.env.DEV ? DEFAULT_DEV_GATEWAY_BASE_URL : "");
+
+export const BACKEND_BASE_URL =
+  sanitizeConfiguredUrl(import.meta.env.VITE_BACKEND_URL) ||
+  inferBrowserBackendBaseUrl() ||
+  DEFAULT_PRODUCTION_BACKEND_BASE_URL;
 
 export const USE_GATEWAY =
   String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";
@@ -245,6 +264,10 @@ async function callApi(method, url, body, options = {}) {
 }
 
 async function ensureCsrfCookie(baseUrl) {
+  return ensureCsrfCookieAt(baseUrl, "/auth/csrf");
+}
+
+async function ensureCsrfCookieAt(baseUrl, csrfPath) {
   if (typeof window === "undefined") {
     return;
   }
@@ -254,7 +277,7 @@ async function ensureCsrfCookie(baseUrl) {
   }
 
   if (!csrfBootstrapPromise) {
-    csrfBootstrapPromise = callApi("GET", toAbsoluteFetchUrl(baseUrl, "/auth/csrf"));
+    csrfBootstrapPromise = callApi("GET", toAbsoluteFetchUrl(baseUrl, csrfPath));
   }
 
   try {
@@ -311,4 +334,40 @@ export async function gatewayRequest(path, options = {}) {
       timeoutMs: options.timeoutMs,
     }
   );
+}
+
+export async function backendRequest(path, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  const body = options.body;
+  const headers = {
+    ...(options.headers || {}),
+  };
+
+  if (!isFormDataBody(body) && body !== undefined && !Object.keys(headers).some((key) => key.toLowerCase() === "content-type")) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return callApi(
+    method,
+    toAbsoluteFetchUrl(BACKEND_BASE_URL, path),
+    body,
+    {
+      headers,
+      withCredentials: options.withCredentials ?? true,
+      timeoutMs: options.timeoutMs,
+    }
+  );
+}
+
+export async function backendApiRequest(path, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  const normalizedPath = String(path || "").startsWith("/api")
+    ? String(path)
+    : `/api${String(path || "").startsWith("/") ? String(path) : `/${String(path || "")}`}`;
+
+  if (!isSafeReadonlyMethod(method)) {
+    await ensureCsrfCookieAt(BACKEND_BASE_URL, "/api/auth/csrf");
+  }
+
+  return backendRequest(normalizedPath, options);
 }
