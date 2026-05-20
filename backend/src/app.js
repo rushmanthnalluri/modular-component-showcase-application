@@ -33,6 +33,7 @@ import {
 } from "./mongodb/index.js";
 import { createAuthMiddleware } from "./middleware/auth.js";
 import { createCsrfMiddleware } from "./middleware/csrf.js";
+import { avatarUpload, mapAvatarUploadError } from "./middleware/avatarUpload.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
 import { createComponentsRouter } from "./routes/componentsRoutes.js";
 import { createEmailRouter } from "./routes/emailRoutes.js";
@@ -53,7 +54,6 @@ import {
     syncSqlUserFavorites,
 } from "./neondb/index.js";
 import logger, { withRequestContext } from "./utils/logger.js";
-import { mapAvatarUploadError } from "./middleware/avatarUpload.js";
 import { buildError, buildSuccess, sendError } from "./utils/responseHelper.js";
 import { idempotencyService } from "./services/idempotencyService.js";
 import { startAuditEventConsumer, stopAuditEventConsumer } from "./consumers/auditEventConsumer.js";
@@ -370,6 +370,47 @@ app.get("/metrics", (_req, res) => {
     res.type("text/plain; version=0.0.4").send(`${lines.join("\n")}\n`);
 });
 
+function toPublicUserPayload(user, req) {
+    const storedAvatar = String(user?.avatarImage || "");
+    const baseUrl = req?.protocol && req?.get ? `${req.protocol}://${req.get("host")}` : "";
+    const resolvedAvatar = storedAvatar.startsWith("/app/uploads/avatars/") || storedAvatar.startsWith("/uploads/avatars/")
+        ? (baseUrl ? `${baseUrl}/uploads/avatars/${path.basename(storedAvatar)}` : `/uploads/avatars/${path.basename(storedAvatar)}`)
+        : storedAvatar;
+
+    return {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isVerifiedDeveloper: Boolean(user.isVerifiedDeveloper),
+        favorites: Array.isArray(user.favorites) ? user.favorites : [],
+        bio: user.bio || "",
+        avatarImage: resolvedAvatar,
+        avatarUrl: resolvedAvatar,
+        socialLinks: user.socialLinks || {},
+        stats: user.stats || {},
+        emailPreferences: user.emailPreferences || {},
+    };
+}
+
+function parseOptionalJsonObject(value) {
+    if (value === undefined || value === null || value === "") {
+        return {};
+    }
+
+    if (typeof value === "object") {
+        return value;
+    }
+
+    try {
+        const parsed = JSON.parse(String(value));
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+        return {};
+    }
+}
+
 apiRouter.use(cookieParser());
 apiRouter.use(ensureCsrfCookie);
 apiRouter.use(requireCsrf);
@@ -453,6 +494,106 @@ apiRouter.use(
         syncSqlUserFavorites,
     })
 );
+
+apiRouter.get("/profile", requireAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        return res.json(buildSuccess({ user: toPublicUserPayload(user, req) }));
+    } catch (error) {
+        logger.error("profile_fetch_failed", { error: error.message });
+        return res.status(500).json({ message: "Unable to fetch profile." });
+    }
+});
+
+apiRouter.put("/profile", requireAuth, requireCsrf, avatarUpload.single("avatar"), async (req, res) => {
+    try {
+        const body = req.body && typeof req.body === "object" ? req.body : {};
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        if (body.fullName !== undefined) {
+            user.fullName = String(body.fullName || "").trim().slice(0, 120);
+        }
+        if (body.email !== undefined) {
+            user.email = String(body.email || "").trim().toLowerCase();
+        }
+        if (body.phone !== undefined) {
+            user.phone = String(body.phone || "").replace(/\D/g, "").slice(0, 15);
+        }
+        if (body.bio !== undefined) {
+            user.bio = String(body.bio || "").trim().slice(0, 500);
+        }
+        if (req.file?.filename) {
+            user.avatarImage = `/uploads/avatars/${req.file.filename}`;
+        } else if (body.avatarUrl !== undefined) {
+            user.avatarImage = String(body.avatarUrl || "").trim();
+        } else if (body.avatarImage !== undefined) {
+            user.avatarImage = String(body.avatarImage || "").trim();
+        }
+
+        if (body.socialLinks !== undefined) {
+            const socialLinks = parseOptionalJsonObject(body.socialLinks);
+            user.socialLinks = {
+                github: String(socialLinks?.github || "").trim(),
+                twitter: String(socialLinks?.twitter || "").trim(),
+                portfolio: String(socialLinks?.portfolio || "").trim(),
+            };
+        }
+        if (body.emailPreferences !== undefined) {
+            const emailPreferences = parseOptionalJsonObject(body.emailPreferences);
+            user.emailPreferences = {
+                newComponents: Boolean(emailPreferences?.newComponents),
+                reviewComments: Boolean(emailPreferences?.reviewComments),
+                newsletters: Boolean(emailPreferences?.newsletters),
+            };
+        }
+
+        await user.save();
+        await syncSqlUserAccount(user);
+
+        return res.json(buildSuccess({ user: toPublicUserPayload(user, req) }));
+    } catch (error) {
+        logger.error("profile_update_failed", { error: error.message });
+        return res.status(500).json({ message: "Unable to update profile." });
+    }
+});
+
+apiRouter.get("/dashboard", requireAuth, async (req, res) => {
+    try {
+        const role = String(req.user?.role || "").toLowerCase();
+        const filter = role === "admin" ? {} : { createdBy: req.user._id };
+        const [components, total, mostViewed, topRated] = await Promise.all([
+            Component.find(filter).sort({ createdAt: -1 }).limit(20).lean(),
+            Component.countDocuments(filter),
+            Component.find(filter).sort({ views: -1, createdAt: -1 }).limit(5).select("id name views averageRating category").lean(),
+            Component.find(filter).sort({ averageRating: -1, ratingsCount: -1, createdAt: -1 }).limit(5).select("id name averageRating ratingsCount category").lean(),
+        ]);
+
+        return res.json(buildSuccess({
+            components,
+            pagination: {
+                total,
+                page: 1,
+                limit: 20,
+                pages: Math.max(1, Math.ceil(total / 20)),
+            },
+            mostViewed,
+            topRated,
+        }));
+    } catch (error) {
+        logger.error("dashboard_fetch_failed", { error: error.message });
+        return res.status(500).json({ message: "Unable to fetch dashboard data." });
+    }
+});
+
+apiRouter.use("/admin/sql", createSqlRouter());
 
 apiRouter.use(
     "/vector",

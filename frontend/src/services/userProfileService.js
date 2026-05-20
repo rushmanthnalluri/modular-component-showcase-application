@@ -2,7 +2,7 @@ import { apiRequest } from "@/services/apiClient";
 import { updateStoredAuthUser } from "@/services/authAccess";
 
 export async function getCurrentUserProfile() {
-  const payload = await apiRequest("/users/me", { method: "GET" });
+  const payload = await apiRequest("/profile", { method: "GET" });
   return payload?.user || null;
 }
 
@@ -33,12 +33,12 @@ export async function updateCurrentUserProfile({
       formData.append("avatarUrl", String(avatarUrl || ""));
     }
 
-    payload = await apiRequest("/users/me", {
+    payload = await apiRequest("/profile", {
       method: "PUT",
       body: formData,
     });
   } else {
-    payload = await apiRequest("/users/me", {
+    payload = await apiRequest("/profile", {
       method: "PUT",
       body: JSON.stringify({
         fullName,
