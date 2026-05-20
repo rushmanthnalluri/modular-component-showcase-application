@@ -75,9 +75,9 @@ services:
       - key: PORT
         value: 8000
       - key: BACKEND_URL
-        value: https://modular-component-showcase-backend.onrender.com
+        value: http://modular-component-showcase-backend:5000
       - key: SPRING_SERVICE_URL
-        value: https://modular-component-showcase-spring-service.onrender.com
+        value: http://modular-component-showcase-spring-service:8081
       - key: SQL_SERVICE_URL
         sync: false
       - key: REQUEST_TIMEOUT_SECONDS
