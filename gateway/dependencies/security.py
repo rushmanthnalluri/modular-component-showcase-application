@@ -23,7 +23,9 @@ class SecurityPrincipal:
 
 
 def _jwt_secret() -> str:
+    # FastAPI gateway validates the same HS256 secret that Spring/other services sign with.
     return os.getenv("JWT_SECRET") or os.getenv("SPRING_JWT_SECRET") or "development-secret"
+
 
 
 def _jwt_decode_kwargs() -> dict:
@@ -39,15 +41,17 @@ def _jwt_decode_kwargs() -> dict:
 
 def _resolve_token(
     token: str | None,
-    access_token_cookie: str | None,
-    backend_access_token_cookie: str | None,
+    *candidate_tokens: str | None,
 ) -> str | None:
-    return (
-        (token or "").strip()
-        or (access_token_cookie or "").strip()
-        or (backend_access_token_cookie or "").strip()
-        or None
-    )
+    """Return the first non-empty token from a list of candidates."""
+    for t in (token, *candidate_tokens):
+        if t is None:
+            continue
+        t = str(t).strip()
+        if t:
+            return t
+    return None
+
 
 
 def _bearer_token(value: str | None) -> str | None:
@@ -75,12 +79,22 @@ def _principal_from_token(token: str, expected_token_type: str = "access") -> Se
 
 def get_current_principal(
     token: str | None = Depends(oauth2_scheme),
+    # Cookie aliases observed across services / clients.
     access_token_cookie: str | None = Cookie(default=None, alias="accessToken"),
     backend_access_token_cookie: str | None = Cookie(default=None, alias="auth_token"),
+    access_token_cookie_snake: str | None = Cookie(default=None, alias="access_token"),
+    backend_access_token_cookie_snake: str | None = Cookie(default=None, alias="authToken"),
 ) -> SecurityPrincipal:
-    token = _resolve_token(token, access_token_cookie, backend_access_token_cookie)
+    token = _resolve_token(
+        token,
+        access_token_cookie,
+        backend_access_token_cookie,
+        access_token_cookie_snake,
+        backend_access_token_cookie_snake,
+    )
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
 
     try:
         return _principal_from_token(token)
@@ -89,21 +103,44 @@ def get_current_principal(
 
 
 def verify_request_jwt(request: Request) -> SecurityPrincipal:
-    token = _resolve_token(
+    token_candidates: list[str | None] = [
         _bearer_token(request.headers.get("authorization")),
-        request.cookies.get("accessToken") if hasattr(request, "cookies") else None,
-        request.cookies.get("auth_token") if hasattr(request, "cookies") else None,
-    )
+        # Common cookie aliases
+        (request.cookies.get("accessToken") if hasattr(request, "cookies") else None),
+        (request.cookies.get("access_token") if hasattr(request, "cookies") else None),
+        (request.cookies.get("auth_token") if hasattr(request, "cookies") else None),
+        (request.cookies.get("authToken") if hasattr(request, "cookies") else None),
+    ]
+
+    # Optional production debugging (safe to leave off by default)
+    if os.getenv("DEBUG_AUTH_EXTRACTION", "false").lower() == "true":
+        try:
+            logger_info = {
+                "authorization_header_present": bool(request.headers.get("authorization")),
+                "cookies_present": list(getattr(request, "cookies", {}) or {}).copy(),
+                "token_candidates_resolved": [bool(t) for t in token_candidates],
+            }
+            print("[auth-debug]", logger_info)
+        except Exception:
+            pass
+
+    token = _resolve_token(None, *token_candidates)
     if not token:
+        if os.getenv("DEBUG_AUTH_EXTRACTION", "false").lower() == "true":
+            print("[auth-debug] no token resolved")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
     try:
         return _principal_from_token(token)
-    except Exception as exc:  # pragma: no cover - boundary behavior
+    except Exception as exc:
+        if os.getenv("DEBUG_AUTH_EXTRACTION", "false").lower() == "true":
+            print("[auth-debug] invalid token:", str(exc))
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
 
 
+
 def require_roles(*roles: str) -> Callable[[SecurityPrincipal], SecurityPrincipal]:
+    """Dependency factory enforcing RBAC for a set of allowed roles."""
     allowed = {role.lower() for role in roles}
 
     def _dependency(principal: SecurityPrincipal = Depends(get_current_principal)) -> SecurityPrincipal:
@@ -112,3 +149,19 @@ def require_roles(*roles: str) -> Callable[[SecurityPrincipal], SecurityPrincipa
         return principal
 
     return _dependency
+
+
+
+# Exposed for debugging token extraction issues in production.
+# Enable by setting `DEBUG_AUTH_EXTRACTION=true`.
+def _debug_auth_extraction_payload(request: Request) -> dict:
+    try:
+        return {
+            "authorization": bool(request.headers.get("authorization")),
+            "cookies_present": list(request.cookies.keys()),
+            "accessToken_cookie_present": bool(request.cookies.get("accessToken")),
+            "auth_token_cookie_present": bool(request.cookies.get("auth_token")),
+        }
+    except Exception:
+        return {}
+
