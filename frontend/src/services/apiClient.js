@@ -3,6 +3,21 @@ const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
 const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
 const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-backend.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const BACKEND_FALLBACK_PREFIXES = [
+  "/api",
+  "/auth",
+  "/captcha",
+  "/components",
+  "/dashboard",
+  "/profile",
+  "/admin/sql",
+  "/reviews",
+  "/discussions",
+  "/users",
+  "/email",
+  "/search",
+  "/vector",
+];
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
 let csrfBootstrapPromise = null;
 let memoryCsrfToken = null;
@@ -243,7 +258,10 @@ async function callApi(method, url, body, options = {}) {
     } catch {
       // Ignore JSON parse errors for non-JSON error responses.
     }
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    error.url = url;
+    throw error;
   }
 
   if (response.status === 204) {
@@ -288,6 +306,11 @@ async function ensureCsrfCookieAt(baseUrl, csrfPath) {
   }
 }
 
+function shouldRetryAgainstBackend(path) {
+  const normalizedPath = String(path || "").trim().toLowerCase();
+  return BACKEND_FALLBACK_PREFIXES.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
+}
+
 export async function apiRequest(path, options = {}) {
   const method = String(options.method || "GET").toUpperCase();
   const baseUrl = resolveBaseUrl(path);
@@ -306,7 +329,19 @@ export async function apiRequest(path, options = {}) {
     await ensureCsrfCookie(`${baseUrl}${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}`);
   }
 
-  return callApi(method, toAbsoluteFetchUrl(baseUrl, normalizedPath), body, { headers });
+  try {
+    return await callApi(method, toAbsoluteFetchUrl(baseUrl, normalizedPath), body, { headers });
+  } catch (error) {
+    const retryableStatus = !error || typeof error !== "object"
+      ? false
+      : [404, 500, 502, 503, 504].includes(Number(error.status || 0));
+
+    if (baseUrl === GATEWAY_BASE_URL && shouldRetryAgainstBackend(normalizedPath) && retryableStatus) {
+      return backendApiRequest(path, options);
+    }
+
+    throw error;
+  }
 }
 
 export async function gatewayRequest(path, options = {}) {
