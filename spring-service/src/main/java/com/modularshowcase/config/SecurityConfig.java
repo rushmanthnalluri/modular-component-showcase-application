@@ -22,19 +22,23 @@ public class SecurityConfig {
                 // CSRF is disabled because this service is a stateless JWT-based REST API.
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.deny())
-                        .contentTypeOptions(contentTypeOptions -> {})
-                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Ensure CORS preflight (OPTIONS) is never blocked by Spring Security
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/spring/auth/**", "/actuator/health/**", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/spring/admin/**").hasRole("ADMIN")
                         .requestMatchers("/spring/developer/**").hasAnyRole("DEVELOPER", "ADMIN")
                         .requestMatchers("/spring/**").authenticated()
                         .anyRequest().permitAll()
                 )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .contentTypeOptions(contentTypeOptions -> {})
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+
 
         return http.build();
     }
