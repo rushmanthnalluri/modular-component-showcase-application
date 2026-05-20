@@ -37,8 +37,8 @@ Publish Directory: dist
 **Environment Variables:**
 ```
 NODE_VERSION=20
-VITE_API_BASE_URL=https://your-backend.onrender.com
-VITE_GATEWAY_URL=https://your-gateway.onrender.com  # If using gateway
+VITE_API_BASE_URL=https://modular-component-showcase-gateway.onrender.com
+VITE_GATEWAY_URL=https://modular-component-showcase-gateway.onrender.com
 VITE_APP_NAME=Modular Component Showcase
 ```
 

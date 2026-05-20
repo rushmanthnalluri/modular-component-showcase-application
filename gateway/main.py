@@ -120,6 +120,52 @@ app.include_router(sqlController.router)
 app.include_router(componentController.router)
 app.include_router(springController.router)
 
+# ----------------------------
+# Frontend compatibility aliases
+# ----------------------------
+# The frontend expects these legacy/top-level paths under /api/*.
+# Upstream controllers are mounted under service-specific prefixes
+# (e.g. /authservice, /springservice, /sqlservice). These aliases forward
+# requests into the generic /api proxy.
+
+from fastapi import Response as _Response
+
+
+def _forward_to_backend(full_path: str, request: Request):
+    """Use the same proxy logic as /api/{full_path}.
+
+    Implemented as an internal call to avoid route drift.
+    """
+    return proxy_api(full_path=full_path, request=request)
+
+
+@app.api_route("/api/profile", methods=["GET", "PUT", "PATCH", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_profile(request: Request):
+    # Spring service holds user profile + dashboard.
+    return await _forward_to_backend("profile", request)
+
+
+@app.api_route("/api/dashboard", methods=["GET", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_dashboard(request: Request):
+    return await _forward_to_backend("dashboard", request)
+
+
+@app.api_route(
+    "/api/admin/sql/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+async def api_admin_sql_proxy(request: Request, full_path: str):
+    # Map /api/admin/sql/* -> /api/sqlservice/* or /api/sql/* depending on backend.
+    # We forward to the backend path the SQL service controller expects.
+    return await _forward_to_backend(f"sql/{full_path}", request)
+
+
+@app.api_route("/api/admin/sql", methods=["GET", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_admin_sql_root(request: Request):
+    return await _forward_to_backend("sql", request)
+
+
 
 PUBLIC_API_PREFIXES = ("auth", "health", "readyz", "livez", "captcha", "email")
 PUBLIC_API_READ_PREFIXES = (

@@ -56,6 +56,10 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          VITE_API_BASE_URL: https://modular-component-showcase-gateway.onrender.com
+          VITE_GATEWAY_URL: https://modular-component-showcase-gateway.onrender.com
+          VITE_USE_GATEWAY: "true"
         run: |
           npm ci
           npm run build
