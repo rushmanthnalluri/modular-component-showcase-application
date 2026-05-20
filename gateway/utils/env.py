@@ -60,11 +60,13 @@ class Settings(BaseSettings):
         """
         github_pages_frontend = "https://rushmanthnalluri.github.io"
         render_frontend = "https://modular-component-showcase-frontend.onrender.com"
+        render_app_url = "https://modular-component-showcase-application-ve5e.onrender.com"
 
         # FRONTEND_URL is still respected for flexibility across environments.
         return [
             github_pages_frontend,
             render_frontend,
+            render_app_url,
             self.frontend_url,
             "http://localhost:5173",
             "http://localhost:8080",
