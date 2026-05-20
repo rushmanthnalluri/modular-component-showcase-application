@@ -53,14 +53,25 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        """Return allowed CORS origins."""
+        """Return allowed CORS origins.
+
+        Production must explicitly allow the GitHub Pages origin and the Render frontend origin.
+        Avoid wildcard origins because credentials/JWT cookies are used.
+        """
+        github_pages_frontend = "https://rushmanthnalluri.github.io"
+        render_frontend = "https://modular-component-showcase-frontend.onrender.com"
+
+        # FRONTEND_URL is still respected for flexibility across environments.
         return [
+            github_pages_frontend,
+            render_frontend,
             self.frontend_url,
             "http://localhost:5173",
             "http://localhost:8080",
             "http://127.0.0.1:5173",
             "http://127.0.0.1:8080",
         ]
+
 
     @property
     def auth_service_base_url(self) -> str:
