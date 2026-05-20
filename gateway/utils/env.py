@@ -60,19 +60,28 @@ class Settings(BaseSettings):
         """
         github_pages_frontend = "https://rushmanthnalluri.github.io"
         render_frontend = "https://modular-component-showcase-frontend.onrender.com"
-        render_app_url = "https://modular-component-showcase-application-ve5e.onrender.com"
+        render_app_urls = [
+            "https://modular-component-showcase-application-222h.onrender.com",
+            "https://modular-component-showcase-application-ve5e.onrender.com",
+        ]
+        configured_origins = [
+            origin.strip()
+            for origin in os.getenv("FRONTEND_ORIGINS", "").split(",")
+            if origin and origin.strip()
+        ]
 
         # FRONTEND_URL is still respected for flexibility across environments.
-        return [
+        return list(dict.fromkeys([
             github_pages_frontend,
             render_frontend,
-            render_app_url,
+            *render_app_urls,
+            *configured_origins,
             self.frontend_url,
             "http://localhost:5173",
             "http://localhost:8080",
             "http://127.0.0.1:5173",
             "http://127.0.0.1:8080",
-        ]
+        ]))
 
 
     @property
