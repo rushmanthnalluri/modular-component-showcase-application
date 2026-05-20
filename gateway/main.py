@@ -216,6 +216,29 @@ async def api_admin_sql_root(request: Request):
     return await _forward_to_backend("sql", request)
 
 
+def _forward_vector_search_to_backend(full_path: str, request: Request):
+    """Forward vector-search aliases into the backend vector router."""
+    suffix = str(full_path or "").strip("/")
+    vector_path = "vector" if not suffix else f"vector/{suffix}"
+    return proxy_api(full_path=vector_path, request=request)
+
+
+@app.api_route("/api/vector-search", methods=["GET", "POST", "OPTIONS", "HEAD"], include_in_schema=False)
+async def api_vector_search_root(request: Request):
+    if request.method.upper() == "GET":
+        return await _forward_vector_search_to_backend("providers/capabilities", request)
+    return await _forward_vector_search_to_backend("", request)
+
+
+@app.api_route(
+    "/api/vector-search/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+async def api_vector_search_proxy(request: Request, full_path: str):
+    return await _forward_vector_search_to_backend(full_path, request)
+
+
 
 PUBLIC_API_PREFIXES = ("auth", "health", "readyz", "livez", "captcha", "email")
 PUBLIC_API_READ_PREFIXES = (
@@ -224,6 +247,7 @@ PUBLIC_API_READ_PREFIXES = (
     "discussions",
     "search",
     "vector/providers/capabilities",
+    "vector-search",
 )
 PUBLIC_API_SEARCH_PATHS = {
     "search",
