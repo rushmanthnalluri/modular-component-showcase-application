@@ -308,7 +308,7 @@ async function ensureCsrfCookieAt(baseUrl, csrfPath) {
     return;
   }
 
-  if (getCookieValue("csrf_token")) {
+  if (memoryCsrfToken || getCookieValue("csrf_token")) {
     return;
   }
 
