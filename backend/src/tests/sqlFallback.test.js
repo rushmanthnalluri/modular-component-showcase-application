@@ -46,6 +46,28 @@ test("sql helpers fall back cleanly when connection settings are absent", async 
   }
 });
 
+test("sql helpers honor sslmode in DATABASE_URL even when PGSSL is false", async () => {
+  const snapshot = snapshotSqlEnv();
+
+  try {
+    await closeSqlPool();
+    delete process.env.PGHOST;
+    delete process.env.PGUSER;
+    delete process.env.PGPASSWORD;
+    delete process.env.PGDATABASE;
+    delete process.env.PGPORT;
+    process.env.PGSSL = "false";
+    process.env.DATABASE_URL = "postgresql://user:pass@example.com:5432/db?sslmode=require";
+
+    assert.equal(hasSqlConnectionConfig(), true);
+    const pool = getSqlPool();
+    assert.ok(pool);
+  } finally {
+    await closeSqlPool();
+    restoreSqlEnv(snapshot);
+  }
+});
+
 test("sql fallback evidence still includes required tables, indexes, and fixtures", () => {
   const ddl = DDL.join("\n");
 

@@ -6,8 +6,10 @@ RUN npm ci --legacy-peer-deps --no-audit --no-fund || npm install --legacy-peer-
 
 COPY . .
 ARG VITE_GATEWAY_URL=http://localhost:8000
+ARG VITE_BACKEND_URL=http://localhost:5000
 ARG VITE_USE_GATEWAY=true
 ENV VITE_GATEWAY_URL=${VITE_GATEWAY_URL}
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 ENV VITE_USE_GATEWAY=${VITE_USE_GATEWAY}
 RUN npm run build
 
