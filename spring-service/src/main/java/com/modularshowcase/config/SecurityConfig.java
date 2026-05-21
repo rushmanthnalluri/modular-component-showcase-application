@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Ensure CORS preflight (OPTIONS) is never blocked by Spring Security
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/spring/auth/**", "/spring/health", "/actuator/health/**", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/spring/auth/**", "/spring/health", "/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/spring/admin/**").hasRole("ADMIN")
                         .requestMatchers("/spring/developer/**").hasAnyRole("DEVELOPER", "ADMIN")
                         .requestMatchers("/spring/**").authenticated()
