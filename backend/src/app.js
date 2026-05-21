@@ -141,9 +141,9 @@ const defaultLocalOrigins = [
 const defaultProductionOrigins = [
     "https://rushmanthnalluri.github.io",
     "https://modular-component-showcase-frontend.onrender.com",
-    "https://modular-component-showcase-gateway.onrender.com",
-    "https://modular-component-showcase-application-222h.onrender.com",
     "https://modular-component-showcase-application-ve5e.onrender.com",
+    "https://modular-component-showcase-application-222h.onrender.com",
+    "https://modular-component-showcase-application.onrender.com",
 ];
 const allowedOrigins = Array.from(new Set([
     ...(isProduction ? defaultProductionOrigins : defaultLocalOrigins),
