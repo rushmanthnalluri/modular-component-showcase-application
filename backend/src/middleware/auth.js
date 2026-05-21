@@ -27,7 +27,10 @@ export function createAuthMiddleware({ User, jwtSecret, isProduction }) {
                 return res.status(401).json({ message: "Authentication required." });
             }
 
-            const payload = jwt.verify(token, jwtSecret);
+            const options = {};
+            if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+            if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+            const payload = jwt.verify(token, jwtSecret, options);
             if (payload?.tokenType && payload.tokenType !== "access") {
                 return res.status(401).json({ message: "Invalid token." });
             }

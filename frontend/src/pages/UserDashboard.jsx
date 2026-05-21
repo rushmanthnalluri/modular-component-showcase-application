@@ -234,6 +234,7 @@ const UserDashboard = () => {
                   value={form.fullName}
                   onChange={handleChange}
                   placeholder="Enter your full name"
+                  autoComplete="name"
                 />
               </div>
               <div className="user-dashboard-field">
@@ -245,6 +246,7 @@ const UserDashboard = () => {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
+                  autoComplete="email"
                 />
               </div>
               <div className="user-dashboard-field">
@@ -255,6 +257,7 @@ const UserDashboard = () => {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="Enter your phone"
+                  autoComplete="tel"
                 />
               </div>
             </div>
