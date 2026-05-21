@@ -227,9 +227,20 @@ function isFormDataBody(value) {
 async function callApi(method, url, body, options = {}) {
   const csrfToken =
     options.withCredentials === false ? null : (memoryCsrfToken || getCookieValue("csrf_token"));
+  
+  let token = null;
+  if (typeof window !== "undefined") {
+    try {
+      token = localStorage.getItem("authToken");
+    } catch {
+      // Ignore security/sandbox local storage exceptions.
+    }
+  }
+
   const headers = {
     ...(options.headers || {}),
     ...(csrfToken && !isSafeReadonlyMethod(method) ? { "x-csrf-token": csrfToken } : {}),
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
   };
   if (!isFormDataBody(body) && body !== undefined && !Object.keys(headers).some((key) => key.toLowerCase() === "content-type")) {
     headers["Content-Type"] = "application/json";
