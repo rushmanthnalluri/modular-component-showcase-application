@@ -95,7 +95,7 @@ async def _check_service(name: str, base_url: str, path: str = "/health") -> dic
             "service": name,
             "status": "down",
             "response_time_ms": round(response_time_ms, 3),
-            "error_message": f"{DEPENDENCY_UNAVAILABLE_MESSAGE} ({type(exc).__name__}: {str(exc)})",
+            "error_message": DEPENDENCY_UNAVAILABLE_MESSAGE,
         }
 
 

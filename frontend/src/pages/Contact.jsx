@@ -177,6 +177,7 @@ const Contact = () => {
                 placeholder="Short title of your issue"
                 className="support-input"
                 maxLength={120}
+                autoComplete="off"
                 required
               />
 
