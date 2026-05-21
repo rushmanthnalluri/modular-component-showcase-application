@@ -38,6 +38,7 @@ export function createCsrfMiddleware({ isProduction }) {
             ...(req.cookies || {}),
             [CSRF_COOKIE_NAME]: token,
         };
+        req.csrfTokenGenerated = true;
 
         return next();
     }
@@ -53,6 +54,15 @@ export function createCsrfMiddleware({ isProduction }) {
 
         const authHeader = String(req.headers.authorization || "");
         if (authHeader.startsWith("Bearer ")) {
+            return next();
+        }
+
+        const hasSessionOrCsrfCookie = Boolean(
+            (req.cookies?.csrf_token && !req.csrfTokenGenerated) ||
+            req.cookies?.auth_token ||
+            req.cookies?.refresh_token
+        );
+        if (!hasSessionOrCsrfCookie) {
             return next();
         }
 

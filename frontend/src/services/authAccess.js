@@ -108,6 +108,10 @@ export async function authenticateUser({ email, password }) {
     payload = await backendApiRequest("/auth/login", request);
   }
 
+  if (payload?.token) {
+    localStorage.setItem("authToken", payload.token);
+  }
+
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload.user));
   notifyAuthChange();
 
@@ -151,6 +155,7 @@ export async function logoutUser() {
   }
 
   localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem("authToken");
   notifyAuthChange();
 }
 
