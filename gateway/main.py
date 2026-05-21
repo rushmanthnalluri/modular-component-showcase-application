@@ -400,6 +400,9 @@ async def status():
         "gateway_host": settings.gateway_host,
         "gateway_port": settings.gateway_port,
         "debug": settings.debug,
+        "backend_url": settings.backend_url,
+        "spring_service_url": settings.spring_service_url,
+        "spring_service_base_url": settings.spring_service_base_url,
     }
 
 
