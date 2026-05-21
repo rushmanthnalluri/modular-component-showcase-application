@@ -108,6 +108,11 @@ services:
         value: modular-component-showcase
       - key: JWT_AUDIENCE
         value: modular-component-showcase-clients
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: modular-component-showcase-backend
+          envVarKey: JWT_SECRET
       - key: OTEL_EXPORTER_OTLP_ENDPOINT
         sync: false
 
@@ -125,7 +130,10 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: SPRING_JWT_SECRET
-        sync: false
+        fromService:
+          type: web
+          name: modular-component-showcase-backend
+          envVarKey: JWT_SECRET
       - key: SPRING_ALLOWED_ORIGINS
         value: https://rushmanthnalluri.github.io,https://modular-component-showcase-application-222h.onrender.com,https://modular-component-showcase-application-ve5e.onrender.com
       - key: SPRING_PROFILES_ACTIVE

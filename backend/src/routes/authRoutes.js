@@ -144,8 +144,8 @@ export function createAuthRouter({
 
             await syncSqlUserAccount(user);
 
-            const accessToken = createAccessToken(user.id);
-            const refreshToken = createRefreshToken(user.id);
+            const accessToken = createAccessToken(user.id, user.email, user.role);
+            const refreshToken = createRefreshToken(user.id, user.email, user.role);
             issueAuthCookies(req, res, { accessToken, refreshToken });
 
             return successPayload(res, {
@@ -182,8 +182,8 @@ export function createAuthRouter({
                 return errorPayload(res, "UNAUTHORIZED", "Invalid refresh token.", 401);
             }
 
-            const newAccessToken = createAccessToken(user.id);
-            const newRefreshToken = createRefreshToken(user.id);
+            const newAccessToken = createAccessToken(user.id, user.email, user.role);
+            const newRefreshToken = createRefreshToken(user.id, user.email, user.role);
             issueAuthCookies(req, res, { accessToken: newAccessToken, refreshToken: newRefreshToken });
 
             return successPayload(res, {

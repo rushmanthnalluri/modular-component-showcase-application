@@ -206,16 +206,31 @@ const metricsTracker = {
     errorsTotal: 0,
 };
 
-function createAccessToken(userId) {
-    return jwt.sign({ userId, tokenType: "access" }, jwtSecret, { expiresIn: accessTokenExpiresIn });
+function createAccessToken(userId, email = "", role = "") {
+    const payload = { userId, tokenType: "access" };
+    if (email) payload.email = email;
+    if (role) payload.role = role;
+    const options = { expiresIn: accessTokenExpiresIn };
+    if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+    if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+    return jwt.sign(payload, jwtSecret, options);
 }
 
-function createRefreshToken(userId) {
-    return jwt.sign({ userId, tokenType: "refresh" }, jwtSecret, { expiresIn: refreshTokenExpiresIn });
+function createRefreshToken(userId, email = "", role = "") {
+    const payload = { userId, tokenType: "refresh" };
+    if (email) payload.email = email;
+    if (role) payload.role = role;
+    const options = { expiresIn: refreshTokenExpiresIn };
+    if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+    if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+    return jwt.sign(payload, jwtSecret, options);
 }
 
 function verifyRefreshToken(token) {
-    const payload = jwt.verify(token, jwtSecret);
+    const options = {};
+    if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+    if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+    const payload = jwt.verify(token, jwtSecret, options);
     if (!payload?.userId || payload?.tokenType !== "refresh") {
         throw new Error("Invalid refresh token payload");
     }
