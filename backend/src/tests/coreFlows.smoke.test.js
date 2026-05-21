@@ -13,6 +13,14 @@ process.env.ALLOW_MEMORY_FALLBACK = "true";
 process.env.SQL_AUTO_MIGRATE = "false";
 process.env.SEED_SHOWCASE_ON_START = "false";
 
+// Prevent PostgreSQL connection timeouts by setting configuration variables to empty strings
+process.env.DATABASE_URL = "";
+process.env.PGHOST = "";
+process.env.PGPORT = "";
+process.env.PGUSER = "";
+process.env.PGPASSWORD = "";
+process.env.PGDATABASE = "";
+
 function getSetCookieHeaders(response) {
   if (typeof response.headers.getSetCookie === "function") {
     return response.headers.getSetCookie();

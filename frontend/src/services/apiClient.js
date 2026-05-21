@@ -1,5 +1,6 @@
 const DEFAULT_DEV_API_BASE_URL = "/api";
 const DEFAULT_DEV_GATEWAY_BASE_URL = "/gateway";
+const DEFAULT_DEV_BACKEND_BASE_URL = "http://localhost:5000";
 const DEFAULT_PRODUCTION_GATEWAY_BASE_URL = "https://modular-component-showcase-gateway.onrender.com";
 const DEFAULT_PRODUCTION_BACKEND_BASE_URL = "https://modular-component-showcase-backend.onrender.com";
 const SAFE_READONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -153,7 +154,7 @@ export const GATEWAY_BASE_URL =
 export const BACKEND_BASE_URL =
   sanitizeConfiguredUrl(import.meta.env.VITE_BACKEND_URL) ||
   inferBrowserBackendBaseUrl() ||
-  DEFAULT_PRODUCTION_BACKEND_BASE_URL;
+  (import.meta.env.DEV ? DEFAULT_DEV_BACKEND_BASE_URL : DEFAULT_PRODUCTION_BACKEND_BASE_URL);
 
 export const USE_GATEWAY =
   String(import.meta.env.VITE_USE_GATEWAY || "true").toLowerCase() !== "false";

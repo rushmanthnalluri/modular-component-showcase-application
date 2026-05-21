@@ -46,18 +46,17 @@ function shouldUseSsl(connectionString) {
         return true;
     }
 
-    if (explicitPgSsl === "false") {
-        return false;
-    }
-
     try {
         const url = new URL(connectionString);
         const sslMode = String(url.searchParams.get("sslmode") || "").trim().toLowerCase();
         const sslEnabled = String(url.searchParams.get("ssl") || "").trim().toLowerCase();
-        return ["require", "verify-ca", "verify-full"].includes(sslMode) || sslEnabled === "true";
+        if (["require", "verify-ca", "verify-full"].includes(sslMode) || sslEnabled === "true") {
+            return true;
+        }
     } catch {
-        return false;
     }
+
+    return false;
 }
 
 export function hasSqlConnectionConfig() {
