@@ -307,6 +307,7 @@ const UserDashboard = () => {
                     value={form.socialLinks.github}
                     onChange={handleChange}
                     placeholder="https://github.com/username"
+                    autoComplete="url"
                   />
                 </div>
                 <div className="user-dashboard-field">
@@ -318,6 +319,7 @@ const UserDashboard = () => {
                     value={form.socialLinks.twitter}
                     onChange={handleChange}
                     placeholder="https://x.com/username"
+                    autoComplete="url"
                   />
                 </div>
                 <div className="user-dashboard-field">
@@ -329,6 +331,7 @@ const UserDashboard = () => {
                     value={form.socialLinks.portfolio}
                     onChange={handleChange}
                     placeholder="https://portfolio.example.com"
+                    autoComplete="url"
                   />
                 </div>
               </div>

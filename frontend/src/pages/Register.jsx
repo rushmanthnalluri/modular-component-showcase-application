@@ -461,6 +461,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Short bio (optional)"
                 maxLength={500}
+                autoComplete="off"
               />
             </div>
 

@@ -183,10 +183,10 @@ function normalizePathname(path = "") {
 
 function toAbsoluteFetchUrl(baseUrl, path = "") {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
-  const normalizedPath = normalizePathname(path);
+  const cleanPath = String(path || "").replace(/^\/+/, "");
 
   if (!normalizedBaseUrl) {
-    return normalizedPath;
+    return `/${cleanPath}`;
   }
 
   const absoluteBaseUrl = /^https?:\/\//i.test(normalizedBaseUrl)
@@ -196,11 +196,11 @@ function toAbsoluteFetchUrl(baseUrl, path = "") {
       : normalizedBaseUrl;
 
   try {
-    return new URL(normalizedPath, absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : `${absoluteBaseUrl}/`)
-      .toString()
-      .replace(/\/+$/, "");
+    const url = new URL(absoluteBaseUrl.endsWith("/") ? absoluteBaseUrl : `${absoluteBaseUrl}/`);
+    url.pathname = url.pathname.endsWith("/") ? `${url.pathname}${cleanPath}` : `${url.pathname}/${cleanPath}`;
+    return url.toString().replace(/\/+$/, "");
   } catch {
-    return `${normalizedBaseUrl}${normalizedPath}`;
+    return `${normalizedBaseUrl}/${cleanPath}`.replace(/\/+/g, "/").replace(":/", "://");
   }
 }
 
@@ -333,7 +333,10 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!isSafeReadonlyMethod(method)) {
-    await ensureCsrfCookie(`${baseUrl}${baseUrl === GATEWAY_BASE_URL ? "/api" : ""}`);
+    const csrfBaseUrl = baseUrl === GATEWAY_BASE_URL
+      ? `${baseUrl}/api`
+      : baseUrl.endsWith("/api") ? baseUrl : `${baseUrl}/api`;
+    await ensureCsrfCookie(csrfBaseUrl);
   }
 
   try {
