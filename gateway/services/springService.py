@@ -58,5 +58,5 @@ class SpringService:
             async with client as http_client:
                 await http_client.request_json("GET", "/spring/health", headers=headers)
                 return {"status": "up", "spring_service": "up"}
-        except httpx.HTTPError:
-            return {"status": "down", "spring_service": "down"}
+        except httpx.HTTPError as e:
+            return {"status": "down", "spring_service": "down", "error": f"{type(e).__name__}: {str(e)}"}
