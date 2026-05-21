@@ -84,15 +84,9 @@ services:
       - key: PORT
         value: 8000
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: modular-component-showcase-backend
-          envVarKey: RENDER_EXTERNAL_URL
+        value: http://modular-component-showcase-backend:5000
       - key: SPRING_SERVICE_URL
-        fromService:
-          type: web
-          name: modular-component-showcase-spring-service
-          envVarKey: RENDER_EXTERNAL_URL
+        value: http://modular-component-showcase-spring-service:8081
       - key: FRONTEND_URL
         fromService:
           type: web
