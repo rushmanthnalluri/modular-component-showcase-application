@@ -1,0 +1,24 @@
+[
+  {
+    "login": "rushmanthnalluri",
+    "id": 223413137,
+    "node_id": "U_kgDODVEDkQ",
+    "avatar_url": "https://avatars.githubusercontent.com/u/223413137?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/rushmanthnalluri",
+    "html_url": "https://github.com/rushmanthnalluri",
+    "followers_url": "https://api.github.com/users/rushmanthnalluri/followers",
+    "following_url": "https://api.github.com/users/rushmanthnalluri/following{/other_user}",
+    "gists_url": "https://api.github.com/users/rushmanthnalluri/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/rushmanthnalluri/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/rushmanthnalluri/subscriptions",
+    "organizations_url": "https://api.github.com/users/rushmanthnalluri/orgs",
+    "repos_url": "https://api.github.com/users/rushmanthnalluri/repos",
+    "events_url": "https://api.github.com/users/rushmanthnalluri/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/rushmanthnalluri/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false,
+    "contributions": 252
+  }
+]
