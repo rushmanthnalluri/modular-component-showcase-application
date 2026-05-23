@@ -1,0 +1,26 @@
+name: Cancel Copilot-initiated workflow runs
+
+on:
+  workflow_run:
+    types: [requested]
+
+permissions:
+  actions: write
+
+jobs:
+  cancel-copilot-run:
+    runs-on: ubuntu-latest
+    if: contains(github.event.workflow_run.actor.login, 'opilot')
+    steps:
+      - name: Cancel the triggered workflow run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            core.info(`Cancelling workflow run ${runId} triggered by ${context.payload.workflow_run.actor.login}`);
+            await github.actions.cancelWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId
+            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
