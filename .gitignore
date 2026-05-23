@@ -74,3 +74,4 @@ gateway/.env.*
 spring-service/.env
 spring-service/.env.*
 !spring-service/.env.example
+spring-service/target/
