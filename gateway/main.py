@@ -97,7 +97,8 @@ app.middleware("http")(SlidingWindowRateLimiter(max_requests=500, window_seconds
 
 @app.middleware("http")
 async def limit_request_body_size(request: Request, call_next):
-    max_content_length = 1_000_000
+    # Allow larger multipart uploads (avatars up to 5MB). Make configurable via env
+    max_content_length = int(os.getenv("GATEWAY_MAX_CONTENT_LENGTH", str(6_000_000)))
     content_length = request.headers.get("content-length")
     if content_length and content_length.isdigit() and int(content_length) > max_content_length:
         return JSONResponse(
