@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0;url=/modular-component-showcase-application/" />
+    <style>html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#333}</style>
+  </head>
+  <body>
+    <div>
+      <div>Loading application… If you are not redirected, <a id="rootLink" href="/modular-component-showcase-application/">click here</a>.</div>
+    </div>
+    <script>
+      // Try to fetch and render the real index.html into this 404 response so
+      // Single-Page App routes work correctly on GitHub Pages (serves 404 for
+      // unknown paths). This preserves the original requested URL for the
+      // client-side router.
+      (function () {
+        const repoBase = '/modular-component-showcase-application';
+        const indexUrl = repoBase + '/index.html';
+        fetch(indexUrl, { credentials: 'same-origin' })
+          .then(function (r) { if (!r.ok) throw new Error('index fetch failed'); return r.text(); })
+          .then(function (html) {
+            document.open();
+            document.write(html);
+            document.close();
+            // If the app expects a different base href, adjust it.
+            try {
+              const baseEl = document.querySelector('base');
+              if (!baseEl) {
+                const b = document.createElement('base');
+                b.setAttribute('href', repoBase + '/');
+                document.head.appendChild(b);
+              }
+            } catch (e) {}
+          })
+          .catch(function () {
+            // fallback to direct redirect
+            var a = document.getElementById('rootLink');
+            if (a) a.style.display = 'inline';
+            setTimeout(function () { window.location.replace(repoBase + '/'); }, 1000);
+          });
+      })();
+    </script>
+  </body>
+</html>
