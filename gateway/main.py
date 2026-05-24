@@ -432,7 +432,12 @@ async def proxy_api(full_path: str, request: Request):
 
 
     target_url = f"{settings.backend_url.rstrip('/')}/api/{full_path}"
-    body = await request.body()
+    # For large multipart uploads, prefer streaming the request body to avoid
+    # buffering the entire payload in memory at the gateway. For other content
+    # types we still read the body into memory for simpler handling.
+    content_type_hdr = str(request.headers.get("content-type") or "").lower()
+    is_multipart = content_type_hdr.startswith("multipart/")
+    body = None
     query_params = dict(request.query_params)
 
     correlation_id = getattr(request.state, "correlation_id", "")
@@ -461,13 +466,25 @@ async def proxy_api(full_path: str, request: Request):
             pool=float(settings.request_timeout_seconds),
         )
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            backend_response = await client.request(
-                method=request.method,
-                url=target_url,
-                headers=outbound_headers,
-                params=query_params,
-                content=body if body else None,
-            )
+            if is_multipart:
+                # Stream multipart content directly from the incoming request
+                backend_response = await client.request(
+                    method=request.method,
+                    url=target_url,
+                    headers=outbound_headers,
+                    params=query_params,
+                    content=request.stream(),
+                )
+            else:
+                # Small/non-multipart payloads are read into memory
+                body = await request.body()
+                backend_response = await client.request(
+                    method=request.method,
+                    url=target_url,
+                    headers=outbound_headers,
+                    params=query_params,
+                    content=body if body else None,
+                )
     except httpx.TimeoutException:
         logger.error(f"Upstream timeout for {target_url} [ID: {correlation_id}]")
         return JSONResponse(
