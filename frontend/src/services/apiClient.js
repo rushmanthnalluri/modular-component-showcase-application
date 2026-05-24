@@ -177,9 +177,7 @@ function isSafeReadonlyMethod(method) {
   return SAFE_READONLY_METHODS.has(String(method || "").toUpperCase());
 }
 
-function normalizePathname(path = "") {
-  return `/${String(path || "").replace(/^\/+/, "")}`;
-}
+// `normalizePathname` was unused and removed to satisfy lint rules.
 
 function toAbsoluteFetchUrl(baseUrl, path = "") {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
