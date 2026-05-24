@@ -142,7 +142,7 @@ export async function logoutUser() {
       method: "POST",
       body: JSON.stringify({}),
     });
-  } catch (error) {
+  } catch {
     try {
       await backendApiRequest("/auth/logout", {
         method: "POST",
