@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="30" y1="28" x2="610" y2="336" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF3F4"/>
+      <stop offset="1" stop-color="#FBE8D8"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#bg)"/>
+  <rect x="164" y="84" width="312" height="64" rx="16" fill="#065F46" fill-opacity=".9"/>
+  <rect x="164" y="84" width="8" height="64" rx="4" fill="#34D399"/>
+  <rect x="164" y="156" width="312" height="64" rx="16" fill="#7F1D1D" fill-opacity=".88"/>
+  <rect x="164" y="156" width="8" height="64" rx="4" fill="#F87171"/>
+  <rect x="164" y="228" width="312" height="64" rx="16" fill="#0C4A6E" fill-opacity=".9"/>
+  <rect x="164" y="228" width="8" height="64" rx="4" fill="#38BDF8"/>
+  <g fill="white" font-family="Arial, sans-serif" font-size="20" font-weight="700">
+    <text x="188" y="123">Saved successfully</text>
+    <text x="188" y="195">Unable to submit form</text>
+    <text x="188" y="267">Background sync running</text>
+  </g>
+</svg>
