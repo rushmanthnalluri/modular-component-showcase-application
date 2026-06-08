@@ -42,6 +42,7 @@ def main() -> None:
             "SPRING_JWT_SECRET": ci_spring_jwt_secret,
             "BACKEND_URL": "http://backend:5000",
             "SPRING_SERVICE_URL": "http://springboot:8081",
+            "PGADMIN_DEFAULT_PASSWORD": secrets.token_urlsafe(32),
         },
         root / "backend/.env": {
             "PORT": "5000",
