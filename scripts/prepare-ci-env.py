@@ -38,10 +38,27 @@ def main() -> None:
 
     overrides = {
         root / ".env": {
+            "POSTGRES_USER": "postgres",
+            "POSTGRES_PASSWORD": "postgres",
+            "POSTGRES_DB": "modular_component_showcase_application",
+            "MONGODB_URI": "mongodb://mongo:27017/modular_components",
+            "DATABASE_URL": "postgresql://postgres:postgres@postgres:5432/modular_component_showcase_application",
+            "NODE_ENV": "production",
             "JWT_SECRET": ci_jwt_secret,
             "SPRING_JWT_SECRET": ci_spring_jwt_secret,
+            "FRONTEND_ORIGINS": "http://localhost:8080,http://localhost:5173",
+            "SPRING_ALLOWED_ORIGINS": "http://localhost:8080,http://localhost:5173,http://localhost:8000",
+            "VITE_GATEWAY_URL": "http://localhost:8000",
+            "VITE_USE_GATEWAY": "true",
             "BACKEND_URL": "http://backend:5000",
             "SPRING_SERVICE_URL": "http://springboot:8081",
+            "FRONTEND_URL": "http://localhost:8080",
+            "REQUEST_TIMEOUT_SECONDS": "20",
+            "REQUEST_MAX_RETRIES": "2",
+            "ALLOW_MEMORY_FALLBACK": "false",
+            "SQL_AUTO_MIGRATE": "true",
+            "PGSSL": "false",
+            "SPRING_PROFILES_ACTIVE": "production",
             "PGADMIN_DEFAULT_PASSWORD": secrets.token_urlsafe(32),
         },
         root / "backend/.env": {
@@ -52,6 +69,7 @@ def main() -> None:
             "JWT_SECRET": ci_jwt_secret,
             "FRONTEND_ORIGINS": "http://localhost:8080,http://localhost:5173",
             "SQL_AUTO_MIGRATE": "true",
+            "PGSSL": "false",
             "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4318",
         },
         root / "frontend/.env": {
