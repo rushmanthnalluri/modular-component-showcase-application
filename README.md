@@ -6,7 +6,6 @@
 
 Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, **FastAPI gateway**, and **Spring Boot microservice**, backed by **PostgreSQL + pgvector** and **MongoDB**, containerized with **Docker**, and deployment-ready with **GitHub Actions CI/CD**.
 
-[!-- Actions badges removed --]
 [![License](https://img.shields.io/github/license/rushmanthnalluri/modular-component-showcase-application?color=2563eb)](#license)
 [![Last Commit](https://img.shields.io/github/last-commit/rushmanthnalluri/modular-component-showcase-application)](https://github.com/rushmanthnalluri/modular-component-showcase-application/commits/main)
 [![Repo Size](https://img.shields.io/github/repo-size/rushmanthnalluri/modular-component-showcase-application)](https://github.com/rushmanthnalluri/modular-component-showcase-application)
@@ -296,16 +295,6 @@ Use these references when setting up configuration:
 
 GitHub Actions now generates runtime `.env` files from the examples before launching Docker Compose, so CI does not depend on local developer files. In production, inject real secrets through GitHub Secrets or your deployment platform instead of committing `.env` files.
 
-## Enterprise Proof Pack
-
-- [docs/final-verification-report.md](docs/final-verification-report.md)
-- [docs/evaluator-upgrade-report.md](docs/evaluator-upgrade-report.md)
-- [docs/viva-ready-theory-to-code-mapping.md](docs/viva-ready-theory-to-code-mapping.md)
-- [docs/testing-and-quality-proof.md](docs/testing-and-quality-proof.md)
-- [docs/security-hardening-proof.md](docs/security-hardening-proof.md)
-- [docs/production-readiness-proof.md](docs/production-readiness-proof.md)
-- [docs/vector-search-verification.md](docs/vector-search-verification.md)
-
 ## Local Development Setup
 
 ### 1. Clone the repository
@@ -453,26 +442,6 @@ ModularComponentShowcaseApplication/
 ├── docker-compose.yml
 └── README.md
 ```
-
----
-
-## Academic Alignment
-
-This repository maps directly to the 25CS1302E evaluation goals:
-
-- **SQL normalization:** PostgreSQL schema is normalized and constrained
-- **NoSQL usage:** MongoDB stores embeddings, logs, and flexible documents
-- **Vector search:** Semantic retrieval uses PostgreSQL pgvector HNSW when available, with MongoDB exact-scan fallback for local/dev environments
-- **API Gateway:** FastAPI provides a dedicated routing and control layer
-- **Microservices:** Frontend, backend, gateway, and Spring Boot service are separated by responsibility
-
-Reference documentation:
-
-- [Architecture](docs/architecture.md)
-- [Database design](docs/database-design.md)
-- [Security](docs/security.md)
-- [Hybrid search](docs/hybrid-search-and-rag.md)
-- [Performance](docs/performance-report.md)
 
 ---
 
