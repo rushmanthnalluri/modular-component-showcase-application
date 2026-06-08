@@ -22,6 +22,7 @@
     <lombok.version>1.18.38</lombok.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <flyway.version>10.21.0</flyway.version>
+    <postgresql.version>42.7.11</postgresql.version>
     <caffeine.version>3.1.8</caffeine.version>
     <jacoco.version>0.8.14</jacoco.version>
     <bytebuddy.version>1.17.5</bytebuddy.version>
@@ -72,6 +73,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

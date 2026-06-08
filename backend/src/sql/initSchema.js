@@ -250,7 +250,12 @@ export const DDL = [
 ];
 
 export async function initializeSqlSchema() {
-    for (const statement of DDL) {
-        await sqlQuery(statement);
+    await sqlQuery("SELECT pg_advisory_lock(hashtext('modular_showcase_schema_init'))");
+    try {
+        for (const statement of DDL) {
+            await sqlQuery(statement);
+        }
+    } finally {
+        await sqlQuery("SELECT pg_advisory_unlock(hashtext('modular_showcase_schema_init'))");
     }
 }

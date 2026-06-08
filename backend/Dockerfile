@@ -9,7 +9,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN addgroup -S appgroup && adduser -S -G appgroup -h /app -s /sbin/nologin appuser && chown -R appuser:appgroup /app
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+    && addgroup -S appgroup \
+    && adduser -S -G appgroup -h /app -s /sbin/nologin appuser \
+    && chown -R appuser:appgroup /app
 USER appuser
 EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD node -e "fetch('http://localhost:5000/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
