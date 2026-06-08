@@ -10,9 +10,13 @@ permissions:
 jobs:
   cancel-copilot-run:
     runs-on: ubuntu-latest
-    if: contains(github.event.workflow_run.actor.login, 'opilot')
     steps:
+      - name: Skip non-Copilot workflow runs
+        if: ${{ !contains(github.event.workflow_run.actor.login, 'opilot') }}
+        run: echo "Workflow run was not initiated by Copilot; nothing to cancel."
+
       - name: Cancel the triggered workflow run
+        if: ${{ contains(github.event.workflow_run.actor.login, 'opilot') }}
         uses: actions/github-script@v7
         with:
           script: |

@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { hasSqlConnectionConfig, query } from "../sql/db.js";
+import { initializeSqlSchema } from "../sql/initSchema.js";
 
 test("sql performance baseline explain analyze", { timeout: 30000 }, async (t) => {
   if (!hasSqlConnectionConfig()) {
     t.skip("SQL connection is not configured.");
     return;
   }
+
+  await initializeSqlSchema();
 
   const result = await query(`
     EXPLAIN (ANALYZE, FORMAT JSON)
