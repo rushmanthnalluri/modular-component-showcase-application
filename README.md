@@ -6,8 +6,7 @@
 
 Modern monorepo architecture built with **React + Vite**, **Node.js + Express**, **FastAPI gateway**, and **Spring Boot microservice**, backed by **PostgreSQL + pgvector** and **MongoDB**, containerized with **Docker**, and deployment-ready with **GitHub Actions CI/CD**.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/ci.yml?branch=main&label=CI&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/github/actions/workflow/status/rushmanthnalluri/modular-component-showcase-application/deploy-pages.yml?branch=main&label=GitHub%20Pages&logo=githubactions)](https://github.com/rushmanthnalluri/modular-component-showcase-application/actions/workflows/deploy-pages.yml)
+[!-- Actions badges removed --]
 [![License](https://img.shields.io/github/license/rushmanthnalluri/modular-component-showcase-application?color=2563eb)](#license)
 [![Last Commit](https://img.shields.io/github/last-commit/rushmanthnalluri/modular-component-showcase-application)](https://github.com/rushmanthnalluri/modular-component-showcase-application/commits/main)
 [![Repo Size](https://img.shields.io/github/repo-size/rushmanthnalluri/modular-component-showcase-application)](https://github.com/rushmanthnalluri/modular-component-showcase-application)
