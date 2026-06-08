@@ -30,7 +30,7 @@
 
 ## Repository Evidence
 - SQL test: `backend/src/tests/sql.transaction-isolation.test.js`
-- theory SQL: `backend/sql/advanced_queries.sql`
+- theory SQL: `sql/advanced_queries.sql`
 - rollback-compatible schema bootstrap: `backend/src/sql/initSchema.js`
 
 ## Backup and Restore

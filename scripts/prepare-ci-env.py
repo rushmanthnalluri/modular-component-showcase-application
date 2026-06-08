@@ -33,7 +33,7 @@ def main() -> None:
         root / "backend/.env": root / "backend/.env.example",
         root / "frontend/.env": root / "frontend/.env.example",
         root / "gateway/.env": root / "gateway/.env.example",
-        root / "spring-service/.env": root / "spring-service/.env.example",
+        root / "springboot/.env": root / "springboot/.env.example",
     }
 
     overrides = {
@@ -41,7 +41,7 @@ def main() -> None:
             "JWT_SECRET": ci_jwt_secret,
             "SPRING_JWT_SECRET": ci_spring_jwt_secret,
             "BACKEND_URL": "http://backend:5000",
-            "SPRING_SERVICE_URL": "http://spring-service:8081",
+            "SPRING_SERVICE_URL": "http://springboot:8081",
         },
         root / "backend/.env": {
             "PORT": "5000",
@@ -59,7 +59,7 @@ def main() -> None:
         },
         root / "gateway/.env": {
             "BACKEND_URL": "http://backend:5000",
-            "SPRING_SERVICE_URL": "http://spring-service:8081",
+            "SPRING_SERVICE_URL": "http://springboot:8081",
             "FRONTEND_URL": "http://localhost:8080",
             "GATEWAY_PORT": "8000",
             "REQUEST_TIMEOUT_SECONDS": "20",
@@ -67,7 +67,7 @@ def main() -> None:
             "JWT_SECRET": ci_jwt_secret,
             "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4318",
         },
-        root / "spring-service/.env": {
+        root / "springboot/.env": {
             "PORT": "8081",
             "SPRING_DATASOURCE_URL": "jdbc:postgresql://postgres:5432/modular_component_showcase_application",
             "SPRING_DATASOURCE_USERNAME": "postgres",

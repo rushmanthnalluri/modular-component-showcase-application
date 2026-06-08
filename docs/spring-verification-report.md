@@ -2,14 +2,14 @@
 
 ## What Was Added
 
-- Maven Wrapper scripts: `spring-service/mvnw`, `spring-service/mvnw.cmd`, and `spring-service/.mvn/wrapper/maven-wrapper.properties`
+- Maven Wrapper scripts: `springboot/mvnw`, `springboot/mvnw.cmd`, and `springboot/.mvn/wrapper/maven-wrapper.properties`
 - Dedicated Spring smoke and contract tests for auth, actuator health, Prometheus, and runtime OpenAPI validation
 - Stable `application-test.properties` for wrapper-driven local and CI verification
 - Wrapper-driven CI steps, JaCoCo reporting, runtime OpenAPI validation, and actuator smoke checks
 
 ## Local Verification Without Maven Installed
 
-Run from `spring-service/`:
+Run from `springboot/`:
 
 ```bash
 ./mvnw test
@@ -46,7 +46,7 @@ SPRING_FLYWAY_ENABLED=false \
 ## OpenAPI Validation Evidence
 
 - Contract source: `contracts/openapi-spring.yaml`
-- Runtime validation test: `spring-service/src/test/java/com/modularshowcase/OpenApiContractValidationTest.java`
+- Runtime validation test: `springboot/src/test/java/com/modularshowcase/OpenApiContractValidationTest.java`
 - CI runtime validator: `tests/verification/validate_spring_runtime.py`
 - Expected secured runtime paths:
   - `/spring/auth/token`
@@ -68,7 +68,7 @@ Prometheus scrape proof remains part of the deployment evidence pack because it 
 
 ## Coverage and Artifacts
 
-- JaCoCo HTML report: `spring-service/target/site/jacoco/index.html`
-- JaCoCo XML report: `spring-service/target/site/jacoco/jacoco.xml`
+- JaCoCo HTML report: `springboot/target/site/jacoco/index.html`
+- JaCoCo XML report: `springboot/target/site/jacoco/jacoco.xml`
 - Coverage summary artifact: generated in CI after `jacoco:report`
 - Spring runtime log artifact: generated in CI during the runtime OpenAPI/Actuator smoke step

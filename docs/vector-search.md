@@ -27,7 +27,7 @@ Relevant files:
 - `backend/src/routes/mongoRoutes.js`
 - `backend/src/services/embeddingProvider.js`
 - `backend/src/sql/initSchema.js`
-- `spring-service/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
+- `springboot/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
 
 ## API
 

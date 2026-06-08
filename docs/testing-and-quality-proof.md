@@ -14,9 +14,9 @@
 - `node --test src/tests/*.test.js` in `backend`: passed with 39 tests and 3 SQL skips
 - `python -m pytest gateway/tests -q`: passed with 45 tests
 - `python -m pytest tests/verification -q`: passed with 8 tests
-- `spring-service\\mvnw.cmd -B test`: passed with 10 tests
-- `spring-service\\mvnw.cmd -B -DskipTests package`: passed
-- `spring-service\\mvnw.cmd -B jacoco:report`: passed
+- `springboot\\mvnw.cmd -B test`: passed with 10 tests
+- `springboot\\mvnw.cmd -B -DskipTests package`: passed
+- `springboot\\mvnw.cmd -B jacoco:report`: passed
 - wrapper-based Spring runtime smoke plus `tests/verification/validate_spring_runtime.py`: passed
 
 ## Quality Gates Now Enforced In Repo
@@ -31,7 +31,7 @@
 - security scans
 
 ## Targeted Fixes That Closed The Remaining Gaps
-- Added a Maven Wrapper to `spring-service` so Spring can run without a machine-level Maven install.
+- Added a Maven Wrapper to `springboot` so Spring can run without a machine-level Maven install.
 - Added Spring smoke, OpenAPI, and Actuator checks under the test profile backed by H2.
 - Added backend fallback tests for SQL DDL evidence and Atlas configuration evidence.
 - Added cross-stack verification tests for deployment smoke, proof-pack presence, contract parity, and Spring runtime validation.

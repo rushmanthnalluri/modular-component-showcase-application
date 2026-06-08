@@ -6,7 +6,7 @@
 | Frontend | UX, routing, API consumption | `frontend/` |
 | Gateway | ingress, policy, tracing, retries | `gateway/` |
 | Backend | business workflows, Mongo + SQL sync, vector search | `backend/` |
-| Spring | enterprise Java CRUD parity and metrics | `spring-service/` |
+| Spring | enterprise Java CRUD parity and metrics | `springboot/` |
 | Observability | scrape, dashboards, tracing | `observability/` |
 
 ## Boundary Rules

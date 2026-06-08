@@ -1,11 +1,11 @@
 # SQL Advanced Patterns
 
 ## Implemented Assets
-- Recursive CTE examples: backend/sql/advanced_queries.sql
-- Window function ranking: backend/sql/advanced_queries.sql
-- Views and triggers: backend/sql/views_and_triggers.sql
-- Procedures/functions: backend/sql/procedures_and_functions.sql
-- Materialized views: backend/sql/materialized_views.sql
+- Recursive CTE examples: sql/advanced_queries.sql
+- Window function ranking: sql/advanced_queries.sql
+- Views and triggers: sql/views_and_triggers.sql
+- Procedures/functions: sql/procedures_and_functions.sql
+- Materialized views: sql/materialized_views.sql
 
 ## Query Usage Guidelines
 - Use recursive CTE only for bounded hierarchies.

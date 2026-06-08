@@ -71,8 +71,8 @@ backend/.env.*
 gateway/.env
 gateway/.env.*
 !gateway/.env.example
-spring-service/.env
-spring-service/.env.*
-!spring-service/.env.example
-spring-service/target/
+springboot/.env
+springboot/.env.*
+!springboot/.env.example
+springboot/target/
 

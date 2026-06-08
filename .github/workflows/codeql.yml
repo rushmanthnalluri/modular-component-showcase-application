@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Spring service
         if: matrix.language == 'java-kotlin'
-        working-directory: spring-service
+        working-directory: springboot
         run: mvn -B -DskipTests package
 
       - name: Perform CodeQL Analysis

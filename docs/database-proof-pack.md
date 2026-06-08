@@ -2,8 +2,8 @@
 
 ## Evidence Sources
 
-- Schema and fixtures: `backend/sql/postgres_schema.sql`, `backend/src/sql/initSchema.js`
-- Advanced SQL examples: `backend/sql/advanced_queries.sql`, `backend/sql/procedures_and_functions.sql`, `backend/sql/views_and_triggers.sql`, `backend/sql/materialized_views.sql`
+- Schema and fixtures: `sql/postgres_schema.sql`, `backend/src/sql/initSchema.js`
+- Advanced SQL examples: `sql/advanced_queries.sql`, `sql/procedures_and_functions.sql`, `sql/views_and_triggers.sql`, `sql/materialized_views.sql`
 - Existing theory docs: `docs/query-plan-analysis.md`, `docs/sql-transactions-acid-isolation-mvcc.md`, `docs/sql-advanced-patterns.md`
 - Test evidence: `backend/src/tests/sql.migration-compatibility.test.js`, `backend/src/tests/sql.performance.test.js`, `backend/src/tests/sql.transaction-isolation.test.js`, `backend/src/tests/sqlFallback.test.js`
 
@@ -33,7 +33,7 @@ If the live SQL tests are skipped because no database is configured, use this ch
 
 1. `backend/src/tests/sqlFallback.test.js` proves the application degrades cleanly when SQL configuration is absent.
 2. The same fallback test asserts required tables, indexes, and materialized views remain in the DDL inventory.
-3. `backend/src/sql/initSchema.js` and `backend/sql/postgres_schema.sql` remain the authoritative schema references.
+3. `backend/src/sql/initSchema.js` and `sql/postgres_schema.sql` remain the authoritative schema references.
 4. `docs/query-plan-analysis.md` and this proof pack document the exact live steps to repeat once PostgreSQL is available.
 
 ## EXPLAIN ANALYZE Screenshot Placeholders

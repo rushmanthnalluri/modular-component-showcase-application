@@ -53,7 +53,7 @@ def test_service_url_overrides_are_respected(monkeypatch):
         SEARCH_SERVICE_URL="http://search-service:5002",
         SQL_SERVICE_URL="http://sql-service:5003",
         COMPONENT_SERVICE_URL="http://component-service:5004",
-        SPRING_SERVICE_URL="http://spring-service:8081",
+        SPRING_SERVICE_URL="http://springboot:8081",
     )
     settings = env_module.settings
 
@@ -61,7 +61,7 @@ def test_service_url_overrides_are_respected(monkeypatch):
     assert settings.search_service_base_url == "http://search-service:5002"
     assert settings.sql_service_base_url == "http://sql-service:5003"
     assert settings.component_service_base_url == "http://component-service:5004"
-    assert settings.spring_service_base_url == "http://spring-service:8081"
+    assert settings.spring_service_base_url == "http://springboot:8081"
 
 
 def test_gateway_entrypoints_expose_same_app():

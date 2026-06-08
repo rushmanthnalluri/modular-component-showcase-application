@@ -16,7 +16,7 @@ x-backend-default-env: &backend-default-env
 
 x-gateway-default-env: &gateway-default-env
   BACKEND_URL: ${BACKEND_URL:-http://backend:5000}
-  SPRING_SERVICE_URL: ${SPRING_SERVICE_URL:-http://spring-service:8081}
+  SPRING_SERVICE_URL: ${SPRING_SERVICE_URL:-http://springboot:8081}
   FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
   JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
   SPRING_JWT_SECRET: ${SPRING_JWT_SECRET:?SPRING_JWT_SECRET is required}
@@ -47,7 +47,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/sql/postgres_schema.sql:/docker-entrypoint-initdb.d/01-postgres_schema.sql:ro
+      - ./sql/postgres_schema.sql:/docker-entrypoint-initdb.d/01-postgres_schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d modular_component_showcase_application"]
       interval: 10s
@@ -141,7 +141,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      spring-service:
+      springboot:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import httpx; httpx.get(\"http://127.0.0.1:8000/health\", timeout=5).raise_for_status()'"]
@@ -170,12 +170,12 @@ services:
     networks:
       - modular_net
 
-  spring-service:
+  springboot:
     build:
-      context: ./spring-service
-    container_name: showcase-spring-service
+      context: ./springboot
+    container_name: showcase-springboot
     env_file:
-      - path: ./spring-service/.env
+      - path: ./springboot/.env
         required: false
     environment:
       <<: *spring-default-env
@@ -219,7 +219,7 @@ services:
         condition: service_healthy
       gateway:
         condition: service_healthy
-      spring-service:
+      springboot:
         condition: service_healthy
     networks:
       - modular_net

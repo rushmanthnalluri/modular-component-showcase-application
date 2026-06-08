@@ -14,8 +14,8 @@ This document records the implementation evidence after the production-readiness
 
 - PostgreSQL pgvector table and HNSW index are defined in:
   - `backend/src/sql/initSchema.js`
-  - `backend/sql/postgres_schema.sql`
-  - `spring-service/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
+  - `sql/postgres_schema.sql`
+  - `springboot/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
 - Runtime query logic is implemented in `backend/src/services/pgVectorSearchService.js`.
 - `POST /api/vector/search/semantic` uses pgvector first and falls back to MongoDB exact scoring only when pgvector is unavailable.
 - The embedding seeder persists generated 128-dimensional embeddings to both MongoDB and pgvector when configured.
@@ -52,7 +52,7 @@ npm test --workspace frontend
 npm run build --workspace frontend
 py -m pytest gateway\tests -q
 py -m pytest tests\verification -q
-cd spring-service && .\mvnw.cmd test
+cd springboot && .\mvnw.cmd test
 docker compose config --quiet
 ```
 

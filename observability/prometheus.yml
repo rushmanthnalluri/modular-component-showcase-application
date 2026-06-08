@@ -20,7 +20,7 @@ scrape_configs:
     static_configs:
       - targets: ["otel-collector:8889"]
 
-  - job_name: spring-service
+  - job_name: springboot
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ["spring-service:8081"]
+      - targets: ["springboot:8081"]

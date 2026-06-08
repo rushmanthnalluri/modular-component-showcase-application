@@ -43,5 +43,5 @@ BCNF requires every determinant to be a candidate key.
 
 ## Drift Prevention
 - Node schema bootstrap: `backend/src/sql/initSchema.js`
-- Spring Flyway migrations: `spring-service/src/main/resources/db/migration`
+- Spring Flyway migrations: `springboot/src/main/resources/db/migration`
 - CI and documentation: contracts, SQL files, and deployment workflows are versioned together

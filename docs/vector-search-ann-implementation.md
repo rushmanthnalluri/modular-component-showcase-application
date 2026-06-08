@@ -33,8 +33,8 @@ USING hnsw (embedding vector_cosine_ops);
 The schema is installed by:
 
 - `backend/src/sql/initSchema.js`
-- `backend/sql/postgres_schema.sql`
-- `spring-service/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
+- `sql/postgres_schema.sql`
+- `springboot/src/main/resources/db/migration/V5__component_vector_embeddings.sql`
 
 ## Runtime Query
 

@@ -4,7 +4,7 @@
 
 - Contracts: `contracts/openapi-backend.yaml`, `contracts/openapi-gateway.yaml`, `contracts/openapi-spring.yaml`
 - Gateway contract tests: `gateway/tests/test_contracts.py`, `gateway/tests/test_openapi_spec_files.py`
-- Spring runtime contract tests: `spring-service/src/test/java/com/modularshowcase/OpenApiContractValidationTest.java`
+- Spring runtime contract tests: `springboot/src/test/java/com/modularshowcase/OpenApiContractValidationTest.java`
 - Cross-contract verification: `tests/verification/test_contract_parity.py`
 - Gateway resilience tests: `gateway/tests/test_gateway_circuit_breaker.py`, `gateway/tests/test_resilience_failover.py`, `gateway/tests/test_timeout_behavior.py`, `gateway/tests/test_rate_limit.py`
 

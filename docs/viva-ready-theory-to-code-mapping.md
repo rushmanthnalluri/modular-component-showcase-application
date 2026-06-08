@@ -6,7 +6,7 @@
 | ER modelling | `docs/er-model-and-cardinality.md` |
 | normalization | `docs/relational-mapping-and-normalization-proof.md` |
 | ACID / isolation / MVCC | `docs/sql-transactions-acid-isolation-mvcc.md` |
-| query planning | `backend/sql/query_optimization_examples.sql`, `docs/query-plan-analysis.md` |
+| query planning | `sql/query_optimization_examples.sql`, `docs/query-plan-analysis.md` |
 
 ## CO2
 | Theory | Code / artifact |

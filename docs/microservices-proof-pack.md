@@ -7,7 +7,7 @@
 | Frontend UX and composition | `frontend/` |
 | Ingress, rate limiting, resilience | `gateway/` |
 | Domain operations and persistence orchestration | `backend/` |
-| Enterprise Java service path | `spring-service/` |
+| Enterprise Java service path | `springboot/` |
 | Observability pipeline | `observability/` |
 
 ## Dependency Graph Placeholders

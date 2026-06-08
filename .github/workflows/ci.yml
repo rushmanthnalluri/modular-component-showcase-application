@@ -202,7 +202,7 @@ jobs:
           cache: 'maven'
       
       - name: Run Maven tests
-        working-directory: spring-service
+        working-directory: springboot
         env:
           SPRING_PROFILES_ACTIVE: test
         run: mvn clean test
@@ -212,7 +212,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: spring-test-results
-          path: 'spring-service/target/surefire-reports/**'
+          path: 'springboot/target/surefire-reports/**'
           if-no-files-found: ignore
 
   docker-build:
@@ -250,11 +250,11 @@ jobs:
           push: false
           tags: modular-showcase-frontend:${{ github.sha }}
       
-      - name: Build spring-service Docker image
+      - name: Build springboot Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./spring-service
-          file: ./spring-service/Dockerfile
+          context: ./springboot
+          file: ./springboot/Dockerfile
           push: false
           tags: modular-showcase-spring:${{ github.sha }}
 
@@ -311,11 +311,11 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "No requirements.txt found"; fi
 
       - name: Start integration stack
-        run: docker compose up -d --build postgres mongo backend spring-service gateway
+        run: docker compose up -d --build postgres mongo backend springboot gateway
 
       - name: Dump integration logs on startup failure
         if: failure()
-        run: docker compose logs postgres mongo backend spring-service gateway
+        run: docker compose logs postgres mongo backend springboot gateway
 
       - name: Wait for gateway health
         run: |

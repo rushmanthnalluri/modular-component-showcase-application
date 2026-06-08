@@ -12,7 +12,7 @@
 - Reviews leaderboard by user.
 
 ## Reference SQL
-- backend/sql/query_optimization_examples.sql
+- sql/query_optimization_examples.sql
 
 ## Example Reading Guide
 When reading `EXPLAIN ANALYZE` focus on:

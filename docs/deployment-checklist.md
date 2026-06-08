@@ -11,7 +11,7 @@
 - build frontend image
 - build backend image
 - build gateway image
-- build spring-service image
+- build springboot image
 
 ## Health and Metrics
 - backend `/health` and `/metrics`

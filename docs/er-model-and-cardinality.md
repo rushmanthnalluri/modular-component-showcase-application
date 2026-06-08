@@ -1,14 +1,14 @@
 # ER Model and Cardinality
 
 ## Purpose
-This file is the conceptual schema proof for CO1. It maps the showcase domain to the implemented relational structures in [backend/sql/postgres_schema.sql](../backend/sql/postgres_schema.sql) and the runtime schema bootstrap in [backend/src/sql/initSchema.js](../backend/src/sql/initSchema.js).
+This file is the conceptual schema proof for CO1. It maps the showcase domain to the implemented relational structures in [sql/postgres_schema.sql](../sql/postgres_schema.sql) and the runtime schema bootstrap in [backend/src/sql/initSchema.js](../backend/src/sql/initSchema.js).
 
 ## Three-Schema Model
 | Schema level | Repository evidence | Meaning |
 |---|---|---|
 | External schema | `contracts/openapi-*.yaml` | Client-visible contracts |
 | Conceptual schema | this ER model, service DTOs, architecture docs | business entities and relationships |
-| Internal schema | `backend/sql/*.sql`, indexes, triggers, materialized views | physical storage and optimization |
+| Internal schema | `sql/*.sql`, indexes, triggers, materialized views | physical storage and optimization |
 
 ## ER Diagram
 ```text

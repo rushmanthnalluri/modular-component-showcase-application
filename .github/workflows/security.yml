@@ -93,5 +93,5 @@ jobs:
           cache: 'maven'
 
       - name: OWASP dependency check
-        working-directory: spring-service
+        working-directory: springboot
         run: mvn -B org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7

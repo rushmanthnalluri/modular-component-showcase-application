@@ -196,7 +196,8 @@ ModularComponentShowcaseApplication/
 |   |   `-- utils/
 |   `-- Dockerfile
 |-- gateway/
-|-- spring-service/
+|-- springboot/
+|-- sql/
 |-- docs/
 |-- .github/
 |-- docker-compose.yml
@@ -212,7 +213,8 @@ ModularComponentShowcaseApplication/
 | `frontend/` | React + Vite client application, pages, reusable UI, preview components, tests, and styling |
 | `backend/` | Express API, auth middleware, controllers, data models, service logic, SQL helpers, tests, and seed scripts |
 | `gateway/` | FastAPI gateway, proxy routing, gateway services, health endpoints, and Python test coverage |
-| `spring-service/` | Spring Boot microservice with JWT auth, JPA CRUD APIs, role-based access, actuator health, and Swagger |
+| `springboot/` | Spring Boot microservice with JWT auth, JPA CRUD APIs, role-based access, actuator health, and Swagger |
+| `sql/` | Shared PostgreSQL schema, views, procedures, materialized views, and query examples |
 | `docs/` | Architecture, deployment, environment, database, monitoring, and troubleshooting documentation |
 | `.github/` | CI/CD workflows for code quality validation and GitHub Pages deployment |
 
@@ -289,7 +291,7 @@ Use these references when setting up configuration:
 - [frontend/.env.example](frontend/.env.example)
 - [backend/.env.example](backend/.env.example)
 - [gateway/.env.example](gateway/.env.example)
-- [spring-service/.env.example](spring-service/.env.example)
+- [springboot/.env.example](springboot/.env.example)
 - [docs/environment-guide.md](docs/environment-guide.md)
 - [render.yaml](render.yaml)
 
@@ -357,12 +359,12 @@ cp .env.example .env
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
 cp gateway/.env.example gateway/.env
-cp spring-service/.env.example spring-service/.env
+cp springboot/.env.example springboot/.env
 ```
 
 ### 4. Run with Docker
 
-Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin, frontend, backend, gateway, and spring-service:
+Use Docker Compose for a full local stack including PostgreSQL, MongoDB, pgAdmin, frontend, backend, gateway, and springboot:
 
 ```bash
 docker compose up --build
@@ -409,13 +411,13 @@ If Docker is not available in your environment, run the following locally on a m
 docker compose config
 
 # Bring up core services (build images)
-docker compose up -d --build postgres mongo backend spring-service gateway
+docker compose up -d --build postgres mongo backend springboot gateway
 
 # Inspect running services
 docker compose ps
 
 # Stream logs for troubleshooting
-docker compose logs -f backend gateway spring-service
+docker compose logs -f backend gateway springboot
 ```
 
 If CI fails with "env file ... not found" or undefined interpolation warnings:
@@ -445,7 +447,8 @@ ModularComponentShowcaseApplication/
 ├── frontend/
 ├── backend/
 ├── gateway/
-├── spring-service/
+├── springboot/
+├── sql/
 ├── docs/
 ├── contracts/
 ├── docker-compose.yml
@@ -462,7 +465,7 @@ This repository maps directly to the 25CS1302E evaluation goals:
 - **NoSQL usage:** MongoDB stores embeddings, logs, and flexible documents
 - **Vector search:** Semantic retrieval uses PostgreSQL pgvector HNSW when available, with MongoDB exact-scan fallback for local/dev environments
 - **API Gateway:** FastAPI provides a dedicated routing and control layer
-- **Microservices:** Frontend, backend, gateway, and Spring service are separated by responsibility
+- **Microservices:** Frontend, backend, gateway, and Spring Boot service are separated by responsibility
 
 Reference documentation:
 
