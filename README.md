@@ -382,6 +382,19 @@ npm run test:backend
 cd gateway && pytest
 ```
 
+### 6. Resetting the Database
+
+If you ever need to completely wipe your local or remote databases and start fresh:
+
+```bash
+cd backend
+npm run db:reset
+npm run seed:showcase
+npm run seed:embeddings
+```
+
+This will completely drop the PostgreSQL public schema, clear all MongoDB collections, and seamlessly populate the databases with default showcase components, users, and pgvector embeddings.
+
 ---
 
 ## Validation & CI troubleshooting
