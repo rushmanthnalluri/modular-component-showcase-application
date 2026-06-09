@@ -60,10 +60,7 @@ class Settings(BaseSettings):
         """
         github_pages_frontend = "https://rushmanthnalluri.github.io"
         render_frontend = "https://modular-component-showcase-frontend.onrender.com"
-        render_app_urls = [
-            "https://modular-component-showcase-application-222h.onrender.com",
-            "https://modular-component-showcase-application-ve5e.onrender.com",
-        ]
+        render_app_urls = []
         configured_origins = [
             origin.strip()
             for origin in os.getenv("FRONTEND_ORIGINS", "").split(",")
