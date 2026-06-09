@@ -68,9 +68,9 @@ This project is especially useful for:
 
 | Surface | Purpose | URL / Access |
 |---|---|---|
-| Frontend | Public client application | https://rushmanthnalluri.github.io/modular-component-showcase-application/ |
-| Backend API | Express API service | https://modular-component-showcase-application.onrender.com/api |
-| Gateway | FastAPI proxy/gateway layer |https://modular-component-showcase-application-ve5e.onrender.com |
+| Frontend | Public client application | [https://rushmanthnalluri.github.io/modular-component-showcase-application/](https://rushmanthnalluri.github.io/modular-component-showcase-application/) |
+| Backend API | Express API service | [https://modular-component-showcase-application.onrender.com/api](https://modular-component-showcase-application.onrender.com/api) |
+| Gateway | FastAPI proxy/gateway layer | [https://modular-component-showcase-application-ve5e.onrender.com](https://modular-component-showcase-application-ve5e.onrender.com) |
 | Database Layer | Neon PostgreSQL + MongoDB Atlas | Privately managed services by Rushmanth Nalluri |
 
 > Render free services may spin down after inactivity, so the backend or gateway may take a short time to respond on first request.
@@ -197,6 +197,12 @@ ModularComponentShowcaseApplication/
 |-- springboot/
 |-- sql/
 |-- docs/
+|-- contracts/
+|-- deploy/
+|-- k8s/
+|-- observability/
+|-- scripts/
+|-- tests/
 |-- .github/
 |-- docker-compose.yml
 |-- render.yaml
@@ -209,12 +215,18 @@ ModularComponentShowcaseApplication/
 | Directory | Responsibility |
 |---|---|
 | `frontend/` | React + Vite client application, pages, reusable UI, preview components, tests, and styling |
-| `backend/` | Express API, auth middleware, controllers, data models, service logic, SQL helpers, tests, and seed scripts |
+| `backend/` | Node.js + Express API, auth middleware, controllers, data models, service logic, SQL helpers, tests, and seed scripts |
 | `gateway/` | FastAPI gateway, proxy routing, gateway services, health endpoints, and Python test coverage |
 | `springboot/` | Spring Boot microservice with JWT auth, JPA CRUD APIs, role-based access, actuator health, and Swagger |
 | `sql/` | Shared PostgreSQL schema, views, procedures, materialized views, and query examples |
 | `docs/` | Architecture, deployment, environment, database, monitoring, and troubleshooting documentation |
-| `.github/` | CI/CD workflows for code quality validation and GitHub Pages deployment |
+| `contracts/` | API specifications and data contracts for inter-service communication |
+| `k8s/` | Kubernetes deployment manifests and namespace configurations |
+| `deploy/` | Helm charts and deployment automation |
+| `observability/` | OpenTelemetry collector config, Prometheus, and Grafana dashboards |
+| `scripts/` | Standalone utility scripts (like CI environment preparation and debugging) |
+| `tests/` | Global end-to-end load and verification tests |
+| `.github/` | CI/CD workflows for code quality validation and deployment |
 
 <details>
 <summary>How the architecture works</summary>
@@ -441,22 +453,7 @@ The goal is simple: one request can be traced from the browser through the gatew
 
 ---
 
-## Project Structure
 
-```text
-ModularComponentShowcaseApplication/
-├── frontend/
-├── backend/
-├── gateway/
-├── springboot/
-├── sql/
-├── docs/
-├── contracts/
-├── docker-compose.yml
-└── README.md
-```
-
----
 
 ## Future Improvements
 
