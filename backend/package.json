@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npm run db:reset && npm run seed:showcase && npm run seed:embeddings && node src/app.js",
+    "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "lint": "node scripts/lint.js",
     "test": "node --test src/tests/*.test.js",
