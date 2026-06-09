@@ -1,6 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { ComponentEmbedding } from "../models/appModels.js";
+import { ComponentEmbedding } from "../mongodb/schema.js";
 import { generateEmbedding } from "../services/embeddingProvider.js";
 import { upsertPgVectorEmbedding } from "../services/pgVectorSearchService.js";
 import { closeSqlPool } from "../sql/db.js";

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { pathToFileURL } from "node:url";
-import { User, Component } from "../models/appModels.js";
+import { User, Component } from "../mongodb/schema.js";
 import { initializeSqlSchema } from "../sql/initSchema.js";
 import { closeSqlPool, hasSqlConnectionConfig, sqlQuery } from "../sql/db.js";
 import { connectMongoWithSrvFallback, isMongoSrvUri } from "../utils/mongoSrvFallback.js";

@@ -23,6 +23,7 @@ x-gateway-default-env: &gateway-default-env
   GATEWAY_PORT: ${GATEWAY_PORT:-8000}
   REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-20}
   REQUEST_MAX_RETRIES: ${REQUEST_MAX_RETRIES:-2}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
 
 x-spring-default-env: &spring-default-env
@@ -143,6 +144,8 @@ services:
         condition: service_healthy
       springboot:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import httpx; httpx.get(\"http://127.0.0.1:8000/health\", timeout=5).raise_for_status()'"]
       interval: 15s
@@ -166,6 +169,20 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
+    networks:
+      - modular_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: showcase-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     networks:
       - modular_net

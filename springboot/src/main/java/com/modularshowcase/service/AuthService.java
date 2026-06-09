@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.modularshowcase.dto.AuthRefreshRequest;
 import com.modularshowcase.dto.AuthRequest;
 import com.modularshowcase.dto.AuthResponse;
+import com.modularshowcase.dto.UserRequest;
 import com.modularshowcase.dto.UserResponse;
 import com.modularshowcase.exception.AccessDeniedBusinessException;
 import com.modularshowcase.model.UserEntity;
@@ -58,6 +59,12 @@ public class AuthService {
         UserEntity user = userService.findByEmail(jwtTokenProvider.extractUsername(refreshToken));
         UserPrincipal principal = new UserPrincipal(user.getUserId(), user.getEmail(), user.getRole());
         return responseFor(user, principal);
+    }
+
+    public AuthResponse register(@NonNull UserRequest request) {
+        userService.create(request);
+        AuthRequest authReq = new AuthRequest(request.email(), request.password(), request.role());
+        return issueToken(authReq);
     }
 
     private AuthResponse responseFor(UserEntity user, UserPrincipal principal) {

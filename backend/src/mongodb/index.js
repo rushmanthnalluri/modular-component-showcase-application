@@ -10,7 +10,7 @@ export {
     ComponentDescription,
     ComponentEmbedding,
     UsageLog,
-} from "../models/appModels.js";
+} from "./schema.js";
 
 export {
     createMongoRouter,
