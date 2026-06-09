@@ -30,7 +30,6 @@ export function buildSuccess(data = {}) {
     return {
         success: true,
         data,
-        ...spreadable(data),
     };
 }
 
@@ -59,8 +58,6 @@ export function buildError(code = "INTERNAL_ERROR", message = "Server error.", d
             message: normalizedMessage,
             ...(details !== undefined && details !== null ? { details } : {}),
         },
-        code: normalizedCode,
-        message: normalizedMessage,
     };
 }
 
