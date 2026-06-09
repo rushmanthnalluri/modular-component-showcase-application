@@ -10,7 +10,8 @@
     "security": "npm audit --omit=dev",
     "db:remove-avatar-url": "node src/scripts/removeAvatarUrlField.js",
     "seed:showcase": "node src/scripts/seedShowcaseComponents.js",
-    "seed:embeddings": "node src/scripts/seedComponentEmbeddings.js"
+    "seed:embeddings": "node src/scripts/seedComponentEmbeddings.js",
+    "db:reset": "node src/scripts/resetDatabases.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
