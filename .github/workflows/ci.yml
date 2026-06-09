@@ -40,13 +40,15 @@ jobs:
       run: pytest --cov=. --cov-report=xml
       working-directory: ./gateway
 
-  owasp-dependency-check:
+  security-scan:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    - name: Run Trivy vulnerability scanner (OWASP & Image Scanning)
+      uses: aquasecurity/trivy-action@master
       with:
-        command: monitor
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        exit-code: '0'
+        severity: 'CRITICAL,HIGH'
