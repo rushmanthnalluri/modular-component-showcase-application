@@ -1,4 +1,4 @@
-import { apiRequest, backendApiRequest, backendRequest } from "@/services/apiClient";
+import { apiRequest } from "@/services/apiClient";
 
 const AUTH_USER_KEY = "authUser";
 
