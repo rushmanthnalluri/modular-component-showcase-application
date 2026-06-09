@@ -86,7 +86,7 @@ services:
       - key: BACKEND_URL
         value: http://modular-component-showcase-backend:5000
       - key: SPRING_SERVICE_URL
-        value: http://modular-component-showcase-springboot:8081
+        value: http://modular-component-showcase-spring-service:8081
       - key: FRONTEND_URL
         fromService:
           type: web
@@ -111,11 +111,11 @@ services:
         sync: false
 
   - type: web
-    name: modular-component-showcase-springboot
+    name: modular-component-showcase-spring-service
     runtime: docker
-    rootDir: springboot
-    dockerContext: ./springboot
-    dockerfilePath: ./springboot/Dockerfile
+    rootDir: spring-service
+    dockerContext: ./spring-service
+    dockerfilePath: ./spring-service/Dockerfile
     healthCheckPath: /actuator/health
     autoDeployTrigger: commit
     envVars:
