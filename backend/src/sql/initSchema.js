@@ -179,6 +179,12 @@ export const DDL = [
                     FOREIGN KEY (component_id) REFERENCES components(component_id)
                     ON UPDATE CASCADE ON DELETE SET NULL;
             END IF;
+
+            ALTER TABLE components DROP CONSTRAINT IF EXISTS components_user_id_fkey;
+            ALTER TABLE components 
+                ADD CONSTRAINT components_user_id_fkey 
+                FOREIGN KEY (user_id) REFERENCES users(user_id) 
+                ON UPDATE CASCADE ON DELETE CASCADE;
         END
         $$`,
     "CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id)",
