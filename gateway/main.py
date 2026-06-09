@@ -446,7 +446,7 @@ async def proxy_api(full_path: str, request: Request):
     outbound_headers = {
         key: value
         for key, value in request.headers.items()
-        if key.lower() not in {"host", "content-length", "origin", "referer"}
+        if key.lower() not in {"host", "content-length"}
     }
     outbound_headers.setdefault("x-correlation-id", correlation_id)
     outbound_headers.setdefault("x-request-id", correlation_id)
