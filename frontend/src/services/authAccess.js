@@ -59,39 +59,21 @@ export async function registerUser({
     }),
   };
 
-  try {
-    await apiRequest("/auth/register", request);
-  } catch (error) {
-    console.warn("Gateway register request failed; retrying backend directly.", error);
-    await backendApiRequest("/auth/register", request);
-  }
+  await apiRequest("/auth/register", request);
 }
 
 export async function fetchRegisterCaptcha(length = 6) {
   const requestConfig = { method: "GET" };
 
-  try {
-    const payload = await apiRequest(`/api/captcha/getcaptcha/${length}`, requestConfig);
-    if (payload?.text && payload?.image) {
-      return {
-        text: String(payload.text),
-        image: String(payload.image),
-      };
-    }
-  } catch (error) {
-    console.warn("Gateway captcha request failed; retrying backend directly.", error);
+  const payload = await apiRequest(`/api/captcha/getcaptcha/${length}`, requestConfig);
+  if (payload?.text && payload?.image) {
+    return {
+      text: String(payload.text),
+      image: String(payload.image),
+    };
   }
 
-  const fallbackPayload = await backendRequest(`/api/captcha/getcaptcha/${length}`, requestConfig);
-
-  if (!fallbackPayload?.text || !fallbackPayload?.image) {
-    throw new Error("Captcha service unavailable. Please refresh.");
-  }
-
-  return {
-    text: String(fallbackPayload.text),
-    image: String(fallbackPayload.image),
-  };
+  throw new Error("Captcha service unavailable. Please refresh.");
 }
 
 export async function authenticateUser({ email, password }) {
@@ -100,13 +82,7 @@ export async function authenticateUser({ email, password }) {
     body: JSON.stringify({ email, password }),
   };
 
-  let payload;
-  try {
-    payload = await apiRequest("/auth/login", request);
-  } catch (error) {
-    console.warn("Gateway login request failed; retrying backend directly.", error);
-    payload = await backendApiRequest("/auth/login", request);
-  }
+  const payload = await apiRequest("/auth/login", request);
 
   if (payload?.token) {
     localStorage.setItem("authToken", payload.token);
@@ -128,12 +104,7 @@ export async function forgotPassword({ email, phone, newPassword }) {
     }),
   };
 
-  try {
-    await apiRequest("/auth/forgot-password", request);
-  } catch (error) {
-    console.warn("Gateway forgot-password request failed; retrying backend directly.", error);
-    await backendApiRequest("/auth/forgot-password", request);
-  }
+  await apiRequest("/auth/forgot-password", request);
 }
 
 export async function logoutUser() {
@@ -143,14 +114,6 @@ export async function logoutUser() {
       body: JSON.stringify({}),
     });
   } catch {
-    try {
-      await backendApiRequest("/auth/logout", {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-    } catch (backendError) {
-      console.warn("Gateway logout request failed; backend retry also failed.", backendError);
-    }
     // Clear local auth state even when the backend session has already expired.
   }
 
